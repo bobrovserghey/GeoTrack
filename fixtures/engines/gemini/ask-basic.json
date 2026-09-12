@@ -1,0 +1,38 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "Notion is a widely-used productivity and knowledge management tool that combines note-taking, project management, and database features in a single workspace. It is recognized by major AI assistants and frequently cited in productivity-related queries."
+          }
+        ],
+        "role": "model"
+      },
+      "grounding_metadata": {
+        "grounding_chunks": [
+          {
+            "web": {
+              "uri": "https://notion.so",
+              "title": "Notion – The all-in-one workspace"
+            }
+          },
+          {
+            "web": {
+              "uri": "https://techcrunch.com/2021/10/notion-valuation",
+              "title": "Notion hits $10B valuation | TechCrunch"
+            }
+          }
+        ],
+        "web_search_queries": ["Notion productivity tool AI visibility"]
+      },
+      "finish_reason": "STOP"
+    }
+  ],
+  "usage_metadata": {
+    "prompt_token_count": 18,
+    "candidates_token_count": 52,
+    "total_token_count": 70
+  },
+  "model_version": "gemini-2.0-flash"
+}
