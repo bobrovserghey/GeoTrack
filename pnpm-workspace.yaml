@@ -1,0 +1,9 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  '@img/sharp-libvips-darwin-arm64': true
+  '@next/swc-darwin-arm64': true
+  esbuild: true
+  sharp: true
