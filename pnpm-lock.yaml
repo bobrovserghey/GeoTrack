@@ -26,9 +26,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@geotrack/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@geotrack/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      drizzle-orm:
+        specifier: ^0.36.0
+        version: 0.36.4(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@types/react@19.3.0)(postgres@3.4.9)(react@19.3.0)
       next:
         specifier: ^15.0.0
         version: 15.5.25(@opentelemetry/api@1.9.1)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      postgres:
+        specifier: ^3.4.5
+        version: 3.4.9
       react:
         specifier: ^19.0.0
         version: 19.3.0
