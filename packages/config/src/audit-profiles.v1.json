@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "profiles": {
+    "teaser": {
+      "id": "teaser",
+      "version": 1,
+      "crawlerPages": 3,
+      "engines": ["perplexity"],
+      "promptCount": 12,
+      "promptRepeats": 1,
+      "competitorCount": 0,
+      "pillars": ["A_preliminary", "B", "E5"],
+      "findingCount": 3,
+      "manualReview": false,
+      "pdf": false,
+      "serpApiRequests": 2,
+      "costSoftCeilingUsd": 0.10,
+      "costHardCeilingUsd": 0.25,
+      "timeBudgetSeconds": 90
+    },
+    "standard": {
+      "id": "standard",
+      "version": 1,
+      "crawlerPages": 50,
+      "engines": ["perplexity", "chatgpt", "gemini"],
+      "promptCount": 30,
+      "promptRepeats": 2,
+      "competitorCount": 3,
+      "pillars": ["A", "B", "C", "D", "E"],
+      "findingCount": 15,
+      "manualReview": true,
+      "pdf": true,
+      "serpApiRequests": 11,
+      "costSoftCeilingUsd": 6.00,
+      "costHardCeilingUsd": 8.00,
+      "timeBudgetSeconds": 360
+    },
+    "extended": {
+      "id": "extended",
+      "version": 1,
+      "crawlerPages": 50,
+      "engines": ["perplexity", "chatgpt", "gemini"],
+      "promptCount": 50,
+      "promptRepeats": 2,
+      "competitorCount": 5,
+      "pillars": ["A", "B", "C", "D", "E"],
+      "findingCount": 15,
+      "manualReview": true,
+      "pdf": true,
+      "serpApiRequests": 11,
+      "costSoftCeilingUsd": 9.00,
+      "costHardCeilingUsd": 12.00,
+      "timeBudgetSeconds": 480
+    }
+  }
+}

@@ -17,4 +17,12 @@ export default defineWorkspace([
       environment: 'node',
     },
   },
+  {
+    test: {
+      name: 'config',
+      root: './packages/config',
+      include: ['src/__tests__/**/*.test.ts'],
+      environment: 'node',
+    },
+  },
 ]);
