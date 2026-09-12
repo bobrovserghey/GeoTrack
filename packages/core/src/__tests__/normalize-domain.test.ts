@@ -53,4 +53,27 @@ describe('normalizeDomain', () => {
   it('handles mixed case URL with www', () => {
     expect(normalizeDomain('HTTPS://WWW.Acme.Com/pricing')).toBe('acme.com');
   });
+
+  // punycode / IDN normalisation
+  it('normalises IDN domain to ASCII punycode', () => {
+    // Node WHATWG URL converts non-ASCII to punycode
+    expect(normalizeDomain('münchen.de')).toBe('xn--mnchen-3ya.de');
+  });
+
+  it('normalises IDN in full URL to ASCII punycode', () => {
+    expect(normalizeDomain('https://münchen.de/shop')).toBe('xn--mnchen-3ya.de');
+  });
+
+  it('strips www from IDN domain after punycode normalisation', () => {
+    expect(normalizeDomain('www.münchen.de')).toBe('xn--mnchen-3ya.de');
+  });
+
+  // double TLD protection
+  it('does not strip www from co.uk domain (double TLD)', () => {
+    expect(normalizeDomain('www.example.co.uk')).toBe('example.co.uk');
+  });
+
+  it('does not strip m from com.au domain (double TLD)', () => {
+    expect(normalizeDomain('m.example.com.au')).toBe('example.com.au');
+  });
 });
