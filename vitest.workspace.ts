@@ -9,4 +9,12 @@ export default defineWorkspace([
       environment: 'node',
     },
   },
+  {
+    test: {
+      name: 'db',
+      root: './packages/db',
+      include: ['src/__tests__/**/*.test.ts'],
+      environment: 'node',
+    },
+  },
 ]);
