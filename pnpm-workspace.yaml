@@ -6,4 +6,5 @@ allowBuilds:
   '@img/sharp-libvips-darwin-arm64': true
   '@next/swc-darwin-arm64': true
   esbuild: true
+  protobufjs: true
   sharp: true

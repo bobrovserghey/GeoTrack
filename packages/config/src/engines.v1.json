@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "engines": [
+    {
+      "id": "perplexity",
+      "provider": "perplexity",
+      "model": "sonar",
+      "concurrencyLimit": 3,
+      "retryOnStatus": [429, 503],
+      "maxRetries": 4,
+      "timeoutMs": 30000
+    },
+    {
+      "id": "chatgpt",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "concurrencyLimit": 5,
+      "retryOnStatus": [429, 503],
+      "maxRetries": 4,
+      "timeoutMs": 30000
+    },
+    {
+      "id": "gemini",
+      "provider": "google",
+      "model": "gemini-2.0-flash",
+      "concurrencyLimit": 5,
+      "retryOnStatus": [429, 503],
+      "maxRetries": 4,
+      "timeoutMs": 30000
+    }
+  ]
+}

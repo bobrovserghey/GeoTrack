@@ -7,7 +7,12 @@
     "dev": "node --watch src/index.ts",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@geotrack/core": "workspace:*",
+    "inngest": "^3.29.0"
+  },
   "devDependencies": {
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "vitest": "^2.1.9"
   }
 }
