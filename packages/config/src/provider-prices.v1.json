@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "models": {
+    "openai/gpt-4o-mini-search-preview": {
+      "inputPerMToken": 0.20,
+      "outputPerMToken": 1.20,
+      "webSearchCallPer1k": 10.0
+    },
+    "perplexity/sonar": {
+      "requestPer1k": 8.0,
+      "inputPerMToken": 1.0,
+      "outputPerMToken": 1.0
+    },
+    "gemini/gemini-2.0-flash": {
+      "inputPerMToken": 0.75,
+      "outputPerMToken": 3.75,
+      "groundingCallPer1k": 14.0
+    },
+    "gemini/gemini-2.0-flash-lite": {
+      "inputPerMToken": 0.30,
+      "outputPerMToken": 2.50
+    },
+    "serpapi/web_search": {
+      "requestPer1k": 15.0
+    }
+  }
+}
