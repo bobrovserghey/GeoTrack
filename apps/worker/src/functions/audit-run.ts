@@ -1,5 +1,5 @@
 import { inngest } from '../inngest.js';
-import { auditRunHandler, type AuditRunDeps } from './audit-run-handler.js';
+import { auditRunHandler, type AuditRunDeps, type StepTools } from './audit-run-handler.js';
 
 // Production deps are injected at startup (T-05 leaves DB wiring for T-06+).
 // Replace this no-op implementation when the real DB client is wired in.
@@ -21,7 +21,7 @@ export const auditRun = inngest.createFunction(
   ({ event, step }) =>
     auditRunHandler(
       (event.data as { auditId: string }).auditId,
-      step,
+      step as unknown as StepTools,
       deps,
     ),
 );
