@@ -52,9 +52,17 @@ importers:
         specifier: ^22.0.0
         version: 22.20.2
 
-  packages/config: {}
+  packages/config:
+    dependencies:
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      '@geotrack/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/db:
     dependencies:
