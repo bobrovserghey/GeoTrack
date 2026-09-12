@@ -1,0 +1,21 @@
+{
+  "name": "geotrack",
+  "private": true,
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/config && tsc --noEmit -p packages/db && tsc --noEmit -p packages/ui && tsc --noEmit -p apps/web && tsc --noEmit -p apps/worker",
+    "test": "vitest run --workspace vitest.workspace.ts",
+    "test:watch": "vitest --workspace vitest.workspace.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  }
+}
