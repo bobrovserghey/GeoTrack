@@ -1,2 +1,2 @@
-// Drizzle schema and migrations added in T-02.
-export {};
+export * from './schema/index.js';
+export * from './client.js';
