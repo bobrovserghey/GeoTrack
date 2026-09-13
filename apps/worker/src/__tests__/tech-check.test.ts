@@ -38,9 +38,11 @@ function makeBaseInput(overrides: Partial<TechCheckInput> = {}): TechCheckInput 
   };
 }
 
+type FetchResponse = { status: number; body: string; headers?: Record<string, string> };
+
 function makeFetch(
-  responses: Record<string, { status: number; body: string; headers?: Record<string, string> }>,
-  fallback = { status: 200, body: PAGE_NORMAL },
+  responses: Record<string, FetchResponse>,
+  fallback: FetchResponse = { status: 200, body: PAGE_NORMAL },
 ) {
   return vi.fn().mockImplementation((url: string) => {
     const key = Object.keys(responses).find((k) => url.includes(k));
