@@ -1,12 +1,19 @@
 import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { AuditProfileSchema, AuditProfilesFileSchema } from './schemas/audit-profile.js';
 import { EngineRegistryFileSchema } from './schemas/engine-registry.js';
 import { ProviderPricesFileSchema } from './schemas/provider-prices.js';
 import { TaxonomySchema } from './schemas/taxonomy.js';
+import { PromptSetSchema } from './schemas/prompt-set.js';
 import type { AuditProfile, AuditProfileId } from './schemas/audit-profile.js';
 import type { EngineRegistryEntry } from './schemas/engine-registry.js';
 import type { ModelPrice } from './schemas/provider-prices.js';
 import type { CategoryEntry } from './schemas/taxonomy.js';
+import type { PromptSet, Locale } from './schemas/prompt-set.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const require = createRequire(import.meta.url);
 
@@ -50,11 +57,19 @@ export function getCategoryById(id: string): CategoryEntry | undefined {
   return getTaxonomy().find((c) => c.id === id);
 }
 
+export function getPromptSet(categoryId: string, locale: Locale): PromptSet {
+  const file = join(__dirname, 'prompts', 'categories', categoryId, `${locale}.v1.json`);
+  const raw = JSON.parse(readFileSync(file, 'utf8')) as unknown;
+  return PromptSetSchema.parse(raw);
+}
+
 export type { AuditProfile, AuditProfileId };
 export type { EngineRegistryEntry };
 export type { ModelPrice };
 export type { CategoryEntry };
 export { CategoryEntrySchema, TaxonomySchema } from './schemas/taxonomy.js';
+export type { PromptSet, PromptEntry, Locale, PromptType } from './schemas/prompt-set.js';
+export { PromptSetSchema, PromptEntrySchema, LOCALES, PROMPT_TYPES } from './schemas/prompt-set.js';
 export { AuditProfileSchema, AuditProfilesFileSchema };
 export { EngineRegistryEntrySchema, EngineRegistryFileSchema } from './schemas/engine-registry.js';
 export { ModelPriceSchema, ProviderPricesFileSchema } from './schemas/provider-prices.js';

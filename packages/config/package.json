@@ -7,7 +7,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prompts:generate-categories": "node --experimental-strip-types scripts/generate-categories.ts"
   },
   "dependencies": {
     "zod": "^3.23.8"
