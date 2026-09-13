@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"category_id\":\"project-management-software\",\"confidence\":0.93,\"rationale\":\"The product focuses on task tracking, team collaboration, and workflow automation — core traits of project management software.\",\"candidates\":[{\"category_id\":\"project-management-software\",\"confidence\":0.93},{\"category_id\":\"team-messaging\",\"confidence\":0.41},{\"category_id\":\"work-os-platform\",\"confidence\":0.28}]}"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "usage_metadata": {
+    "prompt_token_count": 1853,
+    "candidates_token_count": 78,
+    "total_token_count": 1931
+  }
+}

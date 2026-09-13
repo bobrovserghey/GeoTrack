@@ -9,4 +9,7 @@ export { GeminiAdapter, PerplexityAdapter, GeminiModelAdapter } from './adapters
 export { normalizeDomain } from './net/normalize-domain.js';
 export { PassportOutputSchema } from './steps/passport.js';
 export type { PassportOutput } from './steps/passport.js';
+export { CategoryDetectOutputSchema } from './steps/category-detect.js';
+export type { CategoryDetectOutput, CategoryCandidate } from './steps/category-detect.js';
+export type { CategoryEntry } from '@geotrack/config';
 export type { ModelAdapter, GenerateOptions, ModelAnswer } from './contracts/model.js';
