@@ -15,3 +15,5 @@ export { CompetitorDetectOutputSchema } from './steps/competitor-detect.js';
 export type { CompetitorDetectOutput, Competitor } from './steps/competitor-detect.js';
 export type { CategoryEntry } from '@geotrack/config';
 export type { ModelAdapter, GenerateOptions, ModelAnswer } from './contracts/model.js';
+export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, PROFILE_QUOTAS, BUNDLED_PROMPT_TYPES } from '@geotrack/config';
+export type { PromptBundle, BundledPromptEntry, ProfileId } from '@geotrack/config';
