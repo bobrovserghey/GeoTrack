@@ -1,0 +1,248 @@
+{
+  "categoryId": "vpn-service-business",
+  "locale": "en",
+  "version": "1",
+  "generatedAt": "2026-09-13",
+  "prompts": [
+    {
+      "id": "discovery-01",
+      "text": "best vpn service (business)",
+      "type": "discovery",
+      "priority": 1
+    },
+    {
+      "id": "discovery-02",
+      "text": "top vpn service (business) tools",
+      "type": "discovery",
+      "priority": 2
+    },
+    {
+      "id": "discovery-03",
+      "text": "vpn service (business) comparison",
+      "type": "discovery",
+      "priority": 3
+    },
+    {
+      "id": "discovery-04",
+      "text": "what is vpn service (business)",
+      "type": "discovery",
+      "priority": 4
+    },
+    {
+      "id": "discovery-05",
+      "text": "how to choose vpn service (business)",
+      "type": "discovery",
+      "priority": 5
+    },
+    {
+      "id": "discovery-06",
+      "text": "vpn service (business) for small business",
+      "type": "discovery",
+      "priority": 6
+    },
+    {
+      "id": "discovery-07",
+      "text": "vpn service (business) for remote teams",
+      "type": "discovery",
+      "priority": 7
+    },
+    {
+      "id": "discovery-08",
+      "text": "vpn service (business) for startups",
+      "type": "discovery",
+      "priority": 8
+    },
+    {
+      "id": "discovery-09",
+      "text": "vpn service (business) features",
+      "type": "discovery",
+      "priority": 9
+    },
+    {
+      "id": "discovery-10",
+      "text": "vpn service (business) pricing",
+      "type": "discovery",
+      "priority": 10
+    },
+    {
+      "id": "discovery-11",
+      "text": "cloud-based vpn service (business)",
+      "type": "discovery",
+      "priority": 11
+    },
+    {
+      "id": "discovery-12",
+      "text": "vpn service (business) reviews",
+      "type": "discovery",
+      "priority": 12
+    },
+    {
+      "id": "discovery-13",
+      "text": "enterprise vpn service (business)",
+      "type": "discovery",
+      "priority": 13
+    },
+    {
+      "id": "discovery-14",
+      "text": "free vpn service (business)",
+      "type": "discovery",
+      "priority": 14
+    },
+    {
+      "id": "discovery-15",
+      "text": "vpn service (business) 2025",
+      "type": "discovery",
+      "priority": 15
+    },
+    {
+      "id": "discovery-16",
+      "text": "recommended vpn service (business)",
+      "type": "discovery",
+      "priority": 16
+    },
+    {
+      "id": "problem-01",
+      "text": "how to improve vpn service (business)",
+      "type": "problem-led",
+      "priority": 17
+    },
+    {
+      "id": "problem-02",
+      "text": "best tools for vpn service (business)",
+      "type": "problem-led",
+      "priority": 18
+    },
+    {
+      "id": "problem-03",
+      "text": "software to help with vpn service (business)",
+      "type": "problem-led",
+      "priority": 19
+    },
+    {
+      "id": "problem-04",
+      "text": "how to automate vpn service (business)",
+      "type": "problem-led",
+      "priority": 20
+    },
+    {
+      "id": "problem-05",
+      "text": "how to track vpn service (business)",
+      "type": "problem-led",
+      "priority": 21
+    },
+    {
+      "id": "problem-06",
+      "text": "how to organize vpn service (business) workflow",
+      "type": "problem-led",
+      "priority": 22
+    },
+    {
+      "id": "problem-07",
+      "text": "how to scale vpn service (business) operations",
+      "type": "problem-led",
+      "priority": 23
+    },
+    {
+      "id": "problem-08",
+      "text": "best way to handle vpn service (business)",
+      "type": "problem-led",
+      "priority": 24
+    },
+    {
+      "id": "problem-09",
+      "text": "what do companies use for vpn service (business)",
+      "type": "problem-led",
+      "priority": 25
+    },
+    {
+      "id": "problem-10",
+      "text": "how to streamline vpn service (business) processes",
+      "type": "problem-led",
+      "priority": 26
+    },
+    {
+      "id": "comparison-01",
+      "text": "NordLayer vs Perimeter 81",
+      "type": "comparison",
+      "priority": 27
+    },
+    {
+      "id": "comparison-02",
+      "text": "NordLayer vs Cisco AnyConnect",
+      "type": "comparison",
+      "priority": 28
+    },
+    {
+      "id": "comparison-03",
+      "text": "NordLayer vs Palo Alto GlobalProtect",
+      "type": "comparison",
+      "priority": 29
+    },
+    {
+      "id": "comparison-04",
+      "text": "NordLayer vs Zscaler",
+      "type": "comparison",
+      "priority": 30
+    },
+    {
+      "id": "comparison-05",
+      "text": "Perimeter 81 vs Cisco AnyConnect",
+      "type": "comparison",
+      "priority": 31
+    },
+    {
+      "id": "comparison-06",
+      "text": "Perimeter 81 vs Palo Alto GlobalProtect",
+      "type": "comparison",
+      "priority": 32
+    },
+    {
+      "id": "comparison-07",
+      "text": "Perimeter 81 vs Zscaler",
+      "type": "comparison",
+      "priority": 33
+    },
+    {
+      "id": "comparison-08",
+      "text": "Cisco AnyConnect vs Palo Alto GlobalProtect",
+      "type": "comparison",
+      "priority": 34
+    },
+    {
+      "id": "alternative-01",
+      "text": "NordLayer alternatives",
+      "type": "alternative",
+      "priority": 35
+    },
+    {
+      "id": "alternative-02",
+      "text": "best alternative to NordLayer",
+      "type": "alternative",
+      "priority": 36
+    },
+    {
+      "id": "alternative-03",
+      "text": "replace NordLayer",
+      "type": "alternative",
+      "priority": 37
+    },
+    {
+      "id": "alternative-04",
+      "text": "NordLayer competitors",
+      "type": "alternative",
+      "priority": 38
+    },
+    {
+      "id": "local-01",
+      "text": "best vpn service (business) for US companies",
+      "type": "local",
+      "priority": 39
+    },
+    {
+      "id": "local-02",
+      "text": "top vpn service (business) tools for English-speaking teams",
+      "type": "local",
+      "priority": 40
+    }
+  ]
+}

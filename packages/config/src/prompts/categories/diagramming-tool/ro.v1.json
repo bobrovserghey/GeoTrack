@@ -1,0 +1,248 @@
+{
+  "categoryId": "diagramming-tool",
+  "locale": "ro",
+  "version": "1",
+  "generatedAt": "2026-09-13",
+  "prompts": [
+    {
+      "id": "discovery-01",
+      "text": "cel mai bun software de tip diagramming tool",
+      "type": "discovery",
+      "priority": 1
+    },
+    {
+      "id": "discovery-02",
+      "text": "top instrumente diagramming tool",
+      "type": "discovery",
+      "priority": 2
+    },
+    {
+      "id": "discovery-03",
+      "text": "comparație diagramming tool",
+      "type": "discovery",
+      "priority": 3
+    },
+    {
+      "id": "discovery-04",
+      "text": "ce este diagramming tool",
+      "type": "discovery",
+      "priority": 4
+    },
+    {
+      "id": "discovery-05",
+      "text": "cum să alegi diagramming tool",
+      "type": "discovery",
+      "priority": 5
+    },
+    {
+      "id": "discovery-06",
+      "text": "diagramming tool pentru companii mici",
+      "type": "discovery",
+      "priority": 6
+    },
+    {
+      "id": "discovery-07",
+      "text": "diagramming tool pentru echipe la distanță",
+      "type": "discovery",
+      "priority": 7
+    },
+    {
+      "id": "discovery-08",
+      "text": "diagramming tool pentru startup-uri",
+      "type": "discovery",
+      "priority": 8
+    },
+    {
+      "id": "discovery-09",
+      "text": "funcționalități diagramming tool",
+      "type": "discovery",
+      "priority": 9
+    },
+    {
+      "id": "discovery-10",
+      "text": "prețuri diagramming tool",
+      "type": "discovery",
+      "priority": 10
+    },
+    {
+      "id": "discovery-11",
+      "text": "diagramming tool în cloud",
+      "type": "discovery",
+      "priority": 11
+    },
+    {
+      "id": "discovery-12",
+      "text": "recenzii diagramming tool",
+      "type": "discovery",
+      "priority": 12
+    },
+    {
+      "id": "discovery-13",
+      "text": "soluție enterprise diagramming tool",
+      "type": "discovery",
+      "priority": 13
+    },
+    {
+      "id": "discovery-14",
+      "text": "diagramming tool gratuit",
+      "type": "discovery",
+      "priority": 14
+    },
+    {
+      "id": "discovery-15",
+      "text": "diagramming tool 2025",
+      "type": "discovery",
+      "priority": 15
+    },
+    {
+      "id": "discovery-16",
+      "text": "diagramming tool recomandat",
+      "type": "discovery",
+      "priority": 16
+    },
+    {
+      "id": "problem-01",
+      "text": "cum să îmbunătățești diagramming",
+      "type": "problem-led",
+      "priority": 17
+    },
+    {
+      "id": "problem-02",
+      "text": "cele mai bune instrumente pentru diagramming",
+      "type": "problem-led",
+      "priority": 18
+    },
+    {
+      "id": "problem-03",
+      "text": "software care ajută cu diagramming",
+      "type": "problem-led",
+      "priority": 19
+    },
+    {
+      "id": "problem-04",
+      "text": "cum să automatizezi diagramming",
+      "type": "problem-led",
+      "priority": 20
+    },
+    {
+      "id": "problem-05",
+      "text": "cum să urmărești diagramming",
+      "type": "problem-led",
+      "priority": 21
+    },
+    {
+      "id": "problem-06",
+      "text": "cum să organizezi fluxul de lucru diagramming",
+      "type": "problem-led",
+      "priority": 22
+    },
+    {
+      "id": "problem-07",
+      "text": "cum să scalezi operațiunile de diagramming",
+      "type": "problem-led",
+      "priority": 23
+    },
+    {
+      "id": "problem-08",
+      "text": "cel mai bun mod de a gestiona diagramming",
+      "type": "problem-led",
+      "priority": 24
+    },
+    {
+      "id": "problem-09",
+      "text": "ce software folosesc companiile pentru diagramming",
+      "type": "problem-led",
+      "priority": 25
+    },
+    {
+      "id": "problem-10",
+      "text": "cum să optimizezi procesele de diagramming",
+      "type": "problem-led",
+      "priority": 26
+    },
+    {
+      "id": "comparison-01",
+      "text": "Lucidchart vs draw.io",
+      "type": "comparison",
+      "priority": 27
+    },
+    {
+      "id": "comparison-02",
+      "text": "Lucidchart vs Miro",
+      "type": "comparison",
+      "priority": 28
+    },
+    {
+      "id": "comparison-03",
+      "text": "Lucidchart vs Visio",
+      "type": "comparison",
+      "priority": 29
+    },
+    {
+      "id": "comparison-04",
+      "text": "Lucidchart vs Creately",
+      "type": "comparison",
+      "priority": 30
+    },
+    {
+      "id": "comparison-05",
+      "text": "draw.io vs Miro",
+      "type": "comparison",
+      "priority": 31
+    },
+    {
+      "id": "comparison-06",
+      "text": "draw.io vs Visio",
+      "type": "comparison",
+      "priority": 32
+    },
+    {
+      "id": "comparison-07",
+      "text": "draw.io vs Creately",
+      "type": "comparison",
+      "priority": 33
+    },
+    {
+      "id": "comparison-08",
+      "text": "Miro vs Visio",
+      "type": "comparison",
+      "priority": 34
+    },
+    {
+      "id": "alternative-01",
+      "text": "alternative la Lucidchart",
+      "type": "alternative",
+      "priority": 35
+    },
+    {
+      "id": "alternative-02",
+      "text": "cea mai bună alternativă la Lucidchart",
+      "type": "alternative",
+      "priority": 36
+    },
+    {
+      "id": "alternative-03",
+      "text": "înlocuitor pentru Lucidchart",
+      "type": "alternative",
+      "priority": 37
+    },
+    {
+      "id": "alternative-04",
+      "text": "concurenți Lucidchart",
+      "type": "alternative",
+      "priority": 38
+    },
+    {
+      "id": "local-01",
+      "text": "cel mai bun diagramming tool pentru companii din România",
+      "type": "local",
+      "priority": 39
+    },
+    {
+      "id": "local-02",
+      "text": "instrumente diagramming recomandate în română",
+      "type": "local",
+      "priority": 40
+    }
+  ]
+}

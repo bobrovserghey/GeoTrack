@@ -1,0 +1,248 @@
+{
+  "categoryId": "e-discovery-software",
+  "locale": "en",
+  "version": "1",
+  "generatedAt": "2026-09-13",
+  "prompts": [
+    {
+      "id": "discovery-01",
+      "text": "best e-discovery software",
+      "type": "discovery",
+      "priority": 1
+    },
+    {
+      "id": "discovery-02",
+      "text": "top e-discovery software tools",
+      "type": "discovery",
+      "priority": 2
+    },
+    {
+      "id": "discovery-03",
+      "text": "e-discovery software comparison",
+      "type": "discovery",
+      "priority": 3
+    },
+    {
+      "id": "discovery-04",
+      "text": "what is e-discovery software",
+      "type": "discovery",
+      "priority": 4
+    },
+    {
+      "id": "discovery-05",
+      "text": "how to choose e-discovery software",
+      "type": "discovery",
+      "priority": 5
+    },
+    {
+      "id": "discovery-06",
+      "text": "e-discovery software for small business",
+      "type": "discovery",
+      "priority": 6
+    },
+    {
+      "id": "discovery-07",
+      "text": "e-discovery software for remote teams",
+      "type": "discovery",
+      "priority": 7
+    },
+    {
+      "id": "discovery-08",
+      "text": "e-discovery software for startups",
+      "type": "discovery",
+      "priority": 8
+    },
+    {
+      "id": "discovery-09",
+      "text": "e-discovery software features",
+      "type": "discovery",
+      "priority": 9
+    },
+    {
+      "id": "discovery-10",
+      "text": "e-discovery software pricing",
+      "type": "discovery",
+      "priority": 10
+    },
+    {
+      "id": "discovery-11",
+      "text": "cloud-based e-discovery software",
+      "type": "discovery",
+      "priority": 11
+    },
+    {
+      "id": "discovery-12",
+      "text": "e-discovery software reviews",
+      "type": "discovery",
+      "priority": 12
+    },
+    {
+      "id": "discovery-13",
+      "text": "enterprise e-discovery software",
+      "type": "discovery",
+      "priority": 13
+    },
+    {
+      "id": "discovery-14",
+      "text": "free e-discovery software",
+      "type": "discovery",
+      "priority": 14
+    },
+    {
+      "id": "discovery-15",
+      "text": "e-discovery software 2025",
+      "type": "discovery",
+      "priority": 15
+    },
+    {
+      "id": "discovery-16",
+      "text": "recommended e-discovery software",
+      "type": "discovery",
+      "priority": 16
+    },
+    {
+      "id": "problem-01",
+      "text": "how to improve e-discovery",
+      "type": "problem-led",
+      "priority": 17
+    },
+    {
+      "id": "problem-02",
+      "text": "best tools for e-discovery",
+      "type": "problem-led",
+      "priority": 18
+    },
+    {
+      "id": "problem-03",
+      "text": "software to help with e-discovery",
+      "type": "problem-led",
+      "priority": 19
+    },
+    {
+      "id": "problem-04",
+      "text": "how to automate e-discovery",
+      "type": "problem-led",
+      "priority": 20
+    },
+    {
+      "id": "problem-05",
+      "text": "how to track e-discovery",
+      "type": "problem-led",
+      "priority": 21
+    },
+    {
+      "id": "problem-06",
+      "text": "how to organize e-discovery workflow",
+      "type": "problem-led",
+      "priority": 22
+    },
+    {
+      "id": "problem-07",
+      "text": "how to scale e-discovery operations",
+      "type": "problem-led",
+      "priority": 23
+    },
+    {
+      "id": "problem-08",
+      "text": "best way to handle e-discovery",
+      "type": "problem-led",
+      "priority": 24
+    },
+    {
+      "id": "problem-09",
+      "text": "what do companies use for e-discovery",
+      "type": "problem-led",
+      "priority": 25
+    },
+    {
+      "id": "problem-10",
+      "text": "how to streamline e-discovery processes",
+      "type": "problem-led",
+      "priority": 26
+    },
+    {
+      "id": "comparison-01",
+      "text": "Relativity vs Everlaw",
+      "type": "comparison",
+      "priority": 27
+    },
+    {
+      "id": "comparison-02",
+      "text": "Relativity vs Nuix",
+      "type": "comparison",
+      "priority": 28
+    },
+    {
+      "id": "comparison-03",
+      "text": "Relativity vs Exterro",
+      "type": "comparison",
+      "priority": 29
+    },
+    {
+      "id": "comparison-04",
+      "text": "Relativity vs Logikcull",
+      "type": "comparison",
+      "priority": 30
+    },
+    {
+      "id": "comparison-05",
+      "text": "Everlaw vs Nuix",
+      "type": "comparison",
+      "priority": 31
+    },
+    {
+      "id": "comparison-06",
+      "text": "Everlaw vs Exterro",
+      "type": "comparison",
+      "priority": 32
+    },
+    {
+      "id": "comparison-07",
+      "text": "Everlaw vs Logikcull",
+      "type": "comparison",
+      "priority": 33
+    },
+    {
+      "id": "comparison-08",
+      "text": "Nuix vs Exterro",
+      "type": "comparison",
+      "priority": 34
+    },
+    {
+      "id": "alternative-01",
+      "text": "Relativity alternatives",
+      "type": "alternative",
+      "priority": 35
+    },
+    {
+      "id": "alternative-02",
+      "text": "best alternative to Relativity",
+      "type": "alternative",
+      "priority": 36
+    },
+    {
+      "id": "alternative-03",
+      "text": "replace Relativity",
+      "type": "alternative",
+      "priority": 37
+    },
+    {
+      "id": "alternative-04",
+      "text": "Relativity competitors",
+      "type": "alternative",
+      "priority": 38
+    },
+    {
+      "id": "local-01",
+      "text": "best e-discovery software for US companies",
+      "type": "local",
+      "priority": 39
+    },
+    {
+      "id": "local-02",
+      "text": "top e-discovery tools for English-speaking teams",
+      "type": "local",
+      "priority": 40
+    }
+  ]
+}

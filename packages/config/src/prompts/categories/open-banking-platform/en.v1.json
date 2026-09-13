@@ -1,0 +1,248 @@
+{
+  "categoryId": "open-banking-platform",
+  "locale": "en",
+  "version": "1",
+  "generatedAt": "2026-09-13",
+  "prompts": [
+    {
+      "id": "discovery-01",
+      "text": "best open banking platform",
+      "type": "discovery",
+      "priority": 1
+    },
+    {
+      "id": "discovery-02",
+      "text": "top open banking platform tools",
+      "type": "discovery",
+      "priority": 2
+    },
+    {
+      "id": "discovery-03",
+      "text": "open banking platform comparison",
+      "type": "discovery",
+      "priority": 3
+    },
+    {
+      "id": "discovery-04",
+      "text": "what is open banking platform",
+      "type": "discovery",
+      "priority": 4
+    },
+    {
+      "id": "discovery-05",
+      "text": "how to choose open banking platform",
+      "type": "discovery",
+      "priority": 5
+    },
+    {
+      "id": "discovery-06",
+      "text": "open banking platform for small business",
+      "type": "discovery",
+      "priority": 6
+    },
+    {
+      "id": "discovery-07",
+      "text": "open banking platform for remote teams",
+      "type": "discovery",
+      "priority": 7
+    },
+    {
+      "id": "discovery-08",
+      "text": "open banking platform for startups",
+      "type": "discovery",
+      "priority": 8
+    },
+    {
+      "id": "discovery-09",
+      "text": "open banking platform features",
+      "type": "discovery",
+      "priority": 9
+    },
+    {
+      "id": "discovery-10",
+      "text": "open banking platform pricing",
+      "type": "discovery",
+      "priority": 10
+    },
+    {
+      "id": "discovery-11",
+      "text": "cloud-based open banking platform",
+      "type": "discovery",
+      "priority": 11
+    },
+    {
+      "id": "discovery-12",
+      "text": "open banking platform reviews",
+      "type": "discovery",
+      "priority": 12
+    },
+    {
+      "id": "discovery-13",
+      "text": "enterprise open banking platform",
+      "type": "discovery",
+      "priority": 13
+    },
+    {
+      "id": "discovery-14",
+      "text": "free open banking platform",
+      "type": "discovery",
+      "priority": 14
+    },
+    {
+      "id": "discovery-15",
+      "text": "open banking platform 2025",
+      "type": "discovery",
+      "priority": 15
+    },
+    {
+      "id": "discovery-16",
+      "text": "recommended open banking platform",
+      "type": "discovery",
+      "priority": 16
+    },
+    {
+      "id": "problem-01",
+      "text": "how to improve open banking",
+      "type": "problem-led",
+      "priority": 17
+    },
+    {
+      "id": "problem-02",
+      "text": "best tools for open banking",
+      "type": "problem-led",
+      "priority": 18
+    },
+    {
+      "id": "problem-03",
+      "text": "software to help with open banking",
+      "type": "problem-led",
+      "priority": 19
+    },
+    {
+      "id": "problem-04",
+      "text": "how to automate open banking",
+      "type": "problem-led",
+      "priority": 20
+    },
+    {
+      "id": "problem-05",
+      "text": "how to track open banking",
+      "type": "problem-led",
+      "priority": 21
+    },
+    {
+      "id": "problem-06",
+      "text": "how to organize open banking workflow",
+      "type": "problem-led",
+      "priority": 22
+    },
+    {
+      "id": "problem-07",
+      "text": "how to scale open banking operations",
+      "type": "problem-led",
+      "priority": 23
+    },
+    {
+      "id": "problem-08",
+      "text": "best way to handle open banking",
+      "type": "problem-led",
+      "priority": 24
+    },
+    {
+      "id": "problem-09",
+      "text": "what do companies use for open banking",
+      "type": "problem-led",
+      "priority": 25
+    },
+    {
+      "id": "problem-10",
+      "text": "how to streamline open banking processes",
+      "type": "problem-led",
+      "priority": 26
+    },
+    {
+      "id": "comparison-01",
+      "text": "Plaid vs MX",
+      "type": "comparison",
+      "priority": 27
+    },
+    {
+      "id": "comparison-02",
+      "text": "Plaid vs Finicity",
+      "type": "comparison",
+      "priority": 28
+    },
+    {
+      "id": "comparison-03",
+      "text": "Plaid vs TrueLayer",
+      "type": "comparison",
+      "priority": 29
+    },
+    {
+      "id": "comparison-04",
+      "text": "Plaid vs Salt Edge",
+      "type": "comparison",
+      "priority": 30
+    },
+    {
+      "id": "comparison-05",
+      "text": "MX vs Finicity",
+      "type": "comparison",
+      "priority": 31
+    },
+    {
+      "id": "comparison-06",
+      "text": "MX vs TrueLayer",
+      "type": "comparison",
+      "priority": 32
+    },
+    {
+      "id": "comparison-07",
+      "text": "MX vs Salt Edge",
+      "type": "comparison",
+      "priority": 33
+    },
+    {
+      "id": "comparison-08",
+      "text": "Finicity vs TrueLayer",
+      "type": "comparison",
+      "priority": 34
+    },
+    {
+      "id": "alternative-01",
+      "text": "Plaid alternatives",
+      "type": "alternative",
+      "priority": 35
+    },
+    {
+      "id": "alternative-02",
+      "text": "best alternative to Plaid",
+      "type": "alternative",
+      "priority": 36
+    },
+    {
+      "id": "alternative-03",
+      "text": "replace Plaid",
+      "type": "alternative",
+      "priority": 37
+    },
+    {
+      "id": "alternative-04",
+      "text": "Plaid competitors",
+      "type": "alternative",
+      "priority": 38
+    },
+    {
+      "id": "local-01",
+      "text": "best open banking platform for US companies",
+      "type": "local",
+      "priority": 39
+    },
+    {
+      "id": "local-02",
+      "text": "top open banking tools for English-speaking teams",
+      "type": "local",
+      "priority": 40
+    }
+  ]
+}

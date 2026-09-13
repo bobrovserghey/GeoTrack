@@ -1,0 +1,248 @@
+{
+  "categoryId": "erp-software",
+  "locale": "en",
+  "version": "1",
+  "generatedAt": "2026-09-13",
+  "prompts": [
+    {
+      "id": "discovery-01",
+      "text": "best erp software",
+      "type": "discovery",
+      "priority": 1
+    },
+    {
+      "id": "discovery-02",
+      "text": "top erp software tools",
+      "type": "discovery",
+      "priority": 2
+    },
+    {
+      "id": "discovery-03",
+      "text": "erp software comparison",
+      "type": "discovery",
+      "priority": 3
+    },
+    {
+      "id": "discovery-04",
+      "text": "what is erp software",
+      "type": "discovery",
+      "priority": 4
+    },
+    {
+      "id": "discovery-05",
+      "text": "how to choose erp software",
+      "type": "discovery",
+      "priority": 5
+    },
+    {
+      "id": "discovery-06",
+      "text": "erp software for small business",
+      "type": "discovery",
+      "priority": 6
+    },
+    {
+      "id": "discovery-07",
+      "text": "erp software for remote teams",
+      "type": "discovery",
+      "priority": 7
+    },
+    {
+      "id": "discovery-08",
+      "text": "erp software for startups",
+      "type": "discovery",
+      "priority": 8
+    },
+    {
+      "id": "discovery-09",
+      "text": "erp software features",
+      "type": "discovery",
+      "priority": 9
+    },
+    {
+      "id": "discovery-10",
+      "text": "erp software pricing",
+      "type": "discovery",
+      "priority": 10
+    },
+    {
+      "id": "discovery-11",
+      "text": "cloud-based erp software",
+      "type": "discovery",
+      "priority": 11
+    },
+    {
+      "id": "discovery-12",
+      "text": "erp software reviews",
+      "type": "discovery",
+      "priority": 12
+    },
+    {
+      "id": "discovery-13",
+      "text": "enterprise erp software",
+      "type": "discovery",
+      "priority": 13
+    },
+    {
+      "id": "discovery-14",
+      "text": "free erp software",
+      "type": "discovery",
+      "priority": 14
+    },
+    {
+      "id": "discovery-15",
+      "text": "erp software 2025",
+      "type": "discovery",
+      "priority": 15
+    },
+    {
+      "id": "discovery-16",
+      "text": "recommended erp software",
+      "type": "discovery",
+      "priority": 16
+    },
+    {
+      "id": "problem-01",
+      "text": "how to improve erp",
+      "type": "problem-led",
+      "priority": 17
+    },
+    {
+      "id": "problem-02",
+      "text": "best tools for erp",
+      "type": "problem-led",
+      "priority": 18
+    },
+    {
+      "id": "problem-03",
+      "text": "software to help with erp",
+      "type": "problem-led",
+      "priority": 19
+    },
+    {
+      "id": "problem-04",
+      "text": "how to automate erp",
+      "type": "problem-led",
+      "priority": 20
+    },
+    {
+      "id": "problem-05",
+      "text": "how to track erp",
+      "type": "problem-led",
+      "priority": 21
+    },
+    {
+      "id": "problem-06",
+      "text": "how to organize erp workflow",
+      "type": "problem-led",
+      "priority": 22
+    },
+    {
+      "id": "problem-07",
+      "text": "how to scale erp operations",
+      "type": "problem-led",
+      "priority": 23
+    },
+    {
+      "id": "problem-08",
+      "text": "best way to handle erp",
+      "type": "problem-led",
+      "priority": 24
+    },
+    {
+      "id": "problem-09",
+      "text": "what do companies use for erp",
+      "type": "problem-led",
+      "priority": 25
+    },
+    {
+      "id": "problem-10",
+      "text": "how to streamline erp processes",
+      "type": "problem-led",
+      "priority": 26
+    },
+    {
+      "id": "comparison-01",
+      "text": "SAP vs Oracle NetSuite",
+      "type": "comparison",
+      "priority": 27
+    },
+    {
+      "id": "comparison-02",
+      "text": "SAP vs Microsoft Dynamics 365",
+      "type": "comparison",
+      "priority": 28
+    },
+    {
+      "id": "comparison-03",
+      "text": "SAP vs Odoo",
+      "type": "comparison",
+      "priority": 29
+    },
+    {
+      "id": "comparison-04",
+      "text": "SAP vs Epicor",
+      "type": "comparison",
+      "priority": 30
+    },
+    {
+      "id": "comparison-05",
+      "text": "Oracle NetSuite vs Microsoft Dynamics 365",
+      "type": "comparison",
+      "priority": 31
+    },
+    {
+      "id": "comparison-06",
+      "text": "Oracle NetSuite vs Odoo",
+      "type": "comparison",
+      "priority": 32
+    },
+    {
+      "id": "comparison-07",
+      "text": "Oracle NetSuite vs Epicor",
+      "type": "comparison",
+      "priority": 33
+    },
+    {
+      "id": "comparison-08",
+      "text": "Microsoft Dynamics 365 vs Odoo",
+      "type": "comparison",
+      "priority": 34
+    },
+    {
+      "id": "alternative-01",
+      "text": "SAP alternatives",
+      "type": "alternative",
+      "priority": 35
+    },
+    {
+      "id": "alternative-02",
+      "text": "best alternative to SAP",
+      "type": "alternative",
+      "priority": 36
+    },
+    {
+      "id": "alternative-03",
+      "text": "replace SAP",
+      "type": "alternative",
+      "priority": 37
+    },
+    {
+      "id": "alternative-04",
+      "text": "SAP competitors",
+      "type": "alternative",
+      "priority": 38
+    },
+    {
+      "id": "local-01",
+      "text": "best erp software for US companies",
+      "type": "local",
+      "priority": 39
+    },
+    {
+      "id": "local-02",
+      "text": "top erp tools for English-speaking teams",
+      "type": "local",
+      "priority": 40
+    }
+  ]
+}
