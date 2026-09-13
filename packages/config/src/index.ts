@@ -2,9 +2,11 @@ import { createRequire } from 'module';
 import { AuditProfileSchema, AuditProfilesFileSchema } from './schemas/audit-profile.js';
 import { EngineRegistryFileSchema } from './schemas/engine-registry.js';
 import { ProviderPricesFileSchema } from './schemas/provider-prices.js';
+import { TaxonomySchema } from './schemas/taxonomy.js';
 import type { AuditProfile, AuditProfileId } from './schemas/audit-profile.js';
 import type { EngineRegistryEntry } from './schemas/engine-registry.js';
 import type { ModelPrice } from './schemas/provider-prices.js';
+import type { CategoryEntry } from './schemas/taxonomy.js';
 
 const require = createRequire(import.meta.url);
 
@@ -39,9 +41,20 @@ export function getProviderPrices(): Record<string, ModelPrice> {
   return ProviderPricesFileSchema.parse(raw).models;
 }
 
+export function getTaxonomy(): CategoryEntry[] {
+  const raw = require('./taxonomy.v1.json');
+  return TaxonomySchema.parse(raw);
+}
+
+export function getCategoryById(id: string): CategoryEntry | undefined {
+  return getTaxonomy().find((c) => c.id === id);
+}
+
 export type { AuditProfile, AuditProfileId };
 export type { EngineRegistryEntry };
 export type { ModelPrice };
+export type { CategoryEntry };
+export { CategoryEntrySchema, TaxonomySchema } from './schemas/taxonomy.js';
 export { AuditProfileSchema, AuditProfilesFileSchema };
 export { EngineRegistryEntrySchema, EngineRegistryFileSchema } from './schemas/engine-registry.js';
 export { ModelPriceSchema, ProviderPricesFileSchema } from './schemas/provider-prices.js';
