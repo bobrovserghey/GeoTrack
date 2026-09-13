@@ -1,0 +1,20 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\"competitors\":[{\"name\":\"Asana\",\"domain\":\"asana.com\",\"rationale\":\"Direct project management competitor with similar workflow automation and team collaboration features.\"},{\"name\":\"Monday.com\",\"domain\":\"monday.com\",\"rationale\":\"Work OS platform targeting the same remote engineering teams with comparable feature depth.\"},{\"name\":\"Jira\",\"domain\":\"atlassian.com\",\"rationale\":\"Leading issue tracker and project management tool widely used by software engineering teams.\"}]}"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP"
+    }
+  ],
+  "usage_metadata": {
+    "prompt_token_count": 892,
+    "candidates_token_count": 74,
+    "total_token_count": 966
+  }
+}

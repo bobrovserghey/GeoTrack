@@ -8,6 +8,7 @@
     "./net/safe-fetch": "./src/net/safe-fetch.ts",
     "./steps/passport": "./src/steps/passport.ts",
     "./steps/category-detect": "./src/steps/category-detect.ts",
+    "./steps/competitor-detect": "./src/steps/competitor-detect.ts",
     "./contracts/model": "./src/contracts/model.ts"
   },
   "scripts": {
