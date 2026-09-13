@@ -9,7 +9,9 @@
     "./steps/passport": "./src/steps/passport.ts",
     "./steps/category-detect": "./src/steps/category-detect.ts",
     "./steps/competitor-detect": "./src/steps/competitor-detect.ts",
-    "./contracts/model": "./src/contracts/model.ts"
+    "./contracts/model": "./src/contracts/model.ts",
+    "./checks/robots": "./src/checks/robots.ts",
+    "./steps/tech-check": "./src/steps/tech-check.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

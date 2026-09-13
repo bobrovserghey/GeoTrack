@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JS-Only Page Test Fixture</title>
+</head>
+<body>
+  <!-- Raw HTML has no visible content; all content rendered by JS -->
+  <div id="app"></div>
+  <script>
+    document.getElementById('app').innerHTML =
+      '<h1>Welcome to Example</h1>' +
+      '<p>This is the main content rendered by JavaScript.</p>' +
+      '<p>Without JavaScript, this page appears empty.</p>';
+  </script>
+</body>
+</html>

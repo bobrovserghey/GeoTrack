@@ -17,3 +17,7 @@ export type { CategoryEntry } from '@geotrack/config';
 export type { ModelAdapter, GenerateOptions, ModelAnswer } from './contracts/model.js';
 export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, PROFILE_QUOTAS, BUNDLED_PROMPT_TYPES } from '@geotrack/config';
 export type { PromptBundle, BundledPromptEntry, ProfileId } from '@geotrack/config';
+export { AI_BOTS, parseRobotsPermissions } from './checks/robots.js';
+export type { BotName, BotPermission, RobotsPermissions } from './checks/robots.js';
+export { TechCheckFactsSchema } from './steps/tech-check.js';
+export type { TechCheckFacts, B1Facts, B2Facts, B3Facts, B4Facts, B5Facts, B6Facts } from './steps/tech-check.js';
