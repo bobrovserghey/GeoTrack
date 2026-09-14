@@ -21,3 +21,7 @@ export { AI_BOTS, parseRobotsPermissions } from './checks/robots.js';
 export type { BotName, BotPermission, RobotsPermissions } from './checks/robots.js';
 export { TechCheckFactsSchema } from './steps/tech-check.js';
 export type { TechCheckFacts, B1Facts, B2Facts, B3Facts, B4Facts, B5Facts, B6Facts } from './steps/tech-check.js';
+export { scorePillarB } from './scoring/pillar-b.js';
+export type { PillarBResult, CriterionScore } from './scoring/pillar-b.js';
+export { getMethodology } from '@geotrack/config';
+export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig } from '@geotrack/config';
