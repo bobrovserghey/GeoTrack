@@ -10,6 +10,7 @@
   "dependencies": {
     "@geotrack/core": "workspace:*",
     "@geotrack/db": "workspace:*",
+    "drizzle-orm": "^0.36.0",
     "inngest": "^3.29.0",
     "playwright": "^1.63.0"
   },
