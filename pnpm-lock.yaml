@@ -63,6 +63,9 @@ importers:
       '@geotrack/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@geotrack/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       inngest:
         specifier: ^3.29.0
         version: 3.54.2(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(next@15.5.25(@opentelemetry/api@1.9.1)(@types/node@22.20.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(supports-color@7.2.0)(typescript@5.9.3)(zod@3.25.76)
