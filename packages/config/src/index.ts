@@ -13,7 +13,7 @@ import type { EngineRegistryEntry } from './schemas/engine-registry.js';
 import type { ModelPrice } from './schemas/provider-prices.js';
 import type { CategoryEntry } from './schemas/taxonomy.js';
 import type { PromptSet, Locale } from './schemas/prompt-set.js';
-import type { Methodology, BlockerConfig, PillarConfig, CriterionConfig } from './schemas/methodology.js';
+import type { Methodology } from './schemas/methodology.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
