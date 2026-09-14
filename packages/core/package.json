@@ -13,7 +13,8 @@
     "./checks/robots": "./src/checks/robots.ts",
     "./steps/tech-check": "./src/steps/tech-check.ts",
     "./scoring/pillar-b": "./src/scoring/pillar-b.ts",
-    "./steps/engine-poll": "./src/steps/engine-poll.ts"
+    "./steps/engine-poll": "./src/steps/engine-poll.ts",
+    "./steps/extract-mentions": "./src/steps/extract-mentions.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
