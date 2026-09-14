@@ -25,3 +25,6 @@ export { scorePillarB } from './scoring/pillar-b.js';
 export type { PillarBResult, CriterionScore } from './scoring/pillar-b.js';
 export { getMethodology } from '@geotrack/config';
 export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig } from '@geotrack/config';
+export type { EngineRegistryEntry } from '@geotrack/config';
+export { getEngineRegistry } from '@geotrack/config';
+export type { EnginePollInput, EnginePollOutput, EnginePollResponse } from './steps/engine-poll.js';
