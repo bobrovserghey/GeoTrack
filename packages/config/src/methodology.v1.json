@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "pillars": {
+    "A": {
+      "weight": 0.40,
+      "criteria": {
+        "a1": { "id": "a1", "maxScore": 20 },
+        "a2": { "id": "a2", "maxScore": 15 },
+        "a3": { "id": "a3", "maxScore": 15 },
+        "a4": { "id": "a4", "maxScore": 20 },
+        "a5": { "id": "a5", "maxScore": 15 },
+        "a6": { "id": "a6", "maxScore": 15 }
+      }
+    },
+    "B": {
+      "weight": 0.20,
+      "criteria": {
+        "b1": { "id": "b1", "maxScore": 20 },
+        "b2": { "id": "b2", "maxScore": 25 },
+        "b3": { "id": "b3", "maxScore": 15 },
+        "b4": { "id": "b4", "maxScore": 15 },
+        "b5": { "id": "b5", "maxScore": 15 },
+        "b6": { "id": "b6", "maxScore": 10 }
+      }
+    },
+    "C": {
+      "weight": 0.15,
+      "criteria": {
+        "c1": { "id": "c1", "maxScore": 20 },
+        "c2": { "id": "c2", "maxScore": 20 },
+        "c3": { "id": "c3", "maxScore": 15 },
+        "c4": { "id": "c4", "maxScore": 15 },
+        "c5": { "id": "c5", "maxScore": 15 },
+        "c6": { "id": "c6", "maxScore": 15 }
+      }
+    },
+    "D": {
+      "weight": 0.10,
+      "criteria": {
+        "d1": { "id": "d1", "maxScore": 35 },
+        "d2": { "id": "d2", "maxScore": 35 },
+        "d4": { "id": "d4", "maxScore": 30 }
+      }
+    },
+    "E": {
+      "weight": 0.15,
+      "criteria": {
+        "e1": { "id": "e1", "maxScore": 30 },
+        "e2": { "id": "e2", "maxScore": 20 },
+        "e3": { "id": "e3", "maxScore": 15 },
+        "e4": { "id": "e4", "maxScore": 20 },
+        "e5": { "id": "e5", "maxScore": 15 }
+      }
+    }
+  },
+  "blockers": [
+    {
+      "id": "b1_all_bots_robots_blocked",
+      "pillar": "B",
+      "dependsOn": ["b1"],
+      "label": "All AI bots blocked in robots.txt"
+    },
+    {
+      "id": "b2_all_bots_http_blocked",
+      "pillar": "B",
+      "dependsOn": ["b2"],
+      "label": "All AI bots HTTP-blocked by server / CDN"
+    },
+    {
+      "id": "b3_no_static_content",
+      "pillar": "B",
+      "dependsOn": ["b3"],
+      "label": "Content is JavaScript-only (no static text)"
+    },
+    {
+      "id": "b4_no_pages_indexed",
+      "pillar": "B",
+      "dependsOn": ["b4"],
+      "label": "No pages found in Bing index"
+    }
+  ],
+  "bands": [
+    { "min": 0,  "max": 30,  "label": "critical"   },
+    { "min": 31, "max": 50,  "label": "poor"        },
+    { "min": 51, "max": 70,  "label": "fair"        },
+    { "min": 71, "max": 85,  "label": "good"        },
+    { "min": 86, "max": 100, "label": "excellent"   }
+  ],
+  "interval": {
+    "hRepFallback": 0.3,
+    "hCovFactor": 0.5,
+    "hRepFactor": 0.3
+  }
+}

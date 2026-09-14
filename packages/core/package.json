@@ -11,7 +11,8 @@
     "./steps/competitor-detect": "./src/steps/competitor-detect.ts",
     "./contracts/model": "./src/contracts/model.ts",
     "./checks/robots": "./src/checks/robots.ts",
-    "./steps/tech-check": "./src/steps/tech-check.ts"
+    "./steps/tech-check": "./src/steps/tech-check.ts",
+    "./scoring/pillar-b": "./src/scoring/pillar-b.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

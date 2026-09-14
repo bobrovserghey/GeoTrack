@@ -7,11 +7,13 @@ import { EngineRegistryFileSchema } from './schemas/engine-registry.js';
 import { ProviderPricesFileSchema } from './schemas/provider-prices.js';
 import { TaxonomySchema } from './schemas/taxonomy.js';
 import { PromptSetSchema } from './schemas/prompt-set.js';
+import { MethodologySchema } from './schemas/methodology.js';
 import type { AuditProfile, AuditProfileId } from './schemas/audit-profile.js';
 import type { EngineRegistryEntry } from './schemas/engine-registry.js';
 import type { ModelPrice } from './schemas/provider-prices.js';
 import type { CategoryEntry } from './schemas/taxonomy.js';
 import type { PromptSet, Locale } from './schemas/prompt-set.js';
+import type { Methodology, BlockerConfig, PillarConfig, CriterionConfig } from './schemas/methodology.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -41,6 +43,11 @@ export function getAuditProfile(id: AuditProfileId | string): AuditProfile {
 export function getEngineRegistry(): EngineRegistryEntry[] {
   const file = loadEnginesFile();
   return file.engines;
+}
+
+export function getMethodology(): Methodology {
+  const raw = require('./methodology.v1.json');
+  return MethodologySchema.parse(raw);
 }
 
 export function getProviderPrices(): Record<string, ModelPrice> {
@@ -77,3 +84,5 @@ export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, PROFILE_QUOT
 export type { PromptBundle, BundledPromptEntry, ProfileId } from './schemas/prompt-bundle.js';
 export { EngineRegistryEntrySchema, EngineRegistryFileSchema } from './schemas/engine-registry.js';
 export { ModelPriceSchema, ProviderPricesFileSchema } from './schemas/provider-prices.js';
+export { MethodologySchema } from './schemas/methodology.js';
+export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig, BandConfig, IntervalConfig } from './schemas/methodology.js';
