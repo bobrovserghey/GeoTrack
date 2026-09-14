@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { pollEngines } from '../steps/engine-poll.js';
 import type { EnginePollInput } from '@geotrack/core';
 import type { EngineAdapter, EngineAnswer, EngineRegistryEntry, UsageRecord, Budget } from '@geotrack/core';
