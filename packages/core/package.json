@@ -12,7 +12,8 @@
     "./contracts/model": "./src/contracts/model.ts",
     "./checks/robots": "./src/checks/robots.ts",
     "./steps/tech-check": "./src/steps/tech-check.ts",
-    "./scoring/pillar-b": "./src/scoring/pillar-b.ts"
+    "./scoring/pillar-b": "./src/scoring/pillar-b.ts",
+    "./steps/engine-poll": "./src/steps/engine-poll.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
