@@ -13,10 +13,12 @@ const now = () => timestamp('created_at', { withTimezone: true }).notNull().defa
 
 export const categoryCache = pgTable('category_cache', {
   id: uuid('id').primaryKey().defaultRandom(),
-  categorySlug: varchar('category_slug', { length: 128 }).notNull(),
-  promptType: varchar('prompt_type', { length: 32 }).notNull(),
+  categoryId: varchar('category_id', { length: 128 }).notNull(),
+  locale: varchar('locale', { length: 8 }).notNull(),
+  promptSetVersion: integer('prompt_set_version').notNull(),
+  promptId: varchar('prompt_id', { length: 128 }).notNull(),
   engine: varchar('engine', { length: 32 }).notNull(),
-  promptHash: varchar('prompt_hash', { length: 64 }).notNull(),
+  repeatIndex: integer('repeat_index').notNull().default(0),
   responseText: text('response_text').notNull(),
   sources: jsonb('sources').notNull().default([]),
   usageTokensIn: integer('usage_tokens_in').notNull().default(0),
@@ -24,5 +26,7 @@ export const categoryCache = pgTable('category_cache', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: now(),
 }, (t) => [
-  unique('category_cache_key').on(t.categorySlug, t.promptHash, t.engine),
+  unique('category_cache_key').on(
+    t.categoryId, t.locale, t.promptSetVersion, t.promptId, t.engine, t.repeatIndex,
+  ),
 ]);
