@@ -348,8 +348,8 @@ export default function HomePage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, minWidth: 600 }}>
               <thead>
                 <tr style={{ background: 'var(--bg-subtle)' }}>
-                  {['#', 'Brand', 'Mentions', 'Citations', 'Avg position', 'Sentiment'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '12px 16px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{h}</th>
+                  {['#', 'Brand', 'Mentions', 'Citations', 'Avg position', 'Sentiment'].map((h, i) => (
+                    <th key={h} style={{ textAlign: i < 2 ? 'left' : 'center', padding: '12px 16px', color: 'var(--text-tertiary)', fontWeight: 500 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -369,17 +369,17 @@ export default function HomePage() {
                         {name}
                       </div>
                     </td>
-                    <td style={{ padding: '14px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <td style={{ padding: '14px 16px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 60, height: 6, background: 'var(--bg-subtle)', borderRadius: 'var(--radius-full)', flexShrink: 0 }}>
                           <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent-default)', borderRadius: 'var(--radius-full)' }} />
                         </div>
                         <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{pct}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{citations}</td>
-                    <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>{pos}</td>
-                    <td style={{ padding: '14px 16px', color: 'var(--text-tertiary)', fontWeight: 600 }}>{sentiment}</td>
+                    <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', textAlign: 'center' }}>{citations}</td>
+                    <td style={{ padding: '14px 16px', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', textAlign: 'center' }}>{pos}</td>
+                    <td style={{ padding: '14px 16px', color: 'var(--text-tertiary)', fontWeight: 600, textAlign: 'center' }}>{sentiment}</td>
                   </tr>
                 ))}
               </tbody>
