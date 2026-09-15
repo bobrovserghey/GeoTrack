@@ -1,5 +1,7 @@
+import './globals.css';
+
 export const metadata = {
-  title: 'GeoTrack',
+  title: 'Geotrack',
   description: 'AI visibility audit for your business',
 };
 
