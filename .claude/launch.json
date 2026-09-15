@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "geotrack-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["pnpm", "--filter", "geotrack-web", "dev"],
+      "port": 3000
+    }
+  ]
+}
