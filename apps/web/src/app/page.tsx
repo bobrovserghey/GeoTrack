@@ -115,8 +115,8 @@ export default function HomePage() {
             <Turnstile
               siteKey={siteKey}
               onSuccess={setTurnstileToken}
-              options={{ theme: 'auto', size: 'normal' }}
-              style={{ alignSelf: 'center' }}
+              options={{ theme: 'auto', size: 'invisible' }}
+              style={{ display: 'none' }}
             />
 
             {error && (
