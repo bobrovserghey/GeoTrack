@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "geotrack-web",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["pnpm", "--filter", "geotrack-web", "dev"],
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "geotrack-web", "dev"],
       "port": 3000
     }
   ]
