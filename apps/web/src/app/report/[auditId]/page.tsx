@@ -148,7 +148,7 @@ const DEMO_PROPS: ReportContentProps = {
 
 // ---- server component -------------------------------------------------------
 
-const READY_STATUSES = new Set(['completed', 'in_review', 'delivered']);
+const READY_STATUSES = new Set(['completed', 'in_review', 'delivered', 'waiting_email']);
 
 export default async function ReportPage({
   params,
@@ -172,7 +172,7 @@ export default async function ReportPage({
   }
 
   // --- audit ---
-  let audit: { id: string; domain: string; url: string; status: string } | undefined;
+  let audit: { id: string; domain: string; url: string; status: string; emailNormalized: string | null } | undefined;
   try {
     const rows = await db.select().from(audits).where(eq(audits.id, auditId)).limit(1);
     audit = rows[0];
@@ -297,6 +297,9 @@ export default async function ReportPage({
   const uniqueEngines = new Set(engineRunRows.map((r) => r.engine));
   const engineCount = uniqueEngines.size || 1;
 
+  const emailCaptured = Boolean(audit.emailNormalized);
+  const showEmailGate = audit.status === 'waiting_email' && !emailCaptured;
+
   // --- props ---
   const props: ReportContentProps = {
     domain: audit.domain,
@@ -309,6 +312,10 @@ export default async function ReportPage({
     citation,
     lockedFindings,
     lockedFindingsCost,
+    emailCaptured,
+    showEmailGate,
+    auditId,
+    progressToken: pt ?? null,
   };
 
   return <ReportContent {...props} />;

@@ -32,3 +32,4 @@ export type { EngineRegistryEntry } from '@geotrack/config';
 export { getEngineRegistry } from '@geotrack/config';
 export type { EnginePollInput, EnginePollOutput, EnginePollResponse } from './steps/engine-poll.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
+export { normalizeEmail } from './email.js';

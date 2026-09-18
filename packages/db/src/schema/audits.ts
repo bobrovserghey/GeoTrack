@@ -32,9 +32,15 @@ export const auditStatusEnum = pgEnum('audit_status', [
 
 export const auditTypeEnum = pgEnum('audit_type', ['teaser', 'standard', 'extended']);
 
+export const authProviderEnum = pgEnum('auth_provider', ['magic_link', 'google', 'microsoft']);
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 254 }).notNull().unique(),
+  emailNormalized: varchar('email_normalized', { length: 254 }),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  authProvider: authProviderEnum('auth_provider'),
   createdAt: now(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
@@ -44,6 +50,7 @@ export const audits = pgTable('audits', {
   userId: uuid('user_id').references(() => users.id),
   domain: varchar('domain', { length: 253 }).notNull(),
   url: text('url').notNull(),
+  emailNormalized: varchar('email_normalized', { length: 254 }),
   status: auditStatusEnum('status').notNull().default('queued'),
   auditType: auditTypeEnum('audit_type').notNull().default('teaser'),
   profileId: varchar('profile_id', { length: 64 }).notNull(),

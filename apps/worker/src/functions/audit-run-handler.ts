@@ -1,6 +1,7 @@
 import { transition, type AuditStatus } from '@geotrack/core';
 import { crawlStub } from '../steps/crawl-stub.js';
 import { enginePollStub } from '../steps/engine-poll-stub.js';
+import { brandPromptsStub } from '../steps/brand-prompts-stub.js';
 
 export type AuditEventPayload = Record<string, unknown>;
 
@@ -78,7 +79,7 @@ export async function auditRunHandler(
     });
   }
 
-  // 4. Stub step: engine poll
+  // 4. Stub step: initial engine poll (general visibility — before email gate)
   await step.run('engine-poll.stub', async () => {
     await deps.insertAuditEvent(auditId, 'step.started', { step: 'engine-poll.stub' });
     const result = await enginePollStub(auditId);
@@ -90,14 +91,56 @@ export async function auditRunHandler(
     return result;
   });
 
-  // 5. running → completed
+  // 5. running → waiting_email (teaser result is visible; wait for email before brand prompts)
+  await step.run('status.waiting-email', async () => {
+    const next = transition('running', 'waiting_for_email');
+    await deps.updateAuditStatus(auditId, next);
+    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
+  });
+
+  const emailEvent = await step.waitForEvent('wait-email', {
+    event: 'geotrack/audit.email.provided',
+    match: 'data.auditId',
+    timeout: '7d',
+  });
+
+  if (!emailEvent) {
+    // 7-day timeout — complete without brand prompts
+    await step.run('status.completed-email-timeout', async () => {
+      const next = transition('waiting_email', 'email_timeout', { isPaid });
+      await deps.updateAuditStatus(auditId, next);
+      await deps.insertAuditEvent(auditId, 'status.changed', { to: next, emailTimeout: true });
+    });
+    return;
+  }
+
+  // 6. waiting_email → running (email provided, continue with brand prompts)
+  await step.run('status.running-after-email', async () => {
+    const next = transition('waiting_email', 'email_provided');
+    await deps.updateAuditStatus(auditId, next);
+    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
+  });
+
+  // 7. Stub step: brand prompts (expensive; runs only after email is captured)
+  await step.run('brand-prompts.stub', async () => {
+    await deps.insertAuditEvent(auditId, 'step.started', { step: 'brand-prompts.stub' });
+    const result = await brandPromptsStub(auditId);
+    await deps.insertAuditEvent(auditId, 'step.completed', {
+      step: 'brand-prompts.stub',
+      status: result.status,
+      data: result.data,
+    });
+    return result;
+  });
+
+  // 8. running → completed
   await step.run('status.completed', async () => {
     const next = transition('running', 'steps_completed', { isPaid });
     await deps.updateAuditStatus(auditId, next);
     await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
   });
 
-  // 6. completed → in_review (paid audits only)
+  // 9. completed → in_review (paid audits only)
   if (isPaid) {
     await step.run('status.in-review', async () => {
       const next = transition('completed', 'sent_to_review', { isPaid: true });

@@ -15,6 +15,7 @@ describe('Drizzle/Zod schema alignment', () => {
       userId: null,
       domain: 'example.com',
       url: 'https://example.com',
+      emailNormalized: null,
       status: 'queued' as const,
       auditType: 'teaser' as const,
       profileId: 'teaser',
@@ -64,6 +65,10 @@ describe('Drizzle/Zod schema alignment', () => {
     const row = {
       id: '22222222-2222-2222-2222-222222222222',
       email: 'test@example.com',
+      emailNormalized: null,
+      emailVerified: false,
+      verifiedAt: null,
+      authProvider: null,
       createdAt: new Date(),
       deletedAt: null,
     };

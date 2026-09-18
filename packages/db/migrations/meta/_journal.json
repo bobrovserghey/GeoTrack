@@ -16,5 +16,12 @@
       "tag": "0001_category_cache_v2",
       "breakpoints": true
     }
+    ,{
+      "idx": 2,
+      "version": "7",
+      "when": 1758240000000,
+      "tag": "0002_email_gate",
+      "breakpoints": true
+    }
   ]
 }
