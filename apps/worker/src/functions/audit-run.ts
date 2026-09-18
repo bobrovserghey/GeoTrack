@@ -23,5 +23,6 @@ export const auditRun = inngest.createFunction(
       (event.data as { auditId: string }).auditId,
       step as unknown as StepTools,
       deps,
+      (event.data as { categoryHint?: string }).categoryHint,
     ),
 );

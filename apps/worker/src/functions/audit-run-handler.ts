@@ -23,6 +23,7 @@ export async function auditRunHandler(
   auditId: string,
   step: StepTools,
   deps: AuditRunDeps,
+  categoryHint?: string,
 ): Promise<void> {
   const isPaid = await deps.getAuditIsPaid(auditId);
 
@@ -45,30 +46,37 @@ export async function auditRunHandler(
     return result;
   });
 
-  // 3. running → waiting_category, wait for user (10m timeout → auto-select)
-  await step.run('status.waiting-category', async () => {
-    const next = transition('running', 'waiting_for_category');
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-  });
-
-  const categoryEvent = await step.waitForEvent('wait-category', {
-    event: 'geotrack/audit.category.selected',
-    match: 'data.auditId',
-    timeout: '10m',
-  });
-
-  // waiting_category → running (whether user selected or auto-selected on timeout)
-  await step.run('status.running-after-category', async () => {
-    const autoSelected = !categoryEvent;
-    const next = transition('waiting_category', 'category_selected');
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', {
-      to: next,
-      autoSelected,
-      categoryId: categoryEvent?.data?.categoryId ?? null,
+  if (categoryHint) {
+    // Category was provided from landing page — skip waiting_category entirely
+    await step.run('category.preset', async () => {
+      await deps.insertAuditEvent(auditId, 'category.preset', { categoryHint });
     });
-  });
+  } else {
+    // 3. running → waiting_category, wait for user (10m timeout → auto-select)
+    await step.run('status.waiting-category', async () => {
+      const next = transition('running', 'waiting_for_category');
+      await deps.updateAuditStatus(auditId, next);
+      await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
+    });
+
+    const categoryEvent = await step.waitForEvent('wait-category', {
+      event: 'geotrack/audit.category.selected',
+      match: 'data.auditId',
+      timeout: '10m',
+    });
+
+    // waiting_category → running (whether user selected or auto-selected on timeout)
+    await step.run('status.running-after-category', async () => {
+      const autoSelected = !categoryEvent;
+      const next = transition('waiting_category', 'category_selected');
+      await deps.updateAuditStatus(auditId, next);
+      await deps.insertAuditEvent(auditId, 'status.changed', {
+        to: next,
+        autoSelected,
+        categoryId: categoryEvent?.data?.categoryId ?? null,
+      });
+    });
+  }
 
   // 4. Stub step: engine poll
   await step.run('engine-poll.stub', async () => {
