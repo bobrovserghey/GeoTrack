@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOGO_DATA_URI } from '@/lib/logo-data-uri';
 
 // ---- types ------------------------------------------------------------------
 
@@ -18,8 +19,6 @@ type Candidate = { id: string; slug: string; name: string; confidence: number };
 
 const READY_STATUSES = new Set(['completed', 'in_review', 'delivered']);
 
-const LOGO_SVG =
-  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTg1IiBoZWlnaHQ9IjI5IiB2aWV3Qm94PSIwIDAgMTg1IDI5IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOmMycGE9Imh0dHA6Ly9jMnBhLm9yZy9tYW5pZmVzdCI+PG1ldGFkYXRhPjxjMnBhOm1hbmlmZXN0PkFBQVdnbXAxYldJQUFBQWVhblZ0WkdNeWNHRUFFUUFRZ0FBQXFnQTRtM0VEWXpKd1lRQUFBQlpjYW5WdFlnQUFBRWRxZFcxa1l6SnRZUUFSQUJDQUFBQ3FBRGliY1FOMWNtNDZZekp3WVRwbVlqaGtZMkV5Tmkwd09EaGtMVFE0WWpZdE9HUTNZUzB3WVRVNFkyVmtZMk5rTldZQUFBQURsMnAxYldJQUFBQXBhblZ0WkdNeVlYTUFFUUFRZ0FBQXFnQTRtM0VEWXpKd1lTNWhjM05sY25ScGIyNXpBQUFBQUx4cWRXMWlBQUFBUkdwMWJXUmpZbTl5QUJFQUVJQUFBS29BT0p0eEUyTXljR0V1YVc1bmNtVmthV1Z1ZEM1Mk13QUFBQUFZWXpKemFDOTZKcjI1NmxQMGROZDZFVXhPL0o4QUFBQndZMkp2Y3FOcFpHTTZabTl5YldGMGJXbHRZV2RsTDNOMlp5dDRiV3hxYVc1emRHRnVZMlZKUkhnc2VHMXdPbWxwWkRveU1qWTRZbUl6T1MwM05EUTVMVFJqWVRBdE9EVXhaUzAxT0ROaU9XRTROakU1TVRSc2NtVnNZWFJwYjI1emFHbHdhSEJoY21WdWRFOW1BQUFCNGl...';
 
 const PILLARS = [
   {
@@ -314,7 +313,7 @@ export default function AuditProgress({
       {/* NAV */}
       <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-subtle)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '16px clamp(16px, 4vw, 24px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <img src={LOGO_SVG} alt="Geotrack" style={{ height: 22, width: 'auto' }} />
+          <img src={LOGO_DATA_URI} alt="Geotrack" style={{ height: 22, width: 'auto' }} />
           <div style={{ display: 'flex', gap: 2, background: 'var(--bg-subtle)', borderRadius: 'var(--radius-full)', padding: 2 }}>
             <span style={{ fontFamily: 'var(--font-ui)', background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 'var(--radius-full)' }}>EN</span>
             <span style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 'var(--radius-full)' }}>RO</span>
