@@ -160,3 +160,51 @@ describe('auditRunHandler — step call order', () => {
     expect(waitCalls[0]?.[1]).toMatchObject({ timeout: '10m' });
   });
 });
+
+describe('auditRunHandler — categoryHint preset (from landing page)', () => {
+  let deps: ReturnType<typeof makeMockDeps>;
+  let step: StepTools;
+
+  beforeEach(async () => {
+    deps = makeMockDeps();
+    step = makeMockStep(null);
+    await auditRunHandler('audit-hint-1', step, deps, 'saas.crm');
+  });
+
+  it('never transitions to waiting_category', () => {
+    expect(deps.statusHistory).not.toContain('waiting_category');
+  });
+
+  it('never calls waitForEvent', () => {
+    const waitCalls = (step.waitForEvent as ReturnType<typeof vi.fn>).mock.calls;
+    expect(waitCalls).toHaveLength(0);
+  });
+
+  it('calls step.run with category.preset instead of waiting-category steps', () => {
+    const runCalls = (step.run as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0] as string);
+    expect(runCalls).toEqual([
+      'status.running',
+      'crawl.stub',
+      'category.preset',
+      'engine-poll.stub',
+      'status.completed',
+    ]);
+  });
+
+  it('records category.preset event with categoryHint', () => {
+    const presetEvent = deps.eventHistory.find(e => e.eventType === 'category.preset');
+    expect(presetEvent).toBeDefined();
+    expect(presetEvent?.payload['categoryHint']).toBe('saas.crm');
+  });
+
+  it('transitions to completed', () => {
+    expect(deps.statusHistory.at(-1)).toBe('completed');
+  });
+
+  it('status order: running → completed (no category wait)', () => {
+    const statusEvents = deps.eventHistory
+      .filter(e => e.eventType === 'status.changed')
+      .map(e => e.payload['to']);
+    expect(statusEvents).toEqual(['running', 'completed']);
+  });
+});

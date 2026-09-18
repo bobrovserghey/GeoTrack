@@ -15,6 +15,8 @@ const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '1x000000000000000
 
 export default function HomePage() {
   const [url, setUrl] = useState('');
+  const [category, setCategory] = useState('');
+  const [competitors, setCompetitors] = useState('');
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -31,15 +33,21 @@ export default function HomePage() {
       const res = await fetch('/api/audits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalizedUrl, turnstileToken }),
+        body: JSON.stringify({
+          url: normalizedUrl,
+          turnstileToken,
+          ...(category.trim() ? { category: category.trim() } : {}),
+          ...(competitors.trim() ? { competitors: competitors.trim() } : {}),
+        }),
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         setError(data.error ?? 'Something went wrong');
         return;
       }
-      const data = (await res.json()) as { auditId: string };
-      window.location.href = `/report/${data.auditId}`;
+      const data = (await res.json()) as { auditId: string; progressToken?: string };
+      const pt = data.progressToken ? `?pt=${encodeURIComponent(data.progressToken)}` : '';
+      window.location.href = `/report/${data.auditId}${pt}`;
     } catch {
       setError('Network error — please try again');
     } finally {
@@ -135,6 +143,8 @@ export default function HomePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)' }}>Category (optional)</label>
                   <input
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
                     placeholder="e.g. project management software"
                     style={{ height: 38, boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 5, padding: '0 12px', fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--text-primary)', background: 'var(--bg-surface)', outline: 'none' }}
                   />
@@ -142,6 +152,8 @@ export default function HomePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)' }}>Competitors (optional, comma-separated)</label>
                   <input
+                    value={competitors}
+                    onChange={(e) => setCompetitors(e.target.value)}
                     placeholder="e.g. competitor.com, another.io"
                     style={{ height: 38, boxSizing: 'border-box', border: '1px solid var(--border-default)', borderRadius: 5, padding: '0 12px', fontFamily: 'var(--font-ui)', fontSize: 14, color: 'var(--text-primary)', background: 'var(--bg-surface)', outline: 'none' }}
                   />

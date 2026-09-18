@@ -19,6 +19,7 @@ import ReportContent, {
   type TechCheckItem,
   type MentionedBrand,
 } from './report-content';
+import AuditProgress from './audit-progress';
 
 // ---- pillar display config --------------------------------------------------
 
@@ -52,20 +53,6 @@ function engineName(engine: string): string {
   }
 }
 
-// ---- processing page --------------------------------------------------------
-
-function ProcessingPage({ domain }: { domain: string }) {
-  return (
-    <div style={{ fontFamily: 'var(--font-ui)', background: 'var(--bg-app)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '0 clamp(16px, 4vw, 24px)' }}>
-      <div style={{ fontSize: 32, animation: 'spin 1.5s linear infinite' }}>⟳</div>
-      <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)' }}>Your audit is running</div>
-      <div style={{ fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 400 }}>
-        We&rsquo;re analysing <strong>{domain}</strong>. This usually takes a few minutes. Refresh the page to check the status.
-      </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
-}
 
 // ---- demo data (shown when DATABASE_URL is not configured) ------------------
 
@@ -163,8 +150,15 @@ const DEMO_PROPS: ReportContentProps = {
 
 const READY_STATUSES = new Set(['completed', 'in_review', 'delivered']);
 
-export default async function ReportPage({ params }: { params: Promise<{ auditId: string }> }) {
+export default async function ReportPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ auditId: string }>;
+  searchParams: Promise<{ pt?: string }>;
+}) {
   const { auditId } = await params;
+  const { pt } = await searchParams;
 
   if (!process.env.DATABASE_URL) {
     return <ReportContent {...DEMO_PROPS} />;
@@ -188,7 +182,13 @@ export default async function ReportPage({ params }: { params: Promise<{ auditId
   if (!audit) notFound();
 
   if (!READY_STATUSES.has(audit.status)) {
-    return <ProcessingPage domain={audit.domain} />;
+    return (
+      <AuditProgress
+        domain={audit.domain}
+        auditId={auditId}
+        progressToken={pt ?? null}
+      />
+    );
   }
 
   // --- scores ---

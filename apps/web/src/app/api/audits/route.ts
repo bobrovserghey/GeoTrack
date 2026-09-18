@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Inngest } from 'inngest';
 import { createClient } from '@geotrack/db/client';
-import { audits } from '@geotrack/db/schema';
-import { normalizeDomain } from '@geotrack/core';
+import { audits, reportTokens } from '@geotrack/db';
+import { normalizeDomain, generateProgressToken } from '@geotrack/core';
 import { getAuditProfile, getMethodology } from '@geotrack/config';
 
 const inngest = new Inngest({
@@ -23,8 +23,13 @@ async function verifyTurnstile(token: string): Promise<boolean> {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { url?: string; turnstileToken?: string };
-  const { url: rawUrl, turnstileToken } = body;
+  const body = (await request.json()) as {
+    url?: string;
+    turnstileToken?: string;
+    category?: string;
+    competitors?: string;
+  };
+  const { url: rawUrl, turnstileToken, category, competitors } = body;
 
   if (!rawUrl) {
     return NextResponse.json({ error: 'url required' }, { status: 422 });
@@ -66,7 +71,28 @@ export async function POST(request: Request) {
     })
     .returning({ id: audits.id });
 
-  await inngest.send({ name: 'geotrack/audit.queued', data: { auditId: audit.id } });
+  const { token: progressToken, hash } = generateProgressToken();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  return NextResponse.json({ auditId: audit.id }, { status: 201 });
+  await db.insert(reportTokens).values({
+    auditId: audit.id,
+    tokenHash: hash,
+    tokenType: 'progress',
+    expiresAt,
+  });
+
+  const competitorsList = competitors
+    ? competitors.split(',').map((c) => c.trim()).filter(Boolean)
+    : [];
+
+  await inngest.send({
+    name: 'geotrack/audit.queued',
+    data: {
+      auditId: audit.id,
+      ...(category?.trim() ? { categoryHint: category.trim() } : {}),
+      ...(competitorsList.length > 0 ? { competitors: competitorsList } : {}),
+    },
+  });
+
+  return NextResponse.json({ auditId: audit.id, progressToken }, { status: 201 });
 }
