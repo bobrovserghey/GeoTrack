@@ -29,6 +29,21 @@ describe('calcCallCost', () => {
     expect(cost).toBeCloseTo(1.40, 6);
   });
 
+  it('gemini flash: 1 grounding call within free quota = $0.00', () => {
+    const cost = calcCallCost('gemini', 'gemini-2.0-flash', 0, 0, { groundingCalls: 1, freeGroundingCalls: 1 });
+    expect(cost).toBe(0);
+  });
+
+  it('gemini flash: 100 grounding calls where 40 free = $0.84 (60 paid)', () => {
+    const cost = calcCallCost('gemini', 'gemini-2.0-flash', 0, 0, { groundingCalls: 100, freeGroundingCalls: 40 });
+    expect(cost).toBeCloseTo(0.84, 6);
+  });
+
+  it('gemini flash: freeGroundingCalls capped at groundingCalls — never negative cost', () => {
+    const cost = calcCallCost('gemini', 'gemini-2.0-flash', 0, 0, { groundingCalls: 5, freeGroundingCalls: 1000 });
+    expect(cost).toBe(0);
+  });
+
   it('serpapi: 10 requests = $0.15', () => {
     const cost = calcCallCost('serpapi', 'web_search', 0, 0, { requestCount: 10 });
     expect(cost).toBeCloseTo(0.15, 6);

@@ -3,6 +3,7 @@ import { getProviderPrices } from '@geotrack/config';
 export type CalcOptions = {
   webSearchCalls?: number;
   groundingCalls?: number;
+  freeGroundingCalls?: number;
   requestCount?: number;
 };
 
@@ -25,8 +26,10 @@ export function calcCallCost(
     cost += (options.requestCount / 1000) * price.requestPer1k;
   if (price.webSearchCallPer1k !== undefined && options.webSearchCalls)
     cost += (options.webSearchCalls / 1000) * price.webSearchCallPer1k;
-  if (price.groundingCallPer1k !== undefined && options.groundingCalls)
-    cost += (options.groundingCalls / 1000) * price.groundingCallPer1k;
+  if (price.groundingCallPer1k !== undefined && options.groundingCalls) {
+    const paidGrounding = Math.max(0, options.groundingCalls - (options.freeGroundingCalls ?? 0));
+    cost += (paidGrounding / 1000) * price.groundingCallPer1k;
+  }
 
   return cost;
 }

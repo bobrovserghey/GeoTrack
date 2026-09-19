@@ -14,7 +14,8 @@
     "gemini/gemini-2.0-flash": {
       "inputPerMToken": 0.75,
       "outputPerMToken": 3.75,
-      "groundingCallPer1k": 14.0
+      "groundingCallPer1k": 14.0,
+      "freeGroundingCallsPerMonth": 5000
     },
     "gemini/gemini-2.0-flash-lite": {
       "inputPerMToken": 0.30,
