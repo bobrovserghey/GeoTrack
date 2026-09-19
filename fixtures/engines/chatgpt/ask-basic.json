@@ -1,0 +1,53 @@
+{
+  "id": "resp_chatgpt-001",
+  "object": "response",
+  "model": "gpt-4o-mini-search-preview",
+  "output": [
+    {
+      "id": "ws_001",
+      "type": "web_search_call",
+      "status": "completed"
+    },
+    {
+      "id": "msg_001",
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Acme Corp is a leading provider of enterprise software solutions, specializing in CRM and ERP systems. Founded in 2005, the company serves over 500 clients across North America and Europe. Their flagship product, AcmeSuite, integrates customer management, inventory tracking, and financial reporting into a single platform.",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "start_index": 0,
+              "end_index": 9,
+              "url": "https://www.acmecorp.com/about",
+              "title": "About Acme Corp"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 50,
+              "end_index": 60,
+              "url": "https://techcrunch.com/2024/acme-corp-growth",
+              "title": "Acme Corp Records 40% Growth"
+            },
+            {
+              "type": "url_citation",
+              "start_index": 100,
+              "end_index": 110,
+              "url": "https://g2.com/products/acmesuite/reviews",
+              "title": "AcmeSuite Reviews on G2"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 142,
+    "output_tokens": 67,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  }
+}
