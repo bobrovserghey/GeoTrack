@@ -33,3 +33,7 @@ export { getEngineRegistry } from '@geotrack/config';
 export type { EnginePollInput, EnginePollOutput, EnginePollResponse } from './steps/engine-poll.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
+export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
+export type { MxResolver } from './disposable-email.js';
+export { checkRateLimits } from './rate-limit.js';
+export type { RateLimitDeps, RateLimitContext, RateLimitResult } from './rate-limit.js';

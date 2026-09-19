@@ -5,10 +5,14 @@ import { brandPromptsStub } from '../steps/brand-prompts-stub.js';
 
 export type AuditEventPayload = Record<string, unknown>;
 
+export type DisposableCheckDep = (email: string) => Promise<{ blocked: boolean; reason?: string }>;
+
 export type AuditRunDeps = {
   updateAuditStatus(auditId: string, status: AuditStatus): Promise<void>;
   insertAuditEvent(auditId: string, eventType: string, payload: AuditEventPayload): Promise<void>;
   getAuditIsPaid(auditId: string): Promise<boolean>;
+  getAuditEmailNormalized(auditId: string): Promise<string | null>;
+  checkDisposableEmail: DisposableCheckDep;
 };
 
 // Minimal step interface — subset of Inngest step tools; injectable for tests.
@@ -27,6 +31,16 @@ export async function auditRunHandler(
   categoryHint?: string,
 ): Promise<void> {
   const isPaid = await deps.getAuditIsPaid(auditId);
+  const emailNormalized = await deps.getAuditEmailNormalized(auditId);
+
+  if (emailNormalized) {
+    await step.run('disposable-email.check', async () => {
+      const result = await deps.checkDisposableEmail(emailNormalized);
+      if (result.blocked) {
+        throw new Error(`DISPOSABLE_EMAIL:${result.reason ?? 'unknown'}`);
+      }
+    });
+  }
 
   // 1. queued → running
   await step.run('status.running', async () => {
