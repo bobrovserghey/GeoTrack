@@ -42,10 +42,10 @@ describe('checkRateLimits — domain limit', () => {
 });
 
 describe('checkRateLimits — email limit', () => {
-  it('allows when email count is 3 (below threshold)', async () => {
+  it('allows when email count is 2 (below threshold)', async () => {
     const result = await checkRateLimits(
       { ...base, emailNormalized: 'user@example.com' },
-      makeDeps({ countTeasersByEmail: vi.fn(async () => 3) }),
+      makeDeps({ countTeasersByEmail: vi.fn(async () => 2) }),
     );
     expect(result.allowed).toBe(true);
   });
@@ -53,7 +53,7 @@ describe('checkRateLimits — email limit', () => {
   it('blocks 4th teaser on same verified email', async () => {
     const result = await checkRateLimits(
       { ...base, emailNormalized: 'user@example.com' },
-      makeDeps({ countTeasersByEmail: vi.fn(async () => 4) }),
+      makeDeps({ countTeasersByEmail: vi.fn(async () => 3) }),
     );
     expect(result.allowed).toBe(false);
     expect(result.allowed === false && result.reason).toBe('email_limit');

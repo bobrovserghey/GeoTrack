@@ -91,7 +91,6 @@ const DISPOSABLE_DOMAINS = new Set([
   'quickinbox.com',
   'rcpt.at',
   'regbypass.com',
-  'regbypass.comsafe-mail.net',
   's0ny.net',
   'safe-mail.net',
   'safersignup.de',

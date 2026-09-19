@@ -76,7 +76,6 @@ export async function POST(request: Request) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const todayUtc = new Date();
   todayUtc.setUTCHours(0, 0, 0, 0);
-  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
   const rateLimitDeps: RateLimitDeps = {
     countTeasersByDomain: async (d) => {
@@ -115,8 +114,6 @@ export async function POST(request: Request) {
     },
   };
 
-  void oneHourAgo; // IP counting via Postgres deferred to T-26b (Redis/partitioned table)
-
   const limitResult = await checkRateLimits(
     { domainNormalized: domain, ipAddress, isInternal, dailyCeiling },
     rateLimitDeps,
@@ -151,7 +148,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: 'rate_limited', reason: limitResult.reason },
+      {
+        error: 'rate_limited',
+        reason: limitResult.reason,
+        retryAfter: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      },
       { status: 429 },
     );
   }

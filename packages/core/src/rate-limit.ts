@@ -33,7 +33,7 @@ export async function checkRateLimits(
 
   if (ctx.emailNormalized) {
     const emailCount = await deps.countTeasersByEmail(ctx.emailNormalized);
-    if (emailCount >= 4) {
+    if (emailCount >= 3) {
       return { allowed: false, reason: 'email_limit' };
     }
   }
