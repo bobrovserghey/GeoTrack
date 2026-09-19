@@ -6,6 +6,7 @@ export const ModelPriceSchema = z.object({
   requestPer1k: z.number().nonnegative().optional(),
   webSearchCallPer1k: z.number().nonnegative().optional(),
   groundingCallPer1k: z.number().nonnegative().optional(),
+  freeGroundingCallsPerMonth: z.number().int().nonnegative().optional(),
 });
 
 export const ProviderPricesFileSchema = z.object({
