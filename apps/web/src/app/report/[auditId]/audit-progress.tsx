@@ -17,7 +17,7 @@ type Candidate = { id: string; slug: string; name: string; confidence: number };
 
 // ---- constants --------------------------------------------------------------
 
-const READY_STATUSES = new Set(['completed', 'in_review', 'delivered']);
+const READY_STATUSES = new Set(['completed', 'in_review', 'delivered', 'waiting_email']);
 
 
 const PILLARS = [

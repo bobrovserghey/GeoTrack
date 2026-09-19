@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { EmailGate } from './email-gate';
 
 // ---- types ------------------------------------------------------------------
 
@@ -58,6 +59,10 @@ export type ReportContentProps = {
   citation: CitationData | null;
   lockedFindings: LockedFindingRow[];
   lockedFindingsCost: number;
+  emailCaptured?: boolean;
+  showEmailGate?: boolean;
+  auditId?: string;
+  progressToken?: string | null;
 };
 
 // ---- helpers ----------------------------------------------------------------
@@ -358,6 +363,10 @@ export default function ReportContent(props: ReportContentProps) {
     citation,
     lockedFindings,
     lockedFindingsCost,
+    emailCaptured,
+    showEmailGate,
+    auditId,
+    progressToken,
   } = props;
 
   const score = overallScore ?? 0;
@@ -450,8 +459,10 @@ export default function ReportContent(props: ReportContentProps) {
           </div>
         </div>
 
-        {/* Email capture */}
-        <EmailCapture />
+        {/* Email gate */}
+        {showEmailGate && auditId && progressToken && (
+          <EmailGate auditId={auditId} progressToken={progressToken} />
+        )}
 
         {/* Five pillars */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
