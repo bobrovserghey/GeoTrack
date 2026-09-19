@@ -16,6 +16,8 @@ describe('Drizzle/Zod schema alignment', () => {
       domain: 'example.com',
       url: 'https://example.com',
       emailNormalized: null,
+      domainNormalized: null,
+      scheduledFor: null,
       status: 'queued' as const,
       auditType: 'teaser' as const,
       profileId: 'teaser',

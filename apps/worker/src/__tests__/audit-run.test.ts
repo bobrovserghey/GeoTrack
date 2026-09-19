@@ -13,6 +13,8 @@ function makeMockDeps(overrides: Partial<AuditRunDeps> = {}): AuditRunDeps & {
     updateAuditStatus: vi.fn(async (_id, status) => { statusHistory.push(status); }),
     insertAuditEvent: vi.fn(async (_id, eventType, payload) => { eventHistory.push({ eventType, payload }); }),
     getAuditIsPaid: vi.fn(async () => false),
+    getAuditEmailNormalized: vi.fn(async () => null),
+    checkDisposableEmail: vi.fn(async () => ({ blocked: false })),
     statusHistory,
     eventHistory,
     ...overrides,
@@ -342,5 +344,54 @@ describe('auditRunHandler — categoryHint with email provided', () => {
       'brand-prompts.stub',
       'status.completed',
     ]);
+  });
+});
+
+describe('auditRunHandler — disposable-email.check (emailNormalized set)', () => {
+  it('runs disposable-email.check as first step when emailNormalized is set', async () => {
+    const deps = makeMockDeps({
+      getAuditEmailNormalized: vi.fn(async () => 'user@example.com'),
+    });
+    const step = makeMockStep({});
+    await auditRunHandler('audit-disposable-1', step, deps);
+
+    const runCalls = (step.run as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0] as string);
+    expect(runCalls[0]).toBe('disposable-email.check');
+  });
+
+  it('does not run disposable-email.check when emailNormalized is null', async () => {
+    const deps = makeMockDeps({
+      getAuditEmailNormalized: vi.fn(async () => null),
+    });
+    const step = makeMockStep({});
+    await auditRunHandler('audit-no-email', step, deps);
+
+    const runCalls = (step.run as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0] as string);
+    expect(runCalls[0]).toBe('status.running');
+    expect(runCalls).not.toContain('disposable-email.check');
+  });
+
+  it('throws DISPOSABLE_EMAIL when checkDisposableEmail returns blocked', async () => {
+    const deps = makeMockDeps({
+      getAuditEmailNormalized: vi.fn(async () => 'user@mailinator.com'),
+      checkDisposableEmail: vi.fn(async () => ({ blocked: true, reason: 'disposable' })),
+    });
+    const step = makeMockStep({});
+
+    await expect(auditRunHandler('audit-disposable-2', step, deps)).rejects.toThrow('DISPOSABLE_EMAIL');
+  });
+
+  it('stops pipeline after disposable-email.check throws — no further steps', async () => {
+    const deps = makeMockDeps({
+      getAuditEmailNormalized: vi.fn(async () => 'user@mailinator.com'),
+      checkDisposableEmail: vi.fn(async () => ({ blocked: true, reason: 'disposable' })),
+    });
+    const step = makeMockStep({});
+
+    await expect(auditRunHandler('audit-disposable-3', step, deps)).rejects.toThrow();
+
+    const runCalls = (step.run as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0] as string);
+    expect(runCalls).toEqual(['disposable-email.check']);
+    expect(deps.statusHistory).toHaveLength(0);
   });
 });

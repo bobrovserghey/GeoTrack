@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   jsonb,
   numeric,
@@ -51,6 +52,8 @@ export const audits = pgTable('audits', {
   domain: varchar('domain', { length: 253 }).notNull(),
   url: text('url').notNull(),
   emailNormalized: varchar('email_normalized', { length: 254 }),
+  domainNormalized: varchar('domain_normalized', { length: 253 }),
+  scheduledFor: date('scheduled_for'),
   status: auditStatusEnum('status').notNull().default('queued'),
   auditType: auditTypeEnum('audit_type').notNull().default('teaser'),
   profileId: varchar('profile_id', { length: 64 }).notNull(),

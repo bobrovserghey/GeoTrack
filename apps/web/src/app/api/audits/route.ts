@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import { Inngest } from 'inngest';
 import { createClient } from '@geotrack/db/client';
 import { audits, reportTokens } from '@geotrack/db';
-import { normalizeDomain, generateProgressToken } from '@geotrack/core';
+import { normalizeDomain, generateProgressToken, checkRateLimits } from '@geotrack/core';
+import type { RateLimitDeps } from '@geotrack/core';
 import { getAuditProfile, getMethodology } from '@geotrack/config';
+import { eq, and, gte, count } from 'drizzle-orm';
 
 const inngest = new Inngest({
   id: 'geotrack-web',
@@ -20,6 +22,18 @@ async function verifyTurnstile(token: string): Promise<boolean> {
   });
   const data = (await res.json()) as { success: boolean };
   return data.success;
+}
+
+function validateServiceKey(headers: Headers): boolean {
+  const serviceKey = process.env.AUDIT_SERVICE_KEY;
+  if (!serviceKey) return false;
+  return headers.get('x-service-key') === serviceKey;
+}
+
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0]?.trim() ?? '0.0.0.0';
+  return '0.0.0.0';
 }
 
 export async function POST(request: Request) {
@@ -42,17 +56,106 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid url' }, { status: 422 });
   }
 
-  if (!turnstileToken) {
-    return NextResponse.json({ error: 'turnstile token required' }, { status: 400 });
-  }
+  const isInternal = validateServiceKey(request.headers);
 
-  const valid = await verifyTurnstile(turnstileToken);
-  if (!valid) {
-    return NextResponse.json({ error: 'turnstile verification failed' }, { status: 400 });
+  if (!isInternal) {
+    if (!turnstileToken) {
+      return NextResponse.json({ error: 'turnstile token required' }, { status: 400 });
+    }
+    const valid = await verifyTurnstile(turnstileToken);
+    if (!valid) {
+      return NextResponse.json({ error: 'turnstile verification failed' }, { status: 400 });
+    }
   }
 
   const db = createClient(process.env.DATABASE_URL!);
   const domain = normalizeDomain(parsedUrl.hostname);
+  const ipAddress = getClientIp(request);
+  const dailyCeiling = parseInt(process.env.FREE_DAILY_CEILING ?? '0', 10);
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+  const rateLimitDeps: RateLimitDeps = {
+    countTeasersByDomain: async (d) => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(audits)
+        .where(and(
+          eq(audits.domainNormalized, d),
+          eq(audits.auditType, 'teaser'),
+          gte(audits.createdAt, thirtyDaysAgo),
+        ));
+      return Number(row?.n ?? 0);
+    },
+    countTeasersByEmail: async (email) => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(audits)
+        .where(and(
+          eq(audits.emailNormalized, email),
+          eq(audits.auditType, 'teaser'),
+          gte(audits.createdAt, thirtyDaysAgo),
+        ));
+      return Number(row?.n ?? 0);
+    },
+    countByIpHour: async (_ip) => 0,
+    countByIpDay: async (_ip) => 0,
+    countTeasersToday: async () => {
+      const [row] = await db
+        .select({ n: count() })
+        .from(audits)
+        .where(and(
+          eq(audits.auditType, 'teaser'),
+          gte(audits.createdAt, todayUtc),
+        ));
+      return Number(row?.n ?? 0);
+    },
+  };
+
+  void oneHourAgo; // IP counting via Postgres deferred to T-26b (Redis/partitioned table)
+
+  const limitResult = await checkRateLimits(
+    { domainNormalized: domain, ipAddress, isInternal, dailyCeiling },
+    rateLimitDeps,
+  );
+
+  if (!limitResult.allowed) {
+    if (limitResult.reason === 'daily_ceiling') {
+      // Create audit with scheduled_for; respond 202
+      const profile = getAuditProfile('teaser');
+      const methodology = getMethodology();
+      const [scheduledAudit] = await db
+        .insert(audits)
+        .values({
+          domain,
+          domainNormalized: domain,
+          url: parsedUrl.toString(),
+          status: 'queued',
+          auditType: 'teaser',
+          profileId: 'teaser',
+          profileVersion: profile.version,
+          isInternal,
+          locale: 'en',
+          methodologyVersion: String(methodology.version),
+          scheduledFor: limitResult.scheduledDate,
+        })
+        .returning({ id: audits.id });
+
+      return NextResponse.json(
+        { auditId: scheduledAudit?.id, scheduledDate: limitResult.scheduledDate },
+        { status: 202 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'rate_limited', reason: limitResult.reason },
+      { status: 429 },
+    );
+  }
+
   const profile = getAuditProfile('teaser');
   const methodology = getMethodology();
 
@@ -60,12 +163,13 @@ export async function POST(request: Request) {
     .insert(audits)
     .values({
       domain,
+      domainNormalized: domain,
       url: parsedUrl.toString(),
       status: 'queued',
       auditType: 'teaser',
       profileId: 'teaser',
       profileVersion: profile.version,
-      isInternal: false,
+      isInternal,
       locale: 'en',
       methodologyVersion: String(methodology.version),
     })
@@ -94,5 +198,9 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ auditId: audit.id, progressToken }, { status: 201 });
+  const softBlock = limitResult.allowed && limitResult.softBlock === true;
+  return NextResponse.json(
+    { auditId: audit.id, progressToken, ...(softBlock ? { softBlock: true } : {}) },
+    { status: 201 },
+  );
 }
