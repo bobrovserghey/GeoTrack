@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { scorePillarA } from '../scoring/pillar-a.js';
 import type { EngineResponseFacts } from '../steps/extract-mentions.js';
+import type { AccuracyFact } from '../steps/accuracy-check.js';
 import type { Methodology } from '@geotrack/config';
 
 // ---- helpers ----------------------------------------------------------------
@@ -197,15 +198,78 @@ describe('scorePillarA — A4 (share of voice)', () => {
   });
 });
 
-// ---- A5, A6: always unmeasured in T-20 -------------------------------------
+// ---- A5: description accuracy (T-30) ----------------------------------------
 
-describe('scorePillarA — A5, A6 (unmeasured)', () => {
-  it('a5 is always unmeasured', () => {
+function makeAccuracyFact(overrides: Partial<AccuracyFact> = {}): AccuracyFact {
+  return {
+    promptId: 'p1',
+    engineId: 'perplexity',
+    repeatIndex: 0,
+    accurateClaims: 2,
+    inaccurateClaims: 0,
+    unverifiableClaims: 1,
+    ...overrides,
+  };
+}
+
+describe('scorePillarA — A5 (description accuracy)', () => {
+  it('no accuracyFacts → a5 unmeasured', () => {
     const facts = [makeFact({ brandMentioned: true })];
     const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN);
     expect(criterionScores.a5.measured).toBe(false);
+    expect(criterionScores.a5.score).toBe(0);
   });
 
+  it('all facts accurate (inaccurateClaims === 0) → a5 = maxA5 = 15', () => {
+    const facts = [makeFact()];
+    const accuracyFacts = [
+      makeAccuracyFact({ inaccurateClaims: 0 }),
+      makeAccuracyFact({ inaccurateClaims: 0 }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, accuracyFacts);
+    expect(criterionScores.a5.score).toBe(15);
+    expect(criterionScores.a5.measured).toBe(true);
+  });
+
+  it('no accurate facts → a5 = 0 but measured', () => {
+    const facts = [makeFact()];
+    const accuracyFacts = [
+      makeAccuracyFact({ inaccurateClaims: 2 }),
+      makeAccuracyFact({ inaccurateClaims: 1 }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, accuracyFacts);
+    expect(criterionScores.a5.score).toBe(0);
+    expect(criterionScores.a5.measured).toBe(true);
+  });
+
+  it('half accurate → a5 = round(0.5 × 15) = 8', () => {
+    const facts = [makeFact()];
+    const accuracyFacts = [
+      makeAccuracyFact({ inaccurateClaims: 0 }),
+      makeAccuracyFact({ inaccurateClaims: 1 }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, accuracyFacts);
+    expect(criterionScores.a5.score).toBe(8);
+    expect(criterionScores.a5.measured).toBe(true);
+  });
+
+  it('a5 measured contributes to measuredMaxSum', () => {
+    // a1: brandMentioned=true → measured (20), a2: no citedDomain → measured (0/15),
+    // a3: normalizedPositionScore=null → unmeasured, a4: brand=1 total=1 → measured (20)
+    // a5: provided → measured (15), a6: unmeasured
+    // measuredMaxSum = 20+15+20+15 = 70
+    const facts = [makeFact({ brandMentioned: true, normalizedPositionScore: null, citedDomains: [] })];
+    const accuracyFacts = [makeAccuracyFact({ inaccurateClaims: 0 })];
+    const { measuredMaxSum, unmeasuredCriteria } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, accuracyFacts);
+    expect(unmeasuredCriteria).not.toContain('a5');
+    expect(unmeasuredCriteria).toContain('a3');
+    expect(measuredMaxSum).toBe(70); // a1+a2+a4+a5 = 20+15+20+15
+  });
+});
+
+// ---- A6: always unmeasured --------------------------------------------------
+
+describe('scorePillarA — A6 (unmeasured)', () => {
   it('a6 is always unmeasured', () => {
     const facts = [makeFact({ brandMentioned: true })];
     const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN);

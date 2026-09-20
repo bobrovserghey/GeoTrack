@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/config && tsc --noEmit -p packages/db && tsc --noEmit -p packages/ui && tsc --noEmit -p apps/web && tsc --noEmit -p apps/worker",
     "test": "vitest run --workspace vitest.workspace.ts",
     "test:watch": "vitest --workspace vitest.workspace.ts",
-    "prompts:generate-categories": "node --experimental-strip-types packages/config/scripts/generate-categories.ts"
+    "prompts:generate-categories": "node --experimental-strip-types packages/config/scripts/generate-categories.ts",
+    "test:eval": "node --experimental-strip-types apps/worker/src/evals/accuracy-check.eval.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
