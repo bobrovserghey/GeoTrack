@@ -24,13 +24,14 @@ export type { TechCheckFacts, B1Facts, B2Facts, B3Facts, B4Facts, B5Facts, B6Fac
 export { scorePillarB } from './scoring/pillar-b.js';
 export type { PillarBResult, CriterionScore } from './scoring/pillar-b.js';
 export { scorePillarA } from './scoring/pillar-a.js';
-export type { PillarAResult } from './scoring/pillar-a.js';
+export type { PillarAResult, AccuracyFact } from './scoring/pillar-a.js';
 export { computeInterval } from './scoring/confidence-interval.js';
 export { getMethodology } from '@geotrack/config';
 export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig } from '@geotrack/config';
 export type { EngineRegistryEntry } from '@geotrack/config';
 export { getEngineRegistry } from '@geotrack/config';
 export type { EnginePollInput, EnginePollOutput, EnginePollResponse } from './steps/engine-poll.js';
+export type { AccuracyCheckOutput } from './steps/accuracy-check.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';

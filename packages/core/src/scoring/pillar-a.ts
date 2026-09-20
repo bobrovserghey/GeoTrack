@@ -1,6 +1,7 @@
 import type { Methodology } from '@geotrack/config';
 import type { CriterionScore } from './pillar-b.js';
 import type { EngineResponseFacts } from '../steps/extract-mentions.js';
+import type { AccuracyFact } from '../steps/accuracy-check.js';
 
 export type PillarAResult = {
   criterionScores: Record<'a1' | 'a2' | 'a3' | 'a4' | 'a5' | 'a6', CriterionScore>;
@@ -8,6 +9,10 @@ export type PillarAResult = {
   measuredMaxSum: number;
   unmeasuredCriteria: string[];
 };
+
+// ---- re-export for callers --------------------------------------------------
+
+export type { AccuracyFact };
 
 // ---- per-criterion scoring --------------------------------------------------
 
@@ -35,6 +40,12 @@ function scoreA3(facts: EngineResponseFacts[], maxScore: number): { score: numbe
   return { score: Math.round((avg / 100) * maxScore), measured: true };
 }
 
+function scoreA5(accuracyFacts: AccuracyFact[], maxScore: number): { score: number; measured: boolean } {
+  if (accuracyFacts.length === 0) return { score: 0, measured: false };
+  const accurateCount = accuracyFacts.filter((f) => f.inaccurateClaims === 0).length;
+  return { score: Math.round((accurateCount / accuracyFacts.length) * maxScore), measured: true };
+}
+
 function scoreA4(facts: EngineResponseFacts[], maxScore: number): { score: number; measured: boolean } {
   const brandCount = facts.filter((f) => f.brandMentioned).length;
   const competitorCount = facts.reduce(
@@ -52,6 +63,7 @@ export function scorePillarA(
   facts: EngineResponseFacts[],
   config: Methodology,
   clientDomain: string,
+  accuracyFacts: AccuracyFact[] = [],
 ): PillarAResult {
   const aConfig = config.pillars['A'];
   if (!aConfig) throw new Error('Pillar A not found in methodology config');
@@ -68,13 +80,14 @@ export function scorePillarA(
   const a2 = scoreA2(facts, clientDomain, maxA2);
   const a3 = scoreA3(facts, maxA3);
   const a4 = scoreA4(facts, maxA4);
+  const a5 = scoreA5(accuracyFacts, maxA5);
 
   const criterionScores: PillarAResult['criterionScores'] = {
     a1: { criterionId: 'a1', score: a1.score, maxScore: maxA1, measured: a1.measured },
     a2: { criterionId: 'a2', score: a2.score, maxScore: maxA2, measured: a2.measured },
     a3: { criterionId: 'a3', score: a3.score, maxScore: maxA3, measured: a3.measured },
     a4: { criterionId: 'a4', score: a4.score, maxScore: maxA4, measured: a4.measured },
-    a5: { criterionId: 'a5', score: 0, maxScore: maxA5, measured: false },
+    a5: { criterionId: 'a5', score: a5.score, maxScore: maxA5, measured: a5.measured },
     a6: { criterionId: 'a6', score: 0, maxScore: maxA6, measured: false },
   };
 
