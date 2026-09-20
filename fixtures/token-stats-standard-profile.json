@@ -1,0 +1,47 @@
+{
+  "measuredAt": "2026-09-20",
+  "note": "Token counts sourced from fixtures/engines/*/ask-basic.json (single-call samples). Timing estimates use p95 latencies: perplexity=5s, chatgpt=7s, gemini=3.5s. estimatedCostColdUsd fields are informational snapshots; cost assertions in tests use calcCallCost directly.",
+  "profile": "standard",
+  "promptCount": 30,
+  "promptRepeats": 2,
+  "totalCallsPerEngineCold": 60,
+  "engines": {
+    "perplexity": {
+      "provider": "perplexity",
+      "model": "sonar",
+      "avgTokensIn": 18,
+      "avgTokensOut": 47,
+      "concurrencyLimit": 3,
+      "p95LatencyS": 5,
+      "theoreticalTimeS": 100,
+      "estimatedCostColdUsd": 0.484
+    },
+    "chatgpt": {
+      "provider": "openai",
+      "model": "gpt-4o-mini-search-preview",
+      "avgTokensIn": 142,
+      "avgTokensOut": 67,
+      "concurrencyLimit": 5,
+      "p95LatencyS": 7,
+      "theoreticalTimeS": 84,
+      "estimatedCostColdUsd": 0.607
+    },
+    "gemini": {
+      "provider": "gemini",
+      "model": "gemini-2.0-flash",
+      "avgTokensIn": 18,
+      "avgTokensOut": 52,
+      "concurrencyLimit": 5,
+      "p95LatencyS": 3.5,
+      "theoreticalTimeS": 42,
+      "estimatedCostColdUsd": 0.853
+    }
+  },
+  "totalEstimatedCostColdUsd": 1.944,
+  "softCeilingUsd": 6.0,
+  "hardCeilingUsd": 8.0,
+  "timingBudgetS": 180,
+  "theoreticalCriticalPathS": 100,
+  "withinTimingBudget": true,
+  "withinCostBudget": true
+}
