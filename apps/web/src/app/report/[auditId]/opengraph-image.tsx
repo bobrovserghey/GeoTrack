@@ -70,7 +70,7 @@ export default async function Image({
 }) {
   const { auditId } = await params;
 
-  let fonts: { name: string; data: ArrayBuffer; weight: number; style: 'normal' | 'italic' }[] = [];
+  let fonts: { name: string; data: ArrayBuffer; weight: 100|200|300|400|500|600|700|800|900; style: 'normal' | 'italic' }[] = [];
   try {
     const [interFont, monoFont] = await Promise.all([
       fetchGoogleFont('Inter', 600),
