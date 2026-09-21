@@ -10,6 +10,8 @@ export default tseslint.config(
       '**/.next/**',
       '**/*.tsbuildinfo',
       'pnpm-lock.yaml',
+      'apps/web/next-env.d.ts',
+      '.claude/worktrees/**',
     ],
   },
 

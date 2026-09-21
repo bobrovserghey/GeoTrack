@@ -147,7 +147,6 @@ export default async function Image({
       >
         {/* Top: logo + domain */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_DATA_URI} width={179} height={28} alt="Geotrack" />
           <span style={{ fontFamily: 'JetBrains Mono', fontSize: 18, color: '#94A3B8' }}>
             {domain}
