@@ -2,6 +2,7 @@ import type { Methodology } from '@geotrack/config';
 import type { CriterionScore } from './pillar-b.js';
 import type { EngineResponseFacts } from '../steps/extract-mentions.js';
 import type { AccuracyFact } from '../steps/accuracy-check.js';
+import type { ToneFact } from '../steps/tone-check.js';
 
 export type PillarAResult = {
   criterionScores: Record<'a1' | 'a2' | 'a3' | 'a4' | 'a5' | 'a6', CriterionScore>;
@@ -12,7 +13,7 @@ export type PillarAResult = {
 
 // ---- re-export for callers --------------------------------------------------
 
-export type { AccuracyFact };
+export type { AccuracyFact, ToneFact };
 
 // ---- per-criterion scoring --------------------------------------------------
 
@@ -46,6 +47,14 @@ function scoreA5(accuracyFacts: AccuracyFact[], maxScore: number): { score: numb
   return { score: Math.round((accurateCount / accuracyFacts.length) * maxScore), measured: true };
 }
 
+function scoreA6(toneFacts: ToneFact[], maxScore: number): { score: number; measured: boolean } {
+  if (toneFacts.length === 0) return { score: 0, measured: false };
+  const positiveCount = toneFacts.filter((f) => f.tone === 'positive').length;
+  const neutralCount = toneFacts.filter((f) => f.tone === 'neutral').length;
+  const weighted = positiveCount + 0.5 * neutralCount;
+  return { score: Math.round((weighted / toneFacts.length) * maxScore), measured: true };
+}
+
 function scoreA4(facts: EngineResponseFacts[], maxScore: number): { score: number; measured: boolean } {
   const brandCount = facts.filter((f) => f.brandMentioned).length;
   const competitorCount = facts.reduce(
@@ -64,6 +73,7 @@ export function scorePillarA(
   config: Methodology,
   clientDomain: string,
   accuracyFacts: AccuracyFact[] = [],
+  toneFacts: ToneFact[] = [],
 ): PillarAResult {
   const aConfig = config.pillars['A'];
   if (!aConfig) throw new Error('Pillar A not found in methodology config');
@@ -81,6 +91,7 @@ export function scorePillarA(
   const a3 = scoreA3(facts, maxA3);
   const a4 = scoreA4(facts, maxA4);
   const a5 = scoreA5(accuracyFacts, maxA5);
+  const a6 = scoreA6(toneFacts, maxA6);
 
   const criterionScores: PillarAResult['criterionScores'] = {
     a1: { criterionId: 'a1', score: a1.score, maxScore: maxA1, measured: a1.measured },
@@ -88,7 +99,7 @@ export function scorePillarA(
     a3: { criterionId: 'a3', score: a3.score, maxScore: maxA3, measured: a3.measured },
     a4: { criterionId: 'a4', score: a4.score, maxScore: maxA4, measured: a4.measured },
     a5: { criterionId: 'a5', score: a5.score, maxScore: maxA5, measured: a5.measured },
-    a6: { criterionId: 'a6', score: 0, maxScore: maxA6, measured: false },
+    a6: { criterionId: 'a6', score: a6.score, maxScore: maxA6, measured: a6.measured },
   };
 
   const unmeasuredCriteria: string[] = [];

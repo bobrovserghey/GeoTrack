@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { scorePillarA } from '../scoring/pillar-a.js';
 import type { EngineResponseFacts } from '../steps/extract-mentions.js';
 import type { AccuracyFact } from '../steps/accuracy-check.js';
+import type { ToneFact } from '../steps/tone-check.js';
 import type { Methodology } from '@geotrack/config';
 
 // ---- helpers ----------------------------------------------------------------
@@ -267,13 +268,72 @@ describe('scorePillarA — A5 (description accuracy)', () => {
   });
 });
 
-// ---- A6: always unmeasured --------------------------------------------------
+// ---- A6: tone (T-31) --------------------------------------------------------
 
-describe('scorePillarA — A6 (unmeasured)', () => {
-  it('a6 is always unmeasured', () => {
+function makeToneFact(overrides: Partial<ToneFact> = {}): ToneFact {
+  return {
+    promptId: 'p1',
+    engineId: 'perplexity',
+    repeatIndex: 0,
+    tone: 'positive',
+    ...overrides,
+  };
+}
+
+describe('scorePillarA — A6 (tone)', () => {
+  it('no toneFacts → a6 unmeasured (backward compat)', () => {
     const facts = [makeFact({ brandMentioned: true })];
     const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN);
     expect(criterionScores.a6.measured).toBe(false);
+    expect(criterionScores.a6.score).toBe(0);
+  });
+
+  it('all positive → a6 = maxA6 = 15', () => {
+    const facts = [makeFact()];
+    const toneFacts = [
+      makeToneFact({ tone: 'positive' }),
+      makeToneFact({ tone: 'positive' }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, [], toneFacts);
+    expect(criterionScores.a6.score).toBe(15);
+    expect(criterionScores.a6.measured).toBe(true);
+  });
+
+  it('all negative → a6 = 0, measured: true', () => {
+    const facts = [makeFact()];
+    const toneFacts = [
+      makeToneFact({ tone: 'negative' }),
+      makeToneFact({ tone: 'negative' }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, [], toneFacts);
+    expect(criterionScores.a6.score).toBe(0);
+    expect(criterionScores.a6.measured).toBe(true);
+  });
+
+  it('2 positive + 1 neutral → round((2 + 0.5) / 3 × 15) = 13', () => {
+    const facts = [makeFact()];
+    const toneFacts = [
+      makeToneFact({ tone: 'positive' }),
+      makeToneFact({ tone: 'positive' }),
+      makeToneFact({ tone: 'neutral' }),
+    ];
+    const { criterionScores } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, [], toneFacts);
+    expect(criterionScores.a6.score).toBe(13);
+    expect(criterionScores.a6.measured).toBe(true);
+  });
+
+  it('a6 measured contributes to measuredMaxSum', () => {
+    // a1: brandMentioned=true → measured (20), a2: no citedDomain → measured (0/15),
+    // a3: normalizedPositionScore=null → unmeasured, a4: brand=1 total=1 → measured (20)
+    // a5: unmeasured, a6: provided → measured (15)
+    // measuredMaxSum = 20+15+20+15 = 70
+    const facts = [makeFact({ brandMentioned: true, normalizedPositionScore: null, citedDomains: [] })];
+    const toneFacts = [makeToneFact({ tone: 'positive' })];
+    const { measuredMaxSum, unmeasuredCriteria } = scorePillarA(facts, makeConfig(), CLIENT_DOMAIN, [], toneFacts);
+    expect(unmeasuredCriteria).not.toContain('a6');
+    expect(unmeasuredCriteria).toContain('a3');
+    expect(unmeasuredCriteria).toContain('a5');
+    expect(measuredMaxSum).toBe(70); // a1+a2+a4+a6 = 20+15+20+15
   });
 });
 
