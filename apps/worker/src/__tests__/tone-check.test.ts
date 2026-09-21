@@ -22,8 +22,8 @@ function makeResponse(overrides: Partial<EnginePollResponse> = {}): EnginePollRe
     engineId: 'perplexity',
     repeatIndex: 0,
     responseText: 'Acme Corp is highly recommended for enterprise CRM deployments.',
-    citations: [],
-    listItems: [],
+    sources: [],
+    fromCache: false,
     usage: { provider: 'perplexity', model: 'sonar', tokensIn: 10, tokensOut: 20, costUsd: 0.001 },
     ...overrides,
   };
@@ -103,8 +103,8 @@ describe('classifyTone', () => {
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
     expect(result.status).toBe('ok');
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.facts[0]?.tone).toBe('positive');
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.facts[0]?.tone).toBe('positive');
   });
 
   it('skips responses where brand was not mentioned', async () => {
@@ -114,8 +114,8 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
-    expect(result.data.positiveRate).toBe(0);
+    expect(result.data!.facts).toHaveLength(0);
+    expect(result.data!.positiveRate).toBe(0);
   });
 
   it('skips responses with empty responseText', async () => {
@@ -125,7 +125,7 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
+    expect(result.data!.facts).toHaveLength(0);
   });
 
   it('returns partial status when model response is unparseable', async () => {
@@ -136,7 +136,7 @@ describe('classifyTone', () => {
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
     expect(result.status).toBe('partial');
-    expect(result.data.facts).toHaveLength(0);
+    expect(result.data!.facts).toHaveLength(0);
     expect(result.notes.some((n) => n.includes('could not be classified'))).toBe(true);
   });
 
@@ -147,8 +147,8 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
-    expect(result.data.positiveRate).toBe(0);
+    expect(result.data!.facts).toHaveLength(0);
+    expect(result.data!.positiveRate).toBe(0);
   });
 
   it('returns partial status when model.generate throws', async () => {
@@ -161,7 +161,7 @@ describe('classifyTone', () => {
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
     expect(result.status).toBe('partial');
-    expect(result.data.facts).toHaveLength(0);
+    expect(result.data!.facts).toHaveLength(0);
   });
 
   it('positiveRate = 1 when all facts are positive', async () => {
@@ -177,7 +177,7 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.positiveRate).toBe(1);
+    expect(result.data!.positiveRate).toBe(1);
   });
 
   it('positiveRate = 0.5 when half are positive', async () => {
@@ -204,14 +204,14 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.positiveRate).toBe(0.5);
+    expect(result.data!.positiveRate).toBe(0.5);
   });
 
   it('positiveRate = 0 when no facts (all skipped)', async () => {
     const model = makeModel('{"tone":"positive"}');
     const result = await classifyTone([], [], PASSPORT, model);
 
-    expect(result.data.positiveRate).toBe(0);
+    expect(result.data!.positiveRate).toBe(0);
   });
 
   it('records usage for each model call', async () => {
@@ -243,8 +243,8 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.facts[0]?.engineId).toBe('perplexity');
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.facts[0]?.engineId).toBe('perplexity');
   });
 
   it('excludes throw failures from denominator, still partial', async () => {
@@ -268,8 +268,8 @@ describe('classifyTone', () => {
 
     const result = await classifyTone(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.positiveRate).toBe(1);
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.positiveRate).toBe(1);
     expect(result.status).toBe('partial');
   });
 });

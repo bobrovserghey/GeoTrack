@@ -16,7 +16,9 @@
     "./scoring/pillar-a": "./src/scoring/pillar-a.ts",
     "./scoring/confidence-interval": "./src/scoring/confidence-interval.ts",
     "./steps/engine-poll": "./src/steps/engine-poll.ts",
-    "./steps/extract-mentions": "./src/steps/extract-mentions.ts"
+    "./steps/extract-mentions": "./src/steps/extract-mentions.ts",
+    "./steps/accuracy-check": "./src/steps/accuracy-check.ts",
+    "./steps/tone-check": "./src/steps/tone-check.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

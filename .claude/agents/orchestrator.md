@@ -2,6 +2,7 @@
 name: orchestrator
 description: Проверяет код — как загружаемый PR, так и уже разработанный модуль/папку/файл. Гоняет цикл reviewer → debugger/refactorer → reviewer до вердикта MERGE. Запускать только по явному согласию пользователя.
 tools: Read, Edit, Bash, Grep, Glob, Agent(code-reviewer), Agent(debugger), Agent(refactorer)
+model: claude-opus-4.7
 ---
 Ты оркестратор проверки кода.
 
