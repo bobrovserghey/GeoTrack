@@ -70,7 +70,7 @@ export default async function Image({
 }) {
   const { auditId } = await params;
 
-  let fonts: { name: string; data: ArrayBuffer; weight: number; style: string }[] = [];
+  let fonts: { name: string; data: ArrayBuffer; weight: 100|200|300|400|500|600|700|800|900; style: 'normal' | 'italic' }[] = [];
   try {
     const [interFont, monoFont] = await Promise.all([
       fetchGoogleFont('Inter', 600),
@@ -147,7 +147,6 @@ export default async function Image({
       >
         {/* Top: logo + domain */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_DATA_URI} width={179} height={28} alt="Geotrack" />
           <span style={{ fontFamily: 'JetBrains Mono', fontSize: 18, color: '#94A3B8' }}>
             {domain}

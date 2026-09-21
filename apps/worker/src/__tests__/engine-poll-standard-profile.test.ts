@@ -117,7 +117,7 @@ describe('engine-poll standard profile harness', () => {
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
 
     const totalResponses = (CATEGORY_PROMPT_COUNT + BRAND_PROMPT_COUNT) * ENGINES.length * PROMPT_REPEATS;
-    expect(result.data.responses.length).toBe(totalResponses);
+    expect(result.data!.responses.length).toBe(totalResponses);
   });
 
   it('returns no partial engines when all adapters succeed', async () => {
@@ -126,8 +126,8 @@ describe('engine-poll standard profile harness', () => {
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
 
     expect(result.status).toBe('ok');
-    expect(result.data.partialEngines.length).toBe(0);
-    expect(result.data.hardCeilingHit).toBe(false);
+    expect(result.data!.partialEngines.length).toBe(0);
+    expect(result.data!.hardCeilingHit).toBe(false);
   });
 
   it('records usage for all 180 non-cached calls', async () => {
@@ -148,7 +148,7 @@ describe('engine-poll standard profile harness', () => {
 
     const callsPerEngine = (CATEGORY_PROMPT_COUNT + BRAND_PROMPT_COUNT) * PROMPT_REPEATS; // 60
     for (const engineId of ENGINES) {
-      const count = result.data.responses.filter((r) => r.engineId === engineId).length;
+      const count = result.data!.responses.filter((r) => r.engineId === engineId).length;
       expect(count).toBe(callsPerEngine);
     }
   });
@@ -158,7 +158,7 @@ describe('engine-poll standard profile harness', () => {
     const registry = ENGINES.map(makeRegistry);
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
 
-    const brandResponses = result.data.responses.filter((r) => r.promptId.startsWith('brand-'));
+    const brandResponses = result.data!.responses.filter((r) => r.promptId.startsWith('brand-'));
     expect(brandResponses.length).toBe(BRAND_PROMPT_COUNT * ENGINES.length * PROMPT_REPEATS); // 4×3×2=24
     expect(brandResponses.every((r) => r.fromCache === false)).toBe(true);
   });
@@ -216,9 +216,9 @@ describe('engine-poll standard profile harness', () => {
     const registry = ENGINES.map(makeRegistry);
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, tightBudget, { getRetryDelay: () => 0 });
 
-    expect(result.data.hardCeilingHit).toBe(true);
+    expect(result.data!.hardCeilingHit).toBe(true);
     expect(result.status).toBe('partial');
     // Hard ceiling hit: far fewer than 180 responses
-    expect(result.data.responses.length).toBeLessThan(180);
+    expect(result.data!.responses.length).toBeLessThan(180);
   });
 });

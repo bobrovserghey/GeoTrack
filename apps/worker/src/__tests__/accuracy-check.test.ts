@@ -22,8 +22,8 @@ function makeResponse(overrides: Partial<EnginePollResponse> = {}): EnginePollRe
     engineId: 'perplexity',
     repeatIndex: 0,
     responseText: 'Acme Corp provides CRM and ERP systems for enterprise clients.',
-    citations: [],
-    listItems: [],
+    sources: [],
+    fromCache: false,
     usage: { provider: 'perplexity', model: 'sonar', tokensIn: 10, tokensOut: 20, costUsd: 0.001 },
     ...overrides,
   };
@@ -94,10 +94,10 @@ describe('checkAccuracy', () => {
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
     expect(result.status).toBe('ok');
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.facts[0]?.accurateClaims).toBe(3);
-    expect(result.data.facts[0]?.inaccurateClaims).toBe(0);
-    expect(result.data.facts[0]?.unverifiableClaims).toBe(1);
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.facts[0]?.accurateClaims).toBe(3);
+    expect(result.data!.facts[0]?.inaccurateClaims).toBe(0);
+    expect(result.data!.facts[0]?.unverifiableClaims).toBe(1);
   });
 
   it('skips responses where brand was not mentioned', async () => {
@@ -107,8 +107,8 @@ describe('checkAccuracy', () => {
 
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
-    expect(result.data.accuracyRate).toBe(0);
+    expect(result.data!.facts).toHaveLength(0);
+    expect(result.data!.accuracyRate).toBe(0);
   });
 
   it('skips responses with empty responseText', async () => {
@@ -118,7 +118,7 @@ describe('checkAccuracy', () => {
 
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
+    expect(result.data!.facts).toHaveLength(0);
   });
 
   it('accuracyRate = 1 when all facts have inaccurateClaims === 0', async () => {
@@ -134,7 +134,7 @@ describe('checkAccuracy', () => {
 
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
-    expect(result.data.accuracyRate).toBe(1);
+    expect(result.data!.accuracyRate).toBe(1);
   });
 
   it('accuracyRate = 0.5 when half have inaccurate claims', async () => {
@@ -161,7 +161,7 @@ describe('checkAccuracy', () => {
 
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
-    expect(result.data.accuracyRate).toBe(0.5);
+    expect(result.data!.accuracyRate).toBe(0.5);
   });
 
   it('records usage for each model call', async () => {
@@ -195,8 +195,8 @@ describe('checkAccuracy', () => {
 
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
-    expect(result.data.facts).toHaveLength(0);
-    expect(result.data.accuracyRate).toBe(0);
+    expect(result.data!.facts).toHaveLength(0);
+    expect(result.data!.accuracyRate).toBe(0);
   });
 
   it('returns partial status when model.generate throws', async () => {
@@ -209,7 +209,7 @@ describe('checkAccuracy', () => {
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
     expect(result.status).toBe('partial');
-    expect(result.data.facts).toHaveLength(0);
+    expect(result.data!.facts).toHaveLength(0);
     expect(result.notes.some((n) => n.includes('could not be parsed'))).toBe(true);
   });
 
@@ -235,8 +235,8 @@ describe('checkAccuracy', () => {
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
     // only 1 fact (p1 succeeded), p2 threw → excluded from denominator
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.accuracyRate).toBe(1);
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.accuracyRate).toBe(1);
     expect(result.status).toBe('partial');
   });
 
@@ -245,8 +245,8 @@ describe('checkAccuracy', () => {
     const result = await checkAccuracy([], [], PASSPORT, model);
 
     expect(result.status).toBe('ok');
-    expect(result.data.facts).toHaveLength(0);
-    expect(result.data.accuracyRate).toBe(0);
+    expect(result.data!.facts).toHaveLength(0);
+    expect(result.data!.accuracyRate).toBe(0);
   });
 
   it('matches responses to facts by promptId:engineId:repeatIndex key', async () => {
@@ -263,7 +263,7 @@ describe('checkAccuracy', () => {
     const result = await checkAccuracy(responses, facts, PASSPORT, model);
 
     // only perplexity response (brandMentioned=true) should be checked
-    expect(result.data.facts).toHaveLength(1);
-    expect(result.data.facts[0]?.engineId).toBe('perplexity');
+    expect(result.data!.facts).toHaveLength(1);
+    expect(result.data!.facts[0]?.engineId).toBe('perplexity');
   });
 });

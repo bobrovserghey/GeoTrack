@@ -7,6 +7,8 @@ export const noopDeps: AuditRunDeps = {
   updateAuditStatus: async () => {},
   insertAuditEvent: async () => {},
   getAuditIsPaid: async () => false,
+  getAuditEmailNormalized: async () => null,
+  checkDisposableEmail: async () => ({ blocked: false }),
 };
 
 let deps = noopDeps;

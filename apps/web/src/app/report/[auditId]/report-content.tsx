@@ -275,6 +275,7 @@ function FindingCard({ finding }: { finding: FindingRow }) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function EmailCapture() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -363,7 +364,6 @@ export default function ReportContent(props: ReportContentProps) {
     citation,
     lockedFindings,
     lockedFindingsCost,
-    emailCaptured,
     showEmailGate,
     auditId,
     progressToken,

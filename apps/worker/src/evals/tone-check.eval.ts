@@ -1,34 +1,36 @@
 /**
- * Eval harness for A5 accuracy check (T-30).
+ * Eval harness for A6 tone classification (T-31).
  *
- * Reads fixtures/golden/accuracy/set-v1.json, runs each example through the
+ * Reads fixtures/golden/tone/set-v1.json, runs each example through the
  * model, compares prediction with the human label, and reports accuracy.
  * Exits with code 1 if accuracy < THRESHOLD.
  *
  * Requires GEMINI_API_KEY env var. Skips (exit 0) when the key is absent.
  *
- * Usage: node --experimental-strip-types apps/worker/src/evals/accuracy-check.eval.ts
+ * Usage: node --experimental-strip-types apps/worker/src/evals/tone-check.eval.ts
  */
 
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { parseClaimCounts, buildPrompt } from '../steps/accuracy-check.js';
+import { parseTone, buildPrompt } from '../steps/tone-check.js';
 import { GeminiModelAdapter } from '@geotrack/core';
 import type { PassportOutput } from '@geotrack/core';
 
 // ── config ─────────────────────────────────────────────────────────────────────
 
-const THRESHOLD = 0.85;
+const THRESHOLD = 0.80;
 
 // ── load golden set ────────────────────────────────────────────────────────────
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+type ToneLabel = 'positive' | 'neutral' | 'negative';
+
 type GoldenExample = {
   id: string;
   responseText: string;
-  label: 'accurate' | 'inaccurate';
+  label: ToneLabel;
 };
 
 type GoldenSet = {
@@ -36,7 +38,7 @@ type GoldenSet = {
   examples: GoldenExample[];
 };
 
-const GOLDEN_PATH = resolve(__dirname, '../../../../fixtures/golden/accuracy/set-v1.json');
+const GOLDEN_PATH = resolve(__dirname, '../../../../fixtures/golden/tone/set-v1.json');
 const golden = JSON.parse(readFileSync(GOLDEN_PATH, 'utf-8')) as GoldenSet;
 
 // ── main ───────────────────────────────────────────────────────────────────────
@@ -65,15 +67,14 @@ async function main(): Promise<void> {
     const prompt = buildPrompt(passport, example.responseText);
     try {
       const answer = await model.generate(prompt, { jsonMode: true, timeoutMs: 15_000 });
-      const counts = parseClaimCounts(answer.text);
-      const predicted = counts === null || counts.inaccurate === 0 ? 'accurate' : 'inaccurate';
+      const predicted = parseTone(answer.text);
       if (predicted === example.label) {
         correct++;
       } else {
         disagreements.push({
           id: example.id,
           label: example.label,
-          predicted,
+          predicted: predicted ?? '(null)',
           response: example.responseText.slice(0, 80),
         });
       }
