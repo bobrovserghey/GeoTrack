@@ -44,6 +44,7 @@ export type {
   EntityClarityFact,
   ContentCheckFacts,
 } from './steps/content-check.js';
+export type { CitedPageFact, CitedPagesOutput } from './steps/cited-pages.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
