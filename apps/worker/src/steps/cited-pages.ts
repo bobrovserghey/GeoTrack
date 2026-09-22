@@ -1,5 +1,5 @@
 import type { ModelAdapter } from '@geotrack/core/contracts/model';
-import type { StepResult, SourceMapOutput } from '@geotrack/core';
+import type { StepResult, SourceMapOutput, ModelAnswer } from '@geotrack/core';
 import type { CitedPageFact, CitedPagesOutput } from '@geotrack/core/steps/cited-pages';
 import type { PageStructureFact, PageStatsFact, PageFreshnessFact } from '@geotrack/core/steps/content-check';
 import {
@@ -112,6 +112,8 @@ export async function analyzeCitedPages(
   }
 
   // 2. Fetch pages
+  const usageRecords: ModelAnswer['usage'][] = [];
+
   type FetchedPage = {
     url: string;
     html: string;
@@ -151,7 +153,7 @@ export async function analyzeCitedPages(
         pagesWithClientMentionCount: 0,
       },
       artifacts: [],
-      usage: [],
+      usage: usageRecords,
       notes,
     };
   }
@@ -163,10 +165,11 @@ export async function analyzeCitedPages(
   for (const p of fetchedPages) {
     statsMap.set(p.url, computeStatsFact(p.url, p.text));
     const lastModified = extractLastModified(p.html);
-    const ageDays =
+    const ageDaysRaw =
       lastModified !== null
         ? Math.round((nowMs - new Date(lastModified).getTime()) / 86_400_000)
         : null;
+    const ageDays = ageDaysRaw !== null && Number.isFinite(ageDaysRaw) ? ageDaysRaw : null;
     freshnessMap.set(p.url, { url: p.url, lastModified, ageDays });
   }
 
@@ -183,6 +186,7 @@ export async function analyzeCitedPages(
       })),
     );
     const answer = await deps.model.generate(structurePrompt, { jsonMode: true, timeoutMs: 30_000 });
+    usageRecords.push(answer.usage);
     const structureResults = parseStructureResults(answer.text, fetchedPages.map((p) => p.url));
 
     for (const result of structureResults) {
@@ -235,7 +239,7 @@ export async function analyzeCitedPages(
   }
 
   // 6. Compute aggregate metrics
-  const ageDaysValues = pages.map((p) => p.freshness.ageDays).filter((v): v is number => v !== null);
+  const ageDaysValues = pages.map((p) => p.freshness.ageDays).filter((v): v is number => v !== null && Number.isFinite(v));
 
   return {
     status: 'ok',
@@ -249,7 +253,7 @@ export async function analyzeCitedPages(
       pagesWithClientMentionCount: pages.filter((p) => p.mentionsClient).length,
     },
     artifacts: [],
-    usage: [],
+    usage: usageRecords,
     notes,
   };
 }
