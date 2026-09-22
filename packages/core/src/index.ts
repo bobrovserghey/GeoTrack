@@ -33,6 +33,7 @@ export { getEngineRegistry } from '@geotrack/config';
 export type { EnginePollInput, EnginePollOutput, EnginePollResponse } from './steps/engine-poll.js';
 export type { AccuracyCheckOutput } from './steps/accuracy-check.js';
 export type { ToneCheckOutput } from './steps/tone-check.js';
+export type { SourceMapEntry, SourceMapOutput } from './steps/source-map.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
