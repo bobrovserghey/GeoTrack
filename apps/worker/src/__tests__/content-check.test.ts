@@ -26,6 +26,14 @@ describe('stripHtml', () => {
   it('returns empty string for empty input', () => {
     expect(stripHtml('')).toBe('');
   });
+
+  it('strips script and style content', () => {
+    expect(stripHtml('<script>var a=1;</script><style>.a{color:red}</style><h1>Real</h1>')).toBe('Real');
+  });
+
+  it('decodes HTML entities', () => {
+    expect(stripHtml('<p>A &amp; B &lt;3&gt;</p>')).toBe('A & B <3>');
+  });
 });
 
 describe('firstNWords', () => {
@@ -45,6 +53,10 @@ describe('extractH1', () => {
 
   it('returns empty string when no h1', () => {
     expect(extractH1('<h2>Not H1</h2>')).toBe('');
+  });
+
+  it('extracts h1 with nested span tags', () => {
+    expect(extractH1('<h1 class="title"><span>Real Heading</span></h1>')).toBe('Real Heading');
   });
 });
 
@@ -172,6 +184,14 @@ describe('computeStatsFact', () => {
     expect(fact.numericFactsPer1kWords).toBe(0);
     expect(fact.citationPatternsPer1kWords).toBe(0);
   });
+
+  it('does not double-count numbers with percent or multiplier units', () => {
+    const text = 'Growth was 500% and speed 3x faster over year.';
+    const fact = computeStatsFact('https://example.com', text);
+    // "500%" counted once (NUMERIC), "3x" counted once (NUMERIC)
+    // plain "500" and "3" should NOT be double-counted
+    expect(fact.numericFactsPer1kWords).toBeLessThan(400);
+  });
 });
 
 // ── C4: freshness ────────────────────────────────────────────────────────────
@@ -199,6 +219,11 @@ describe('extractLastModified', () => {
 
   it('returns null when no date found', () => {
     expect(extractLastModified('<p>No date here</p>')).toBeNull();
+  });
+
+  it('prefers article:modified_time meta over visible text date', () => {
+    const html = `<p>Updated: January 2018</p><meta property="article:modified_time" content="2026-09-01T10:00:00Z">`;
+    expect(extractLastModified(html)).toBe('2026-09-01');
   });
 });
 
@@ -235,7 +260,7 @@ describe('isUrlReadable', () => {
     expect(isUrlReadable('https://example.com')).toBe(true);
   });
 
-  it('marks URL with short 4-digit year as readable when mixed with text', () => {
+  it('marks URL with standalone 4-digit year segment as unreadable', () => {
     // "2025" alone in segment → unreadable (4 digits = exactly 4)
     expect(isUrlReadable('https://example.com/blog/2025')).toBe(false);
   });
@@ -331,7 +356,7 @@ describe('analyzeContent edge cases', () => {
     expect(result.data!.analyzedPageCount).toBeLessThanOrEqual(10);
   });
 
-  it('totalResponses is correct when LLM fails for C2', async () => {
+  it('returns ok status with fallback structure when LLM fails for C2', async () => {
     const deps: ContentCheckDeps = {
       getPageData: async (url) => ({ html: `<html><title>${url}</title><h1>H</h1></html>` }),
       model: { generate: async () => { throw new Error('timeout'); } } as unknown as ModelAdapter,

@@ -34,7 +34,18 @@ export type ContentCheckInput = {
 
 /** Strip all HTML tags and collapse whitespace to plain text. */
 export function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 /** Extract first N words from plain text. */
@@ -44,8 +55,10 @@ export function firstNWords(text: string, n: number): string {
 
 /** Extract text content of the first matching tag (case-insensitive). */
 function extractTag(html: string, tag: string): string {
-  const re = new RegExp(`<${tag}[^>]*>([^<]*)</${tag}>`, 'i');
-  return (re.exec(html)?.[1] ?? '').trim();
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
+  const match = re.exec(html);
+  if (!match?.[1]) return '';
+  return stripHtml(match[1]).trim();
 }
 
 /** Extract first H1 text. */
@@ -61,7 +74,7 @@ export function extractTitle(html: string): string {
 // ── C1: intent page detection ────────────────────────────────────────────────
 
 const INTENT_PATTERNS: Record<IntentType, RegExp[]> = {
-  pricing:      [/\/pricing\b/i, /\/plans\b/i, /\/tariff/i, /\bpric(e|ing|es)\b/i, /\bplan(s)?\b/i],
+  pricing:      [/\/pricing\b/i, /\/plans\b/i, /\/tariff/i, /\bpric(e|ing|es)\b/i],
   comparison:   [/\-vs\-/i, /\/vs\//i, /\/compare\b/i, /\bvs\s/i, /\bcomparison\b/i],
   alternatives: [/alternativ/i],
   'use-cases':  [/use[\s\-]case/i, /\/solution/i, /\/use[\s\-]cases?\b/i],
@@ -125,7 +138,7 @@ export function buildStructurePrompt(
     'Each item: {"url":"...","hasAnswerFirstParagraph":bool,"hasQuestionHeaders":bool,"hasQABlocks":bool}',
     '',
     'Rules:',
-    '- hasAnswerFirstParagraph: true if the first paragraph directly addresses the main heading topic',
+    '- hasAnswerFirstParagraph: true if the first paragraph directly answers the main heading question',
     '- hasQuestionHeaders: true if at least one heading (H2 or H3) is phrased as a question (ends with ?)',
     '- hasQABlocks: true if there is a visible FAQ or Q&A section',
     '',
@@ -174,8 +187,13 @@ function extractFirstHeading(html: string): string {
 }
 
 function extractFirstParagraph(html: string): string {
-  const match = /<p[^>]*>([^<]{20,})<\/p>/i.exec(html);
-  return stripHtml(match?.[1] ?? '').slice(0, 300);
+  const re = /<p[^>]*>([\s\S]*?)<\/p>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) !== null) {
+    const text = stripHtml(match[1] ?? '').trim();
+    if (text.length >= 20) return text.slice(0, 300);
+  }
+  return '';
 }
 
 // ── C3: stats density ────────────────────────────────────────────────────────
@@ -189,8 +207,11 @@ export function computeStatsFact(url: string, text: string): PageStatsFact {
   const wordCount = words.length;
   const per1k = wordCount > 0 ? 1000 / wordCount : 0;
 
-  const numericMatches =
-    (text.match(NUMERIC_FACT_RE)?.length ?? 0) + (text.match(SIMPLE_NUMBER_RE)?.length ?? 0);
+  const numericWithUnits = text.match(NUMERIC_FACT_RE)?.length ?? 0;
+  // Remove already-counted numbers before applying simple number regex
+  const textWithoutUnits = text.replace(NUMERIC_FACT_RE, ' COUNTED ');
+  const simpleNumbers = textWithoutUnits.match(SIMPLE_NUMBER_RE)?.length ?? 0;
+  const numericMatches = numericWithUnits + simpleNumbers;
   const citationMatches = text.match(CITATION_RE)?.length ?? 0;
 
   return {
@@ -204,17 +225,17 @@ export function computeStatsFact(url: string, text: string): PageStatsFact {
 // ── C4: freshness ────────────────────────────────────────────────────────────
 
 const DATE_PATTERNS = [
-  // JSON-LD dateModified / datePublished
+  // 1. JSON-LD (highest priority)
   /"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})/,
   /"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})/,
-  // Open Graph / article meta
-  /content="(\d{4}-\d{2}-\d{2})/,
-  // Visible text patterns
+  // 2. Specific meta tags (before generic content= catch-all)
+  /property="article:modified_time"[^>]+content="([^"]+)"/i,
+  /name="last-modified"[^>]+content="([^"]+)"/i,
+  // 3. Generic Open Graph content= with ISO date
+  /property="[^"]*"[^>]+content="(\d{4}-\d{2}-\d{2})/i,
+  // 4. Visible text patterns (lowest priority)
   /(?:updated?|last\s+updated?|modified)\s*:?\s*(\w+\s+\d{1,2},?\s+\d{4})/i,
   /(?:updated?|last\s+updated?|modified)\s*:?\s*(\w+\s+\d{4})/i,
-  // ISO meta
-  /name="last-modified"[^>]+content="([^"]+)"/i,
-  /property="article:modified_time"[^>]+content="([^"]+)"/i,
 ];
 
 const MONTH_MAP: Record<string, number> = {
@@ -341,6 +362,7 @@ export async function analyzeContent(
 ): Promise<StepResult<ContentCheckFacts>> {
   const nowMs = deps.nowMs ?? Date.now();
   const usageRecords: UsageRecord[] = [];
+  const notes: string[] = [];
 
   // Load pages
   const pageData: Array<{ url: string; html: string }> = [];
@@ -348,8 +370,8 @@ export async function analyzeContent(
     try {
       const { html } = await deps.getPageData(url);
       pageData.push({ url, html });
-    } catch {
-      // skip failed pages — partial result acceptable
+    } catch (err) {
+      notes.push(`page_fetch_failed: ${url} — ${String(err)}`);
     }
   }
 
@@ -367,7 +389,7 @@ export async function analyzeContent(
       },
       artifacts: [],
       usage: [],
-      notes: [],
+      notes,
     };
   }
 
@@ -399,7 +421,8 @@ export async function analyzeContent(
     const structureAnswer = await deps.model.generate(structurePrompt, { jsonMode: true, timeoutMs: 30_000 });
     usageRecords.push(structureAnswer.usage);
     structureResults = parseStructureResults(structureAnswer.text, pageMeta.map((p) => p.url));
-  } catch {
+  } catch (err) {
+    notes.push(`c2_llm_failed: ${String(err)}`);
     // partial: keep fallback
   }
 
@@ -434,7 +457,8 @@ export async function analyzeContent(
     if (parsed) {
       c5 = { ...parsed, testedText };
     }
-  } catch {
+  } catch (err) {
+    notes.push(`c5_llm_failed: ${String(err)}`);
     // partial: keep fallback
   }
 
@@ -456,6 +480,6 @@ export async function analyzeContent(
     },
     artifacts: [],
     usage: usageRecords,
-    notes: [],
+    notes,
   };
 }
