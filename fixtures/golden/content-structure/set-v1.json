@@ -1,0 +1,456 @@
+{
+  "version": 1,
+  "description": "50 labeled page structure examples for C2 eval. Labels: hasAnswerFirstParagraph, hasQuestionHeaders, hasQABlocks.",
+  "examples": [
+    {
+      "id": "cs-001",
+      "url": "https://example.com/pricing",
+      "firstHeading": "How much does it cost?",
+      "firstParagraph": "Our pricing starts at $49/month for up to 5 users, with no hidden fees.",
+      "contentSample": "Our pricing starts at $49/month for up to 5 users. The Growth plan is $149/month. Enterprise pricing is available on request.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-002",
+      "url": "https://example.com/about",
+      "firstHeading": "About Our Company",
+      "firstParagraph": "We were founded in 2019 with a mission to help businesses grow.",
+      "contentSample": "We were founded in 2019. Our team is distributed across 12 countries. We serve over 5,000 customers worldwide.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-003",
+      "url": "https://example.com/faq",
+      "firstHeading": "Frequently Asked Questions",
+      "firstParagraph": "Find answers to the most common questions about our platform.",
+      "contentSample": "Is there a free trial? Yes, we offer a 14-day free trial. Do you offer refunds? Yes, within 30 days.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": true, "hasQABlocks": true }
+    },
+    {
+      "id": "cs-004",
+      "url": "https://example.com/blog/how-to-reduce-churn",
+      "firstHeading": "How to Reduce Customer Churn in SaaS",
+      "firstParagraph": "Customer churn is reduced by improving onboarding, engaging users early, and gathering feedback regularly.",
+      "contentSample": "Churn is the percentage of customers who cancel. Most SaaS companies see 5-7% monthly churn. Here are five proven strategies to reduce it.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-005",
+      "url": "https://example.com/features",
+      "firstHeading": "Powerful Features for Growing Teams",
+      "firstParagraph": "Our platform includes over 50 integrations, real-time analytics, and AI-powered insights.",
+      "contentSample": "Analytics dashboard. API access. Collaboration tools. 50+ integrations. AI recommendations.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-006",
+      "url": "https://example.com/blog/what-is-crm",
+      "firstHeading": "What Is a CRM?",
+      "firstParagraph": "A CRM (Customer Relationship Management) system is software that helps businesses manage their customer interactions and data.",
+      "contentSample": "A CRM stores contact information, tracks deals, and automates follow-ups. Businesses use CRMs to increase sales productivity by up to 34%.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-007",
+      "url": "https://example.com/blog/saas-metrics",
+      "firstHeading": "The 7 SaaS Metrics Every Founder Must Track",
+      "firstParagraph": "Successful SaaS businesses track MRR, churn, CAC, LTV, NPS, activation rate, and expansion revenue.",
+      "contentSample": "MRR: monthly recurring revenue. Churn: lost customers. CAC: cost to acquire. LTV: lifetime value. These seven metrics define your business health.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-008",
+      "url": "https://example.com/support",
+      "firstHeading": "Customer Support",
+      "firstParagraph": "Contact our support team via email or chat. We respond within 4 hours on business days.",
+      "contentSample": "Email support: support@example.com. Live chat: available 9am-6pm EST. Phone: +1 800 555 0100.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-009",
+      "url": "https://example.com/blog/why-use-ai",
+      "firstHeading": "Why Should Your Business Use AI?",
+      "firstParagraph": "Businesses should use AI to automate repetitive tasks, gain insights from data, and personalize customer experiences at scale.",
+      "contentSample": "AI adoption has grown 270% in the past four years. Companies using AI report 40% higher productivity. Common use cases include customer support, forecasting, and content generation.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-010",
+      "url": "https://example.com/integrations",
+      "firstHeading": "Connect With Your Favorite Tools",
+      "firstParagraph": "Explore all available integrations below.",
+      "contentSample": "Slack. Salesforce. HubSpot. Google Analytics. Zapier. Intercom. Connect them all in minutes.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-011",
+      "url": "https://example.com/blog/best-project-management-tools",
+      "firstHeading": "What Are the Best Project Management Tools in 2025?",
+      "firstParagraph": "The best project management tools in 2025 are Asana, Notion, Linear, and Monday.com — each excels for different team sizes and workflows.",
+      "contentSample": "Asana is best for large teams. Notion works well for documentation-heavy teams. Linear is preferred by engineering teams. Monday.com suits marketing and ops.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-012",
+      "url": "https://example.com/blog/onboarding-tips",
+      "firstHeading": "5 Onboarding Tips to Reduce Time-to-Value",
+      "firstParagraph": "Great onboarding reduces churn and accelerates activation.",
+      "contentSample": "1. Send a welcome email immediately. 2. Offer an in-app tour. 3. Set up the first success milestone. 4. Check in at day 3. 5. Celebrate first win.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-013",
+      "url": "https://example.com/help/how-to-export",
+      "firstHeading": "How Do I Export My Data?",
+      "firstParagraph": "You can export your data as a CSV or JSON file from Settings > Data > Export.",
+      "contentSample": "Navigate to Settings. Click on Data. Select Export. Choose format: CSV or JSON. Download the file.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-014",
+      "url": "https://example.com/case-studies",
+      "firstHeading": "Customer Success Stories",
+      "firstParagraph": "Discover how our customers achieved measurable results with our platform.",
+      "contentSample": "Acme Corp reduced churn by 45%. Bright Labs grew MRR 3x in 6 months. TechForce onboarded 1,000 users in their first week.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-015",
+      "url": "https://example.com/blog/gdpr-compliance",
+      "firstHeading": "Is Our Platform GDPR Compliant?",
+      "firstParagraph": "Yes, our platform is fully GDPR compliant. We store all EU customer data in European data centers and provide data processing agreements.",
+      "contentSample": "GDPR requires explicit consent, data portability, and the right to be forgotten. Our platform handles all three automatically.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-016",
+      "url": "https://example.com/security",
+      "firstHeading": "Security",
+      "firstParagraph": "We take security seriously. Our infrastructure is SOC 2 Type II certified and all data is encrypted at rest and in transit.",
+      "contentSample": "SOC 2 Type II. ISO 27001. GDPR. CCPA. AES-256 encryption. Penetration testing quarterly.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-017",
+      "url": "https://example.com/blog/email-marketing-guide",
+      "firstHeading": "The Complete Guide to Email Marketing",
+      "firstParagraph": "Email marketing is one of the highest-ROI channels, returning $42 for every $1 spent on average.",
+      "contentSample": "Email has 4 billion daily users. Average open rate is 21.33%. Click-through rates average 2.62%. Segmentation increases revenue by 760%.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-018",
+      "url": "https://example.com/blog/what-is-mrr",
+      "firstHeading": "What Is MRR and How Do You Calculate It?",
+      "firstParagraph": "MRR (Monthly Recurring Revenue) is the predictable revenue a SaaS company earns each month. Calculate it by multiplying active subscribers by average revenue per account.",
+      "contentSample": "MRR = active customers × ARPA. If you have 100 customers at $99/month, your MRR is $9,900. Track new MRR, expansion MRR, and churned MRR separately.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-019",
+      "url": "https://example.com/blog/customer-retention",
+      "firstHeading": "Customer Retention Strategies That Work",
+      "firstParagraph": "Customer retention keeps existing customers engaged and reduces churn.",
+      "contentSample": "Retention programs include loyalty rewards, regular check-ins, and proactive support. Companies with strong retention grow 2.5x faster than average.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-020",
+      "url": "https://example.com/docs/api-reference",
+      "firstHeading": "API Reference",
+      "firstParagraph": "Our REST API lets you integrate with any system. All requests require authentication via API key.",
+      "contentSample": "Base URL: https://api.example.com/v1. Authentication: Bearer token. Rate limit: 1000 requests/hour. Response format: JSON.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-021",
+      "url": "https://example.com/blog/product-led-growth",
+      "firstHeading": "What Is Product-Led Growth?",
+      "firstParagraph": "Product-led growth (PLG) is a go-to-market strategy where the product itself is the primary driver of acquisition, retention, and expansion.",
+      "contentSample": "PLG companies let users experience value before purchasing. Examples include Slack, Notion, and Figma. PLG companies grow 2x faster than sales-led peers.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-022",
+      "url": "https://example.com/blog/pricing-psychology",
+      "firstHeading": "Pricing Psychology: How to Price Your SaaS",
+      "firstParagraph": "The way you present prices affects purchase decisions more than the price itself.",
+      "contentSample": "Charm pricing ($99 vs $100) increases conversions by 24%. Anchoring sets expectations. Decoy pricing nudges toward the middle tier.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-023",
+      "url": "https://example.com/help/getting-started",
+      "firstHeading": "Getting Started",
+      "firstParagraph": "This guide will walk you through the key steps to get up and running.",
+      "contentSample": "Step 1: Create your account. Step 2: Set up your workspace. Step 3: Invite your team. Step 4: Connect your tools.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-024",
+      "url": "https://example.com/blog/b2b-saas-marketing",
+      "firstHeading": "How to Market a B2B SaaS Product",
+      "firstParagraph": "B2B SaaS marketing requires targeting decision-makers, demonstrating ROI, and building trust through content and social proof.",
+      "contentSample": "The B2B buying cycle averages 6-12 months. Decision-makers are 57% through the cycle before contacting sales. Content marketing generates 3x more leads than outbound at 62% lower cost.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-025",
+      "url": "https://example.com/changelog",
+      "firstHeading": "Product Changelog",
+      "firstParagraph": "Track every update, improvement, and fix we ship.",
+      "contentSample": "September 2025: New dashboard. August 2025: API v2. July 2025: Mobile app. June 2025: Bulk export.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-026",
+      "url": "https://example.com/blog/alternatives-to-hubspot",
+      "firstHeading": "The Best HubSpot Alternatives in 2025",
+      "firstParagraph": "The best HubSpot alternatives in 2025 include ActiveCampaign for email automation, Pipedrive for sales CRM, and our platform for all-in-one growth.",
+      "contentSample": "Why look for HubSpot alternatives? Price. Complexity. Lack of specific features. Here are the top 5 options reviewed in detail.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-027",
+      "url": "https://example.com/blog/free-crm-tools",
+      "firstHeading": "Top Free CRM Tools for Small Businesses",
+      "firstParagraph": "Small businesses can manage customer relationships without spending money using these free CRM options.",
+      "contentSample": "HubSpot CRM has a generous free tier. Zoho CRM free for up to 3 users. Bitrix24 free for unlimited users with some limits.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-028",
+      "url": "https://example.com/blog/how-to-write-faq",
+      "firstHeading": "How to Write an Effective FAQ Page",
+      "firstParagraph": "A great FAQ page addresses the real questions your customers ask, reduces support tickets, and improves SEO.",
+      "contentSample": "What makes a good FAQ? Short answers. Organized categories. Updated regularly. What to avoid? Overly long answers. Marketing language. Unanswered questions.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": true }
+    },
+    {
+      "id": "cs-029",
+      "url": "https://example.com/blog/sales-automation",
+      "firstHeading": "Sales Automation: Boost Your Team's Output",
+      "firstParagraph": "Sales automation tools free up time by handling repetitive tasks, so your team can focus on closing deals.",
+      "contentSample": "Automated follow-up emails. Lead scoring. CRM data entry. Meeting scheduling. Companies using sales automation close 53% more deals.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-030",
+      "url": "https://example.com/blog/customer-success-metrics",
+      "firstHeading": "Which Metrics Matter Most for Customer Success?",
+      "firstParagraph": "The most important customer success metrics are NPS, CSAT, churn rate, expansion MRR, and time-to-value.",
+      "contentSample": "NPS measures loyalty. CSAT measures satisfaction. Churn rate measures retention. These metrics together tell you how healthy your customer base is.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-031",
+      "url": "https://example.com/use-cases/marketing-teams",
+      "firstHeading": "How Marketing Teams Use Our Platform",
+      "firstParagraph": "Marketing teams use our platform to track campaign performance, automate workflows, and attribute revenue to channels.",
+      "contentSample": "Campaign analytics. Email automation. Lead nurturing. UTM tracking. Revenue attribution. All in one place.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-032",
+      "url": "https://example.com/blog/seo-for-saas",
+      "firstHeading": "SEO for SaaS: How to Rank for High-Intent Keywords",
+      "firstParagraph": "SaaS SEO focuses on ranking for problem-aware and solution-aware keywords to capture buyers at the bottom of the funnel.",
+      "contentSample": "Bottom-of-funnel keywords: [product] alternatives, [product] pricing, best [category] tools. These convert 3-5x higher than informational terms.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-033",
+      "url": "https://example.com/blog/what-is-nps",
+      "firstHeading": "What Is NPS and How Do You Measure It?",
+      "firstParagraph": "NPS (Net Promoter Score) measures customer loyalty by asking one question: how likely are you to recommend us on a scale of 0-10?",
+      "contentSample": "Promoters (9-10) drive growth. Passives (7-8) are satisfied but not loyal. Detractors (0-6) can damage your reputation. NPS = % Promoters - % Detractors.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-034",
+      "url": "https://example.com/resources/templates",
+      "firstHeading": "Free Templates",
+      "firstParagraph": "Download our free templates to get started faster.",
+      "contentSample": "Sales email templates. Onboarding checklists. QBR presentations. Customer success playbooks. All free to download.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-035",
+      "url": "https://example.com/blog/reduce-support-tickets",
+      "firstHeading": "How to Reduce Support Ticket Volume by 40%",
+      "firstParagraph": "You can reduce support tickets by 40% by improving in-app guidance, expanding your knowledge base, and adding proactive notifications.",
+      "contentSample": "Our customers reduced tickets by 38% after adding in-app tooltips. Building a searchable help center cuts volume by another 25%.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-036",
+      "url": "https://example.com/blog/content-marketing-roi",
+      "firstHeading": "Measuring Content Marketing ROI",
+      "firstParagraph": "Content marketing ROI is measured by tracking leads, pipeline, and revenue influenced by content assets.",
+      "contentSample": "Organic traffic. Lead conversion rate. Pipeline influenced. Closed deals. Content costs. Calculate: (Revenue - Cost) / Cost × 100.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-037",
+      "url": "https://example.com/blog/product-roadmap",
+      "firstHeading": "How to Build a Product Roadmap",
+      "firstParagraph": "A product roadmap communicates the strategic direction of your product and helps align teams around priorities.",
+      "contentSample": "Gather customer feedback. Prioritize with RICE or ICE framework. Map to quarterly themes. Share with stakeholders. Update monthly.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-038",
+      "url": "https://example.com/help/billing-faq",
+      "firstHeading": "Billing FAQ",
+      "firstParagraph": "Find answers to common billing questions here.",
+      "contentSample": "When am I charged? At the start of each billing cycle. Can I change my plan? Yes, at any time. Do you offer refunds? Yes, within 30 days of purchase.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": true, "hasQABlocks": true }
+    },
+    {
+      "id": "cs-039",
+      "url": "https://example.com/blog/api-design-best-practices",
+      "firstHeading": "API Design Best Practices for SaaS Products",
+      "firstParagraph": "Well-designed APIs increase developer adoption and make your product more extensible.",
+      "contentSample": "Use REST or GraphQL consistently. Version your API from day one. Document every endpoint. Provide SDKs in popular languages.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-040",
+      "url": "https://example.com/blog/competitive-analysis",
+      "firstHeading": "How to Do a Competitive Analysis",
+      "firstParagraph": "A competitive analysis helps you understand where your product stands in the market and identify differentiation opportunities.",
+      "contentSample": "Compare pricing. List features. Review G2 and Capterra ratings. Read competitor customer reviews. Map positioning.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-041",
+      "url": "https://example.com/blog/ab-testing-guide",
+      "firstHeading": "A/B Testing: The Complete Guide",
+      "firstParagraph": "A/B testing compares two versions of a page or feature to determine which performs better with real users.",
+      "contentSample": "Statistical significance is reached at 95% confidence. Run tests for at least 2 weeks. One variable at a time. Track conversion rate, not just clicks.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-042",
+      "url": "https://example.com/blog/saas-churn-benchmarks",
+      "firstHeading": "SaaS Churn Benchmarks by Category",
+      "firstParagraph": "Average monthly churn varies significantly by segment.",
+      "contentSample": "SMB SaaS: 3-7% monthly churn. Mid-market: 1-2%. Enterprise: 0.5-1%. The best-in-class SaaS companies keep churn below 0.5% monthly.",
+      "hasListsOrTables": true,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-043",
+      "url": "https://example.com/blog/what-is-jtbd",
+      "firstHeading": "What Is Jobs-to-Be-Done Theory?",
+      "firstParagraph": "Jobs-to-Be-Done (JTBD) theory says customers hire products to complete specific jobs in their lives — not just to use features.",
+      "contentSample": "Clayton Christensen popularized JTBD. The classic example: people don't buy a drill, they buy a hole. Applied to SaaS: focus on the outcome, not the feature.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-044",
+      "url": "https://example.com/partners",
+      "firstHeading": "Partner Program",
+      "firstParagraph": "Join our partner program and earn revenue by referring customers.",
+      "contentSample": "20% recurring commission. Co-marketing opportunities. Dedicated partner manager. Joint case studies.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-045",
+      "url": "https://example.com/blog/how-does-ml-work",
+      "firstHeading": "How Does Machine Learning Work?",
+      "firstParagraph": "Machine learning trains algorithms on historical data so they can recognize patterns and make predictions on new data without explicit programming.",
+      "contentSample": "Supervised learning uses labeled data. Unsupervised learning finds patterns. Reinforcement learning optimizes through rewards. Neural networks mimic the human brain.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-046",
+      "url": "https://example.com/blog/customer-interviews",
+      "firstHeading": "Running Customer Discovery Interviews",
+      "firstParagraph": "Customer discovery interviews reveal the real problems your target customers face, helping you build products they actually need.",
+      "contentSample": "Ask open-ended questions. Focus on behavior, not opinions. Listen more than you speak. Record with permission. Aim for 20 interviews per segment.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-047",
+      "url": "https://example.com/help/common-questions",
+      "firstHeading": "Common Questions",
+      "firstParagraph": "Browse our most frequently asked questions below.",
+      "contentSample": "Can I use my own domain? Yes. Is there a mobile app? Yes, iOS and Android. How do I cancel? From Account > Subscription > Cancel.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": true, "hasQABlocks": true }
+    },
+    {
+      "id": "cs-048",
+      "url": "https://example.com/blog/user-onboarding",
+      "firstHeading": "User Onboarding: Why First 7 Days Matter",
+      "firstParagraph": "Users who don't reach their first success milestone within 7 days are 3x more likely to churn.",
+      "contentSample": "Activation in 7 days is the single strongest predictor of 6-month retention in B2B SaaS. Define your activation event. Optimize the path to it.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-049",
+      "url": "https://example.com/blog/sla-meaning",
+      "firstHeading": "What Is an SLA? Service Level Agreements Explained",
+      "firstParagraph": "An SLA (Service Level Agreement) is a contract between a service provider and customer defining the expected level of service, including uptime guarantees, response times, and remedies for failures.",
+      "contentSample": "Most SaaS SLAs guarantee 99.9% uptime. Some enterprise tiers offer 99.99%. SLA violations result in service credits. Common metrics: uptime, response time, resolution time.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": true, "hasQuestionHeaders": true, "hasQABlocks": false }
+    },
+    {
+      "id": "cs-050",
+      "url": "https://example.com/blog/growth-hacking",
+      "firstHeading": "Growth Hacking Strategies for Early-Stage SaaS",
+      "firstParagraph": "Growth hacking combines rapid experimentation across marketing, product, and sales to find the fastest path to scalable growth.",
+      "contentSample": "Referral programs grew Dropbox 3900%. Product-led viral loops power Slack and Figma. Content SEO drives 80% of HubSpot's organic growth.",
+      "hasListsOrTables": false,
+      "label": { "hasAnswerFirstParagraph": false, "hasQuestionHeaders": false, "hasQABlocks": false }
+    }
+  ]
+}
