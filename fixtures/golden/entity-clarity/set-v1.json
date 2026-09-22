@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "description": "30 labeled entity clarity examples for C5 eval. Each example is the first 100 words of a homepage. Labels: entityMentioned, categoryMentioned, targetAudienceMentioned.",
+  "examples": [
+    {
+      "id": "ec-001",
+      "entityName": "Acme CRM",
+      "categoryLabel": "CRM software",
+      "text": "Acme CRM helps sales teams close more deals, faster. Built for B2B companies with 10 to 500 employees, Acme CRM gives your team a single place to track leads, manage pipelines, and forecast revenue. Join 3,000 sales teams that trust Acme CRM to grow their business.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-002",
+      "entityName": "Streamline",
+      "categoryLabel": "project management",
+      "text": "Streamline is the project management tool for modern engineering teams. Plan sprints, track issues, and ship features without the overhead. Trusted by over 10,000 developers at fast-moving startups and scale-ups.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-003",
+      "entityName": "DataVault",
+      "categoryLabel": "data analytics",
+      "text": "DataVault transforms raw data into business insights. Connect all your data sources in minutes and get dashboards your whole team can use. No SQL required.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-004",
+      "entityName": "FlowPay",
+      "categoryLabel": "payment processing",
+      "text": "Accept payments online in 135 currencies. Fast setup, low fees, and developer-friendly APIs. FlowPay powers millions of transactions for businesses of all sizes worldwide.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-005",
+      "entityName": "Helpy",
+      "categoryLabel": "customer support software",
+      "text": "Helpy is the all-in-one customer support platform for growing SaaS companies. Manage tickets, live chat, and self-service knowledge base from a single dashboard. Reduce support volume by 40% with smart automation.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-006",
+      "entityName": "NovaSend",
+      "categoryLabel": "email marketing",
+      "text": "Send beautiful emails that actually convert. NovaSend combines drag-and-drop design with powerful automation and deep analytics. Used by 25,000 marketers in 80 countries.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-007",
+      "entityName": "PulseDash",
+      "categoryLabel": "business intelligence",
+      "text": "Welcome to PulseDash. Bringing clarity to your business data since 2018. Our mission is to make analytics accessible for everyone.",
+      "label": { "entityMentioned": true, "categoryMentioned": false, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-008",
+      "entityName": "TeamSync",
+      "categoryLabel": "team collaboration",
+      "text": "TeamSync makes remote teams more productive. Real-time collaboration, async updates, and meeting summaries in one place. Perfect for distributed teams across time zones.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-009",
+      "entityName": "LeadBot",
+      "categoryLabel": "lead generation",
+      "text": "Automate your lead generation with AI. Our platform captures, qualifies, and routes leads 24/7 so your sales team can focus on closing. Join 2,500 B2B companies using us.",
+      "label": { "entityMentioned": false, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-010",
+      "entityName": "ChartMind",
+      "categoryLabel": "data visualization",
+      "text": "Create stunning charts and dashboards without writing code. ChartMind connects to any data source and generates publication-ready visualizations in seconds. Built for analysts and data teams.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-011",
+      "entityName": "QuickHR",
+      "categoryLabel": "HR software",
+      "text": "Simplify your people operations. Onboarding, payroll, performance reviews, and time tracking — all automated and compliant. Scale from 10 to 10,000 employees without adding HR headcount.",
+      "label": { "entityMentioned": false, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-012",
+      "entityName": "Pricify",
+      "categoryLabel": "pricing optimization",
+      "text": "Pricify helps SaaS founders find the right price. A/B test your pricing page, analyze willingness-to-pay data, and simulate revenue impact before you change anything.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-013",
+      "entityName": "ClearSign",
+      "categoryLabel": "e-signature software",
+      "text": "We believe paperwork should be the last thing slowing you down. ClearSign lets you send, sign, and manage documents from anywhere. Legally binding in 190 countries.",
+      "label": { "entityMentioned": true, "categoryMentioned": false, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-014",
+      "entityName": "Reportly",
+      "categoryLabel": "reporting and analytics",
+      "text": "Reportly is the reporting tool agencies and in-house marketing teams rely on to prove ROI. Connect 100+ data sources, build white-label dashboards, and schedule automated reports.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-015",
+      "entityName": "OpsFlow",
+      "categoryLabel": "workflow automation",
+      "text": "OpsFlow automates your business workflows without code. Connect apps, set triggers, and build multi-step automations in minutes. Replace manual processes for your operations team.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-016",
+      "entityName": "SpendSense",
+      "categoryLabel": "spend management",
+      "text": "Take control of company spending. SpendSense gives finance teams real-time visibility into every purchase, streamlines approval workflows, and integrates with your ERP.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-017",
+      "entityName": "Docuify",
+      "categoryLabel": "document management",
+      "text": "The home page of Docuify. Log in to access your documents. New to Docuify? Sign up free.",
+      "label": { "entityMentioned": true, "categoryMentioned": false, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-018",
+      "entityName": "SecureVPN",
+      "categoryLabel": "VPN service",
+      "text": "SecureVPN protects your privacy online. One click connects you to 3,200 servers in 65 countries. Unblock content, hide your IP, and encrypt your traffic. For individuals and businesses.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-019",
+      "entityName": "Notifio",
+      "categoryLabel": "push notification platform",
+      "text": "Re-engage your users with personalized push notifications. Notifio delivers real-time messages on web, iOS, and Android. Built for product teams who want to increase retention.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-020",
+      "entityName": "MeetingPro",
+      "categoryLabel": "meeting management software",
+      "text": "Stop wasting time in unproductive meetings. MeetingPro provides agendas, AI summaries, and action item tracking for every meeting. Used by executive teams at Fortune 500 companies.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-021",
+      "entityName": "BrandWatch",
+      "categoryLabel": "social media monitoring",
+      "text": "Monitor what people are saying about your brand, competitors, and industry. Track mentions across social media, news, forums, and blogs in real time.",
+      "label": { "entityMentioned": false, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-022",
+      "entityName": "CodeReview",
+      "categoryLabel": "code review tool",
+      "text": "CodeReview makes code reviews faster and more effective for engineering teams. Automate checks, enforce standards, and ship better software with fewer bugs.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-023",
+      "entityName": "TaxEase",
+      "categoryLabel": "tax software",
+      "text": "TaxEase simplifies tax filing for freelancers and small business owners. Import your transactions, categorize expenses, and generate accurate tax reports in minutes.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-024",
+      "entityName": "SurveySpark",
+      "categoryLabel": "survey platform",
+      "text": "Create engaging surveys in minutes. SurveySpark offers 100+ templates, logic branching, and real-time response dashboards. Perfect for customer research and employee feedback.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-025",
+      "entityName": "CloudStore",
+      "categoryLabel": "cloud storage",
+      "text": "CloudStore gives you secure, unlimited file storage. Access your files from anywhere, share with your team, and never worry about losing data again.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-026",
+      "entityName": "GrantWriter",
+      "categoryLabel": "grant writing software",
+      "text": "GrantWriter uses AI to help nonprofits and researchers write compelling grant applications. Find matching grants, draft proposals, and track submissions from one platform.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-027",
+      "entityName": "Invoicely",
+      "categoryLabel": "invoicing software",
+      "text": "Get paid faster. Create professional invoices, accept online payments, and track what you're owed — all in under a minute.",
+      "label": { "entityMentioned": false, "categoryMentioned": true, "targetAudienceMentioned": false }
+    },
+    {
+      "id": "ec-028",
+      "entityName": "AppTrack",
+      "categoryLabel": "app performance monitoring",
+      "text": "AppTrack monitors the performance of your web and mobile applications in real time. Detect errors, slowdowns, and crashes before your users report them. Trusted by 500 engineering teams.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-029",
+      "entityName": "FeedbackLoop",
+      "categoryLabel": "customer feedback platform",
+      "text": "FeedbackLoop helps product teams collect, organize, and act on customer feedback at scale. Turn user insights into product decisions. Integrates with Jira, Linear, and Notion.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": true }
+    },
+    {
+      "id": "ec-030",
+      "entityName": "ScheduleAI",
+      "categoryLabel": "scheduling software",
+      "text": "Booking meetings should be effortless. ScheduleAI eliminates back-and-forth emails by letting anyone book time directly on your calendar based on your real availability.",
+      "label": { "entityMentioned": true, "categoryMentioned": true, "targetAudienceMentioned": false }
+    }
+  ]
+}

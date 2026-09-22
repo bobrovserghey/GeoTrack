@@ -19,7 +19,8 @@
     "./steps/extract-mentions": "./src/steps/extract-mentions.ts",
     "./steps/accuracy-check": "./src/steps/accuracy-check.ts",
     "./steps/tone-check": "./src/steps/tone-check.ts",
-    "./steps/source-map": "./src/steps/source-map.ts"
+    "./steps/source-map": "./src/steps/source-map.ts",
+    "./steps/content-check": "./src/steps/content-check.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
