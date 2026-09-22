@@ -75,11 +75,11 @@ export function extractTitle(html: string): string {
 
 const INTENT_PATTERNS: Record<IntentType, RegExp[]> = {
   pricing:      [/\/pricing\b/i, /\/plans\b/i, /\/tariff/i, /\bpric(e|ing|es)\b/i],
-  comparison:   [/\-vs\-/i, /\/vs\//i, /\/compare\b/i, /\bvs\s/i, /\bcomparison\b/i],
+  comparison:   [/-vs-/i, /\/vs\//i, /\/compare\b/i, /\bvs\s/i, /\bcomparison\b/i],
   alternatives: [/alternativ/i],
-  'use-cases':  [/use[\s\-]case/i, /\/solution/i, /\/use[\s\-]cases?\b/i],
+  'use-cases':  [/use[\s-]case/i, /\/solution/i, /\/use[\s-]cases?\b/i],
   docs:         [/\/docs\b/i, /\/documentation\b/i, /\/help\b/i, /\/support\b/i, /\/guide/i],
-  faq:          [/\/faq\b/i, /frequently[\s\-]asked/i, /\bfaq\b/i],
+  faq:          [/\/faq\b/i, /frequently[\s-]asked/i, /\bfaq\b/i],
 };
 
 function detectIntentType(url: string, title: string, h1: string): IntentType | null {
