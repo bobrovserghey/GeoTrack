@@ -18,7 +18,8 @@
     "./steps/engine-poll": "./src/steps/engine-poll.ts",
     "./steps/extract-mentions": "./src/steps/extract-mentions.ts",
     "./steps/accuracy-check": "./src/steps/accuracy-check.ts",
-    "./steps/tone-check": "./src/steps/tone-check.ts"
+    "./steps/tone-check": "./src/steps/tone-check.ts",
+    "./steps/source-map": "./src/steps/source-map.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
