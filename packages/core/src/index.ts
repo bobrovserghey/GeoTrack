@@ -47,6 +47,16 @@ export type {
 export type { CitedPageFact, CitedPagesOutput } from './steps/cited-pages.js';
 export { scorePillarC } from './scoring/pillar-c.js';
 export type { PillarCResult } from './scoring/pillar-c.js';
+export type {
+  ReviewPlatformKey,
+  ReviewPlatformFact,
+  D1ReviewFacts,
+  D2CitationFacts,
+  D4EntityFacts,
+  OffsiteSignalsOutput,
+} from './steps/offsite-signals.js';
+export { scorePillarD } from './scoring/pillar-d.js';
+export type { PillarDResult } from './scoring/pillar-d.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
