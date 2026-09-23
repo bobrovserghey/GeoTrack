@@ -48,8 +48,11 @@ function scoreC2(
   if (cited.analyzedPageCount > 0) {
     const citedStructureRatio =
       (cited.medianHasAnswerFirstParagraphRatio + cited.medianHasListsOrTablesRatio) / 2;
-    const baseline = Math.max(citedStructureRatio, 0.01);
-    score = Math.round(Math.min(clientStructureRatio / baseline, 1) * maxScore);
+    if (citedStructureRatio === 0) {
+      score = Math.round(clientStructureRatio * maxScore);
+    } else {
+      score = Math.round(Math.min(clientStructureRatio / citedStructureRatio, 1) * maxScore);
+    }
   } else {
     score = Math.round(clientStructureRatio * maxScore);
   }

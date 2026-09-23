@@ -166,6 +166,37 @@ describe('C2 — answer-first structure', () => {
     expect(result.criterionScores.c2.measured).toBe(false);
     expect(result.criterionScores.c2.score).toBe(0);
   });
+
+  it('cited present but citedStructureRatio = 0, full client ratio → score = maxScore', () => {
+    // answerFirst: 1, questionHeaders: 1, listsOrTables: 1 → clientStructureRatio = 1
+    const facts = makeContentFacts({
+      c2: {
+        pages: [
+          { url: 'u', hasAnswerFirstParagraph: true, hasQuestionHeaders: true, hasQABlocks: false, hasListsOrTables: true },
+        ],
+      },
+    });
+    const cited = makeCitedPages({ medianHasAnswerFirstParagraphRatio: 0, medianHasListsOrTablesRatio: 0 });
+    const result = scorePillarC(facts, cited, makeConfig());
+    // citedStructureRatio = 0 → score = Math.round(1.0 * 20) = 20
+    expect(result.criterionScores.c2.score).toBe(20);
+    expect(result.criterionScores.c2.measured).toBe(true);
+  });
+
+  it('cited present but citedStructureRatio = 0, partial client ratio → score proportional', () => {
+    // answerFirst: 0, questionHeaders: 0, listsOrTables: 1 → clientStructureRatio = 1/3
+    const facts = makeContentFacts({
+      c2: {
+        pages: [
+          { url: 'u', hasAnswerFirstParagraph: false, hasQuestionHeaders: false, hasQABlocks: false, hasListsOrTables: true },
+        ],
+      },
+    });
+    const cited = makeCitedPages({ medianHasAnswerFirstParagraphRatio: 0, medianHasListsOrTablesRatio: 0 });
+    const result = scorePillarC(facts, cited, makeConfig());
+    // citedStructureRatio = 0 → score = Math.round((1/3) * 20) = 7
+    expect(result.criterionScores.c2.score).toBe(7);
+  });
 });
 
 // ── C3 ────────────────────────────────────────────────────────────────────────
