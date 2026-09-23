@@ -120,7 +120,7 @@ describe('D1 — review platforms', () => {
 
   it('SerpAPI throws on second D1 request → d1 not measured, requestsUsed includes prior calls', async () => {
     let callCount = 0;
-    const fetchFn = async (url: string): Promise<Response> => {
+    const fetchFn = async (_url: string): Promise<Response> => {
       callCount++;
       if (callCount === 2) throw new Error('network error');
       return {
