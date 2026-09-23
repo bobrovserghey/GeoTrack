@@ -21,7 +21,9 @@
     "./steps/tone-check": "./src/steps/tone-check.ts",
     "./steps/source-map": "./src/steps/source-map.ts",
     "./steps/content-check": "./src/steps/content-check.ts",
-    "./steps/cited-pages": "./src/steps/cited-pages.ts"
+    "./steps/cited-pages": "./src/steps/cited-pages.ts",
+    "./steps/offsite-signals": "./src/steps/offsite-signals.ts",
+    "./scoring/pillar-d": "./src/scoring/pillar-d.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
