@@ -69,9 +69,9 @@ describe('D1 — review platforms', () => {
       { ok: true, body: serpResult('https://www.crunchbase.com/organization/acme-corp') },
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d1.measured).toBe(true);
-    expect(result.data.d1.clientPlatformCount).toBe(4);
-    expect(result.data.d1.clientPlatforms.every((p) => p.profileFound)).toBe(true);
+    expect(result.data!.d1.measured).toBe(true);
+    expect(result.data!.d1.clientPlatformCount).toBe(4);
+    expect(result.data!.d1.clientPlatforms.every((p) => p.profileFound)).toBe(true);
   });
 
   it('2 of 4 platforms found', async () => {
@@ -84,16 +84,16 @@ describe('D1 — review platforms', () => {
       { ok: true, body: serpEmpty() },
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d1.measured).toBe(true);
-    expect(result.data.d1.clientPlatformCount).toBe(2);
+    expect(result.data!.d1.measured).toBe(true);
+    expect(result.data!.d1.clientPlatformCount).toBe(2);
   });
 
   it('no platforms found — organic_results empty for all', async () => {
     const responses = Array(6).fill({ ok: true, body: serpEmpty() });
     const { fetchFn } = makeSerpFetch(responses);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d1.measured).toBe(true);
-    expect(result.data.d1.clientPlatformCount).toBe(0);
+    expect(result.data!.d1.measured).toBe(true);
+    expect(result.data!.d1.clientPlatformCount).toBe(0);
   });
 
   it('serpApiKey undefined → d1 not measured', async () => {
@@ -102,9 +102,9 @@ describe('D1 — review platforms', () => {
       makeInput({ serpApiKey: undefined }),
       { fetchFn },
     );
-    expect(result.data.d1.measured).toBe(false);
-    expect(result.data.d1.clientPlatformCount).toBe(0);
-    expect(result.data.d1.clientPlatforms).toHaveLength(0);
+    expect(result.data!.d1.measured).toBe(false);
+    expect(result.data!.d1.clientPlatformCount).toBe(0);
+    expect(result.data!.d1.clientPlatforms).toHaveLength(0);
   });
 
   it('SerpAPI returns 429 on first D1 request → d1 not measured', async () => {
@@ -113,7 +113,7 @@ describe('D1 — review platforms', () => {
       // remaining calls should not happen
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d1.measured).toBe(false);
+    expect(result.data!.d1.measured).toBe(false);
     // only 1 D1 request was made before error
     expect(calls.filter((c) => c.url.includes('g2.com')).length).toBe(1);
   });
@@ -130,8 +130,8 @@ describe('D1 — review platforms', () => {
       } as unknown as Response;
     };
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d1.measured).toBe(false);
-    expect(result.data.serpRequestsUsed).toBeGreaterThanOrEqual(1);
+    expect(result.data!.d1.measured).toBe(false);
+    expect(result.data!.serpRequestsUsed).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -143,10 +143,10 @@ describe('D2 — citation source presence', () => {
     const { fetchFn } = makeSerpFetch(responses);
     const citedPages = makeCitedPages({ analyzedPageCount: 10, pagesWithClientMentionCount: 3 });
     const result = await collectOffsiteSignals(makeInput({ citedPages }), { fetchFn });
-    expect(result.data.d2.measured).toBe(true);
-    expect(result.data.d2.clientPresenceRatio).toBeCloseTo(0.3);
-    expect(result.data.d2.pagesWithClientMention).toBe(3);
-    expect(result.data.d2.citedPagesAnalyzed).toBe(10);
+    expect(result.data!.d2.measured).toBe(true);
+    expect(result.data!.d2.clientPresenceRatio).toBeCloseTo(0.3);
+    expect(result.data!.d2.pagesWithClientMention).toBe(3);
+    expect(result.data!.d2.citedPagesAnalyzed).toBe(10);
   });
 
   it('unmeasured when analyzedPageCount = 0', async () => {
@@ -154,8 +154,8 @@ describe('D2 — citation source presence', () => {
     const { fetchFn } = makeSerpFetch(responses);
     const citedPages = makeCitedPages({ analyzedPageCount: 0, pagesWithClientMentionCount: 0 });
     const result = await collectOffsiteSignals(makeInput({ citedPages }), { fetchFn });
-    expect(result.data.d2.measured).toBe(false);
-    expect(result.data.d2.clientPresenceRatio).toBe(0);
+    expect(result.data!.d2.measured).toBe(false);
+    expect(result.data!.d2.clientPresenceRatio).toBe(0);
   });
 
   it('D2 measured even when serpApiKey absent', async () => {
@@ -165,8 +165,8 @@ describe('D2 — citation source presence', () => {
       makeInput({ serpApiKey: undefined, citedPages }),
       { fetchFn },
     );
-    expect(result.data.d2.measured).toBe(true);
-    expect(result.data.d2.clientPresenceRatio).toBeCloseTo(0.4);
+    expect(result.data!.d2.measured).toBe(true);
+    expect(result.data!.d2.clientPresenceRatio).toBeCloseTo(0.4);
   });
 });
 
@@ -182,10 +182,10 @@ describe('D4 — entity consistency', () => {
       { ok: true, body: serpResult('https://www.crunchbase.com/organization/acme-corp') },
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d4.measured).toBe(true);
-    expect(result.data.d4.linkedInFound).toBe(true);
-    expect(result.data.d4.crunchbaseFound).toBe(true);
-    expect(result.data.d4.linkedInUrl).toContain('linkedin.com/company');
+    expect(result.data!.d4.measured).toBe(true);
+    expect(result.data!.d4.linkedInFound).toBe(true);
+    expect(result.data!.d4.crunchbaseFound).toBe(true);
+    expect(result.data!.d4.linkedInUrl).toContain('linkedin.com/company');
   });
 
   it('only LinkedIn found', async () => {
@@ -195,18 +195,18 @@ describe('D4 — entity consistency', () => {
       { ok: true, body: serpEmpty() },
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d4.linkedInFound).toBe(true);
-    expect(result.data.d4.crunchbaseFound).toBe(false);
-    expect(result.data.d4.crunchbaseUrl).toBeNull();
+    expect(result.data!.d4.linkedInFound).toBe(true);
+    expect(result.data!.d4.crunchbaseFound).toBe(false);
+    expect(result.data!.d4.crunchbaseUrl).toBeNull();
   });
 
   it('neither LinkedIn nor Crunchbase found', async () => {
     const responses = Array(6).fill({ ok: true, body: serpEmpty() });
     const { fetchFn } = makeSerpFetch(responses);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d4.measured).toBe(true);
-    expect(result.data.d4.linkedInFound).toBe(false);
-    expect(result.data.d4.crunchbaseFound).toBe(false);
+    expect(result.data!.d4.measured).toBe(true);
+    expect(result.data!.d4.linkedInFound).toBe(false);
+    expect(result.data!.d4.crunchbaseFound).toBe(false);
   });
 
   it('SerpAPI 503 on D4 → d4 not measured', async () => {
@@ -215,7 +215,7 @@ describe('D4 — entity consistency', () => {
       { ok: false, status: 503 },
     ]);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.d4.measured).toBe(false);
+    expect(result.data!.d4.measured).toBe(false);
   });
 });
 
@@ -226,7 +226,7 @@ describe('serpRequestsUsed', () => {
     const responses = Array(6).fill({ ok: true, body: serpEmpty() });
     const { fetchFn } = makeSerpFetch(responses);
     const result = await collectOffsiteSignals(makeInput(), { fetchFn });
-    expect(result.data.serpRequestsUsed).toBe(6); // 4 D1 + 2 D4
+    expect(result.data!.serpRequestsUsed).toBe(6); // 4 D1 + 2 D4
   });
 
   it('zero when serpApiKey absent', async () => {
@@ -235,6 +235,6 @@ describe('serpRequestsUsed', () => {
       makeInput({ serpApiKey: undefined }),
       { fetchFn },
     );
-    expect(result.data.serpRequestsUsed).toBe(0);
+    expect(result.data!.serpRequestsUsed).toBe(0);
   });
 });
