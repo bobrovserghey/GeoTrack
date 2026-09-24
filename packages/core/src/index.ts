@@ -68,6 +68,11 @@ export type {
   E5AgentInterfaceFacts,
   MachineReadableCheckOutput,
 } from './steps/machine-readable-check.js';
+export type {
+  ScenarioResult,
+  E1AgentScenarioFacts,
+  AgentScenarioCheckOutput,
+} from './steps/agent-scenario-check.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';

@@ -25,7 +25,8 @@
     "./steps/offsite-signals": "./src/steps/offsite-signals.ts",
     "./scoring/pillar-d": "./src/scoring/pillar-d.ts",
     "./steps/accessibility-check": "./src/steps/accessibility-check.ts",
-    "./steps/machine-readable-check": "./src/steps/machine-readable-check.ts"
+    "./steps/machine-readable-check": "./src/steps/machine-readable-check.ts",
+    "./steps/agent-scenario-check": "./src/steps/agent-scenario-check.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
