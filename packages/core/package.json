@@ -23,7 +23,8 @@
     "./steps/content-check": "./src/steps/content-check.ts",
     "./steps/cited-pages": "./src/steps/cited-pages.ts",
     "./steps/offsite-signals": "./src/steps/offsite-signals.ts",
-    "./scoring/pillar-d": "./src/scoring/pillar-d.ts"
+    "./scoring/pillar-d": "./src/scoring/pillar-d.ts",
+    "./steps/accessibility-check": "./src/steps/accessibility-check.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
