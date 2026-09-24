@@ -57,6 +57,12 @@ export type {
 } from './steps/offsite-signals.js';
 export { scorePillarD } from './scoring/pillar-d.js';
 export type { PillarDResult } from './scoring/pillar-d.js';
+export type {
+  AxeViolation,
+  E2AccessibilityFacts,
+  E3BarrierFacts,
+  AccessibilityCheckOutput,
+} from './steps/accessibility-check.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
