@@ -73,6 +73,10 @@ export type {
   E1AgentScenarioFacts,
   AgentScenarioCheckOutput,
 } from './steps/agent-scenario-check.js';
+export { scorePillarE } from './scoring/pillar-e.js';
+export type { PillarEResult } from './scoring/pillar-e.js';
+export { computeOverallScore } from './scoring/overall.js';
+export type { OverallScoreResult } from './scoring/overall.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
