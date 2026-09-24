@@ -63,6 +63,11 @@ export type {
   E3BarrierFacts,
   AccessibilityCheckOutput,
 } from './steps/accessibility-check.js';
+export type {
+  E4MachineReadableFacts,
+  E5AgentInterfaceFacts,
+  MachineReadableCheckOutput,
+} from './steps/machine-readable-check.js';
 export type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from './steps/extract-mentions.js';
 export { normalizeEmail } from './email.js';
 export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
