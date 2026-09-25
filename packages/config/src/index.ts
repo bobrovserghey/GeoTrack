@@ -3,6 +3,8 @@ import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { AuditProfileSchema, AuditProfilesFileSchema } from './schemas/audit-profile.js';
+import { AuditProfilesV2FileSchema } from './schemas/audit-profile-v2.js';
+import type { AuditProfileV2 } from './schemas/audit-profile-v2.js';
 import { EngineRegistryFileSchema } from './schemas/engine-registry.js';
 import { ProviderPricesFileSchema } from './schemas/provider-prices.js';
 import { TaxonomySchema } from './schemas/taxonomy.js';
@@ -27,6 +29,19 @@ function loadProfilesFile() {
 function loadEnginesFile() {
   const raw = require('./engines.v1.json');
   return EngineRegistryFileSchema.parse(raw);
+}
+
+export function getAuditProfileV2(id: string): AuditProfileV2 {
+  const raw = require('./audit-profiles.v2.json');
+  // The file schema validates every profile via z.record(AuditProfileV2Schema),
+  // so the looked-up entry is already a parsed AuditProfileV2.
+  const file = AuditProfilesV2FileSchema.parse(raw);
+  if (!Object.hasOwn(file.profiles, id)) {
+    throw new Error(
+      `Unknown audit profile v2: "${id}". Known: ${Object.keys(file.profiles).join(', ')}`,
+    );
+  }
+  return file.profiles[id]!;
 }
 
 export function getAuditProfile(id: AuditProfileId | string): AuditProfile {
@@ -78,6 +93,8 @@ export { CategoryEntrySchema, TaxonomySchema } from './schemas/taxonomy.js';
 export type { PromptSet, PromptEntry, Locale, PromptType } from './schemas/prompt-set.js';
 export { PromptSetSchema, PromptEntrySchema, LOCALES, PROMPT_TYPES } from './schemas/prompt-set.js';
 export { AuditProfileSchema, AuditProfilesFileSchema };
+export { AuditProfileV2Schema, AuditProfilesV2FileSchema } from './schemas/audit-profile-v2.js';
+export type { AuditProfileV2, AuditProfileV2Id } from './schemas/audit-profile-v2.js';
 export { generatePromptBundle } from './prompt-bundle.js';
 export type { PromptBundleInput } from './prompt-bundle.js';
 export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, PROFILE_QUOTAS, BUNDLED_PROMPT_TYPES } from './schemas/prompt-bundle.js';

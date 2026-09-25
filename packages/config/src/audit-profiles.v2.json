@@ -1,0 +1,110 @@
+{
+  "version": 2,
+  "profiles": {
+    "teaser": {
+      "id": "teaser",
+      "version": 2,
+      "crawlerPages": 3,
+      "engines": ["perplexity"],
+      "locales": 1,
+      "promptsWithSearch": {
+        "category": 10,
+        "brand": 2,
+        "client": 0
+      },
+      "promptsWithSearchAdditionalLocale": {
+        "category": 0,
+        "brand": 0
+      },
+      "promptsWithoutSearch": {
+        "discovery": 0,
+        "brand": 0
+      },
+      "noSearchEngines": [],
+      "promptRepeats": 1,
+      "competitorCount": 0,
+      "pillars": ["A_preliminary", "B", "E5"],
+      "findingCount": 3,
+      "manualReview": false,
+      "pdf": false,
+      "serpApiRequests": 2,
+      "serpApiRequestsClient": 0,
+      "costSoftCeilingUsd": 0.10,
+      "costHardCeilingUsd": 0.25,
+      "costSoftCeilingPerAdditionalLocaleUsd": 0,
+      "costHardCeilingPerAdditionalLocaleUsd": 0,
+      "timeBudgetSeconds": 90,
+      "timeBudgetPerAdditionalLocaleSeconds": 0
+    },
+    "standard": {
+      "id": "standard",
+      "version": 2,
+      "crawlerPages": 50,
+      "engines": ["perplexity", "chatgpt", "gemini"],
+      "locales": 1,
+      "promptsWithSearch": {
+        "category": 20,
+        "brand": 4,
+        "client": 6
+      },
+      "promptsWithSearchAdditionalLocale": {
+        "category": 0,
+        "brand": 0
+      },
+      "promptsWithoutSearch": {
+        "discovery": 6,
+        "brand": 4
+      },
+      "noSearchEngines": ["chatgpt"],
+      "promptRepeats": 2,
+      "competitorCount": 3,
+      "pillars": ["A", "B", "C", "D", "E"],
+      "findingCount": 15,
+      "manualReview": true,
+      "pdf": true,
+      "serpApiRequests": 11,
+      "serpApiRequestsClient": 2,
+      "costSoftCeilingUsd": 6.00,
+      "costHardCeilingUsd": 8.00,
+      "costSoftCeilingPerAdditionalLocaleUsd": 0,
+      "costHardCeilingPerAdditionalLocaleUsd": 0,
+      "timeBudgetSeconds": 360,
+      "timeBudgetPerAdditionalLocaleSeconds": 0
+    },
+    "extended": {
+      "id": "extended",
+      "version": 2,
+      "crawlerPages": 50,
+      "engines": ["perplexity", "chatgpt", "gemini"],
+      "locales": 3,
+      "promptsWithSearch": {
+        "category": 30,
+        "brand": 10,
+        "client": 10
+      },
+      "promptsWithSearchAdditionalLocale": {
+        "category": 20,
+        "brand": 5
+      },
+      "promptsWithoutSearch": {
+        "discovery": 10,
+        "brand": 10
+      },
+      "noSearchEngines": ["chatgpt", "gemini"],
+      "promptRepeats": 2,
+      "competitorCount": 5,
+      "pillars": ["A", "B", "C", "D", "E"],
+      "findingCount": 15,
+      "manualReview": true,
+      "pdf": true,
+      "serpApiRequests": 11,
+      "serpApiRequestsClient": 2,
+      "costSoftCeilingUsd": 9.00,
+      "costHardCeilingUsd": 12.00,
+      "costSoftCeilingPerAdditionalLocaleUsd": 3.00,
+      "costHardCeilingPerAdditionalLocaleUsd": 4.00,
+      "timeBudgetSeconds": 480,
+      "timeBudgetPerAdditionalLocaleSeconds": 120
+    }
+  }
+}
