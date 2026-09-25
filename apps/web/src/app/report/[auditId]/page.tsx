@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { eq, asc } from 'drizzle-orm';
 import { createClient } from '@geotrack/db/client';
+import { isValidReportToken } from '@/lib/report-access';
 import {
   audits,
   scores,
@@ -155,10 +156,15 @@ export default async function ReportPage({
   searchParams,
 }: {
   params: Promise<{ auditId: string }>;
-  searchParams: Promise<{ pt?: string }>;
+  searchParams: Promise<{ pt?: string | string[]; token?: string | string[] }>;
 }) {
   const { auditId } = await params;
-  const { pt } = await searchParams;
+  const { pt: rawPt, token: rawToken } = await searchParams;
+  // Next can deliver `string[]` for a repeated query param (`?token=a&token=b`);
+  // treat that as absent so it falls into the invalid-token path instead of
+  // throwing inside hashReportToken.
+  const pt = typeof rawPt === 'string' ? rawPt : undefined;
+  const token = typeof rawToken === 'string' ? rawToken : undefined;
 
   if (!process.env.DATABASE_URL) {
     return <ReportContent {...DEMO_PROPS} />;
@@ -172,7 +178,9 @@ export default async function ReportPage({
   }
 
   // --- audit ---
-  let audit: { id: string; domain: string; url: string; status: string; emailNormalized: string | null } | undefined;
+  let audit:
+    | { id: string; domain: string; url: string; status: string; emailNormalized: string | null; auditType: string }
+    | undefined;
   try {
     const rows = await db.select().from(audits).where(eq(audits.id, auditId)).limit(1);
     audit = rows[0];
@@ -180,6 +188,12 @@ export default async function ReportPage({
     return <ReportContent {...DEMO_PROPS} />;
   }
   if (!audit) notFound();
+
+  // Paid reports are gated by a report token (ADR-006); the teaser flow stays
+  // open by auditId — it's already protected by the domain/email/IP limits (ADR-018).
+  if (audit.auditType !== 'teaser') {
+    if (!(await isValidReportToken(db, auditId, token))) notFound();
+  }
 
   if (!READY_STATUSES.has(audit.status)) {
     return (

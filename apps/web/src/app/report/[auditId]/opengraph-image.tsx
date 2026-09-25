@@ -94,12 +94,22 @@ export default async function Image({
   if (db) {
     try {
       const [audit] = await db
-        .select({ domain: audits.domain, createdAt: audits.createdAt })
+        .select({
+          domain: audits.domain,
+          createdAt: audits.createdAt,
+          auditType: audits.auditType,
+        })
         .from(audits)
         .where(eq(audits.id, auditId))
         .limit(1);
 
-      if (audit) {
+      // Only the teaser report is open by auditId (ADR-018 limits). Paid reports
+      // are gated by a report token (ADR-006), and a metadata image route gets
+      // only `params` — no request, no `?token=` — so it cannot verify one.
+      // Therefore paid audits keep the generic demo image: same bytes and same
+      // status code as an unknown auditId, so this route leaks neither scores
+      // nor the existence of the audit.
+      if (audit && audit.auditType === 'teaser') {
         domain = audit.domain;
         auditDate = audit.createdAt;
         const scoreRows = await db

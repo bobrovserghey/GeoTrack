@@ -5,6 +5,7 @@ export * from './cost/index.js';
 export { transition, isTerminal, TransitionError } from './audit-status.js';
 export type { AuditStatus, TransitionEvent, TransitionContext } from './audit-status.js';
 export { generateProgressToken, hashProgressToken } from './progress-token.js';
+export { generateReportToken, hashReportToken } from './report-token.js';
 export { GeminiAdapter, PerplexityAdapter, GeminiModelAdapter, ChatGptAdapter } from './adapters/index.js';
 export { normalizeDomain } from './net/normalize-domain.js';
 export { PassportOutputSchema } from './steps/passport.js';
