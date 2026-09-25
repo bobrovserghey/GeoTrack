@@ -60,9 +60,26 @@ export function getEngineRegistry(): EngineRegistryEntry[] {
   return file.engines;
 }
 
-export function getMethodology(): Methodology {
-  const raw = require('./methodology.v1.json');
+// One static `require` literal per version: this package is pulled into the
+// Next.js webpack build via `transpilePackages`, and a computed `require(path)`
+// would become a context module ("critical dependency: the request of a
+// dependency is an expression") that can fail to resolve at runtime.
+const METHODOLOGY_LOADERS: Record<string, () => unknown> = {
+  '1': () => require('./methodology.v1.json'),
+};
+
+export function getMethodologyByVersion(version: string): Methodology {
+  if (!Object.hasOwn(METHODOLOGY_LOADERS, version)) {
+    throw new Error(
+      `Unknown methodology version: "${version}". Known: ${Object.keys(METHODOLOGY_LOADERS).join(', ')}`,
+    );
+  }
+  const raw = METHODOLOGY_LOADERS[version]!();
   return MethodologySchema.parse(raw);
+}
+
+export function getMethodology(): Methodology {
+  return getMethodologyByVersion('1');
 }
 
 export function getProviderPrices(): Record<string, ModelPrice> {

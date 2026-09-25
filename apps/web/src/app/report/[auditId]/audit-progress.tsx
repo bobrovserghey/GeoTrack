@@ -246,7 +246,10 @@ export default function AuditProgress({
 
           if (data.isTerminal) {
             if (READY_STATUSES.has(data.status)) {
-              router.replace(`/report/${auditId}`);
+              // Keep the current query string: a paid report needs its `?token=`
+              // to pass the server-side gate, and `pt` stays useful for the feed.
+              const qs = window.location.search;
+              router.replace(`/report/${auditId}${qs}`);
             }
             // stop polling for any terminal status (including failed)
             return;

@@ -9,6 +9,17 @@ const config: NextConfig = {
     };
     return webpackConfig;
   },
+  async headers() {
+    return [
+      {
+        source: '/report/:path*',
+        headers: [
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+        ],
+      },
+    ];
+  },
 };
 
 export default config;
