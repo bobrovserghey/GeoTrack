@@ -83,3 +83,5 @@ export { isDisposableEmail, hasMxRecord } from './disposable-email.js';
 export type { MxResolver } from './disposable-email.js';
 export { checkRateLimits } from './rate-limit.js';
 export type { RateLimitDeps, RateLimitContext, RateLimitResult } from './rate-limit.js';
+export { buildFindings } from './findings/build-findings.js';
+export type { Finding, FindingImpact, Evidence, FindingsFacts, FindingsScores, FindingTemplate } from './findings/types.js';
