@@ -85,4 +85,4 @@ export type { PromptBundle, BundledPromptEntry, ProfileId } from './schemas/prom
 export { EngineRegistryEntrySchema, EngineRegistryFileSchema } from './schemas/engine-registry.js';
 export { ModelPriceSchema, ProviderPricesFileSchema } from './schemas/provider-prices.js';
 export { MethodologySchema } from './schemas/methodology.js';
-export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig, BandConfig, IntervalConfig } from './schemas/methodology.js';
+export type { Methodology, BlockerConfig, PillarConfig, CriterionConfig, BandConfig, IntervalConfig, BasketConfig } from './schemas/methodology.js';
