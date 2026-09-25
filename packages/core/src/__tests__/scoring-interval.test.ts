@@ -9,6 +9,7 @@ function makeConfig(): Methodology {
     blockers: [],
     bands: [],
     interval: { hRepFallback: 0.3, hCovFactor: 0.5, hRepFactor: 0.3 },
+    basket: { realizationFactor: 0.7 },
   };
 }
 
