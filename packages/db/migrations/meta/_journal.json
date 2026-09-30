@@ -15,19 +15,26 @@
       "when": 1757894400000,
       "tag": "0001_category_cache_v2",
       "breakpoints": true
-    }
-    ,{
+    },
+    {
       "idx": 2,
       "version": "7",
       "when": 1758240000000,
       "tag": "0002_email_gate",
       "breakpoints": true
-    }
-    ,{
+    },
+    {
       "idx": 3,
       "version": "7",
       "when": 1758499200000,
       "tag": "0003_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790726400000,
+      "tag": "0004_claude_engine",
       "breakpoints": true
     }
   ]

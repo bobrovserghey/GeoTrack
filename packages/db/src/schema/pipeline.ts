@@ -67,7 +67,7 @@ export const prompts = pgTable('prompts', {
   createdAt: now(),
 });
 
-export const engineEnum = pgEnum('engine', ['perplexity', 'chatgpt', 'gemini']);
+export const engineEnum = pgEnum('engine', ['perplexity', 'chatgpt', 'gemini', 'claude']);
 
 export const engineRuns = pgTable('engine_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
