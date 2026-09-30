@@ -27,6 +27,15 @@
       "retryOnStatus": [429, 503],
       "maxRetries": 4,
       "timeoutMs": 30000
+    },
+    {
+      "id": "claude",
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "concurrencyLimit": 5,
+      "retryOnStatus": [429, 503],
+      "maxRetries": 4,
+      "timeoutMs": 30000
     }
   ]
 }

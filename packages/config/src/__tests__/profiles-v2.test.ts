@@ -34,6 +34,7 @@ describe('getAuditProfileV2', () => {
     const p = getAuditProfileV2('standard');
     expect(p.id).toBe('standard');
     expect(p.version).toBe(2);
+    expect(p.engines).toEqual(['perplexity', 'chatgpt', 'gemini', 'claude']);
     expect(p.locales).toBe(1);
     expect(p.promptsWithSearch).toEqual({ category: 20, brand: 4, client: 6 });
     expect(p.promptsWithoutSearch).toEqual({ discovery: 6, brand: 4 });
@@ -52,6 +53,7 @@ describe('getAuditProfileV2', () => {
     const p = getAuditProfileV2('extended');
     expect(p.id).toBe('extended');
     expect(p.version).toBe(2);
+    expect(p.engines).toEqual(['perplexity', 'chatgpt', 'gemini', 'claude']);
     expect(p.locales).toBe(3);
     expect(p.promptsWithSearch).toEqual({ category: 30, brand: 10, client: 10 });
     expect(p.promptsWithSearchAdditionalLocale).toEqual({ category: 20, brand: 5 });
@@ -60,8 +62,8 @@ describe('getAuditProfileV2', () => {
     expect(p.competitorCount).toBe(5);
     expect(p.costSoftCeilingUsd).toBe(9.0);
     expect(p.costHardCeilingUsd).toBe(12.0);
-    expect(p.costSoftCeilingPerAdditionalLocaleUsd).toBe(3.0);
-    expect(p.costHardCeilingPerAdditionalLocaleUsd).toBe(4.0);
+    expect(p.costSoftCeilingPerAdditionalLocaleUsd).toBe(4.0);
+    expect(p.costHardCeilingPerAdditionalLocaleUsd).toBe(5.0);
     expect(p.timeBudgetSeconds).toBe(480);
     expect(p.timeBudgetPerAdditionalLocaleSeconds).toBe(120);
   });

@@ -40,7 +40,7 @@
       "id": "standard",
       "version": 2,
       "crawlerPages": 50,
-      "engines": ["perplexity", "chatgpt", "gemini"],
+      "engines": ["perplexity", "chatgpt", "gemini", "claude"],
       "locales": 1,
       "promptsWithSearch": {
         "category": 20,
@@ -75,7 +75,7 @@
       "id": "extended",
       "version": 2,
       "crawlerPages": 50,
-      "engines": ["perplexity", "chatgpt", "gemini"],
+      "engines": ["perplexity", "chatgpt", "gemini", "claude"],
       "locales": 3,
       "promptsWithSearch": {
         "category": 30,
@@ -101,8 +101,8 @@
       "serpApiRequestsClient": 2,
       "costSoftCeilingUsd": 9.00,
       "costHardCeilingUsd": 12.00,
-      "costSoftCeilingPerAdditionalLocaleUsd": 3.00,
-      "costHardCeilingPerAdditionalLocaleUsd": 4.00,
+      "costSoftCeilingPerAdditionalLocaleUsd": 4.00,
+      "costHardCeilingPerAdditionalLocaleUsd": 5.00,
       "timeBudgetSeconds": 480,
       "timeBudgetPerAdditionalLocaleSeconds": 120
     }

@@ -8,12 +8,13 @@ describe('getEngineRegistry', () => {
     expect(registry.length).toBeGreaterThan(0);
   });
 
-  it('contains perplexity, chatgpt and gemini', () => {
+  it('contains perplexity, chatgpt, gemini and claude', () => {
     const registry = getEngineRegistry();
     const ids = registry.map((e) => e.id);
     expect(ids).toContain('perplexity');
     expect(ids).toContain('chatgpt');
     expect(ids).toContain('gemini');
+    expect(ids).toContain('claude');
   });
 
   it('every engine has required fields with valid values', () => {

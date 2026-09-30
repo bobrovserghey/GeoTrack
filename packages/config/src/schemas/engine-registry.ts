@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const EngineRegistryEntrySchema = z.object({
-  id: z.enum(['perplexity', 'chatgpt', 'gemini']),
+  id: z.enum(['perplexity', 'chatgpt', 'gemini', 'claude']),
   provider: z.string(),
   model: z.string(),
   concurrencyLimit: z.number().int().positive(),

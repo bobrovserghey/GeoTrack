@@ -1,0 +1,64 @@
+{
+  "id": "msg_claude-001",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-haiku-4-5-20251001",
+  "content": [
+    {
+      "type": "text",
+      "text": "I'll search for information about Acme Corp."
+    },
+    {
+      "type": "server_tool_use",
+      "id": "srvtoolu_001",
+      "name": "web_search",
+      "input": { "query": "Acme Corp enterprise software" }
+    },
+    {
+      "type": "web_search_tool_result",
+      "tool_use_id": "srvtoolu_001",
+      "content": [
+        {
+          "type": "web_search_result",
+          "url": "https://www.acmecorp.com/about",
+          "title": "About Acme Corp",
+          "encrypted_content": "EqgfCioIARgBIiQ3YTAwMjY1Mi1mZjM5LTQ1NGUtODgxNC1kNjNjNTk1ZWI3Y2U",
+          "page_age": "January 15, 2026"
+        },
+        {
+          "type": "web_search_result",
+          "url": "https://g2.com/products/acmesuite/reviews",
+          "title": "AcmeSuite Reviews on G2",
+          "encrypted_content": "EqgfCioIARgCIiQzYTAwMjY1Mi1mZjM5LTQ1NGUtODgxNC1kNjNjNTk1ZWI3Y2U",
+          "page_age": "March 3, 2026"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "text": "Acme Corp is a leading provider of enterprise software solutions, specializing in CRM and ERP systems. Reviews on G2 highlight strong customer support.",
+      "citations": [
+        {
+          "type": "web_search_result_location",
+          "url": "https://www.acmecorp.com/about",
+          "title": "About Acme Corp",
+          "encrypted_index": "Eo8BCioIAhgBIiQyYjQ0OWJmZi1lNmU5",
+          "cited_text": "Acme Corp is a leading provider of enterprise software solutions"
+        },
+        {
+          "type": "web_search_result_location",
+          "url": "https://g2.com/products/acmesuite/reviews",
+          "title": "AcmeSuite Reviews on G2",
+          "encrypted_index": "Eo8BCioIAhgCIiQyYjQ0OWJmZi1lNmU5",
+          "cited_text": "Reviews on G2 highlight strong customer support"
+        }
+      ]
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 512,
+    "output_tokens": 98,
+    "server_tool_use": { "web_search_requests": 1 }
+  }
+}
