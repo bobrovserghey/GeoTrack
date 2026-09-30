@@ -1,6 +1,6 @@
 import type { UsageRecord } from './step.js';
 
-export type EngineId = 'perplexity' | 'chatgpt' | 'gemini';
+export type EngineId = 'perplexity' | 'chatgpt' | 'gemini' | 'claude';
 
 export type AskOptions = {
   timeoutMs?: number;

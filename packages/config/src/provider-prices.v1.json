@@ -21,6 +21,11 @@
       "inputPerMToken": 0.30,
       "outputPerMToken": 2.50
     },
+    "anthropic/claude-haiku-4-5-20251001": {
+      "inputPerMToken": 1.0,
+      "outputPerMToken": 5.0,
+      "webSearchCallPer1k": 10.0
+    },
     "serpapi/web_search": {
       "requestPer1k": 15.0
     }

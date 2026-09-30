@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const EngineIdSchema = z.enum(['perplexity', 'chatgpt', 'gemini']);
+const EngineIdSchema = z.enum(['perplexity', 'chatgpt', 'gemini', 'claude']);
 
 const PromptCountByClassSchema = z.object({
   category: z.number().int().min(0),
