@@ -537,7 +537,7 @@ export default function ReportContent(props: ReportContentProps) {
                 {citation.targetMentioned ? 'Your brand: mentioned' : 'Your brand: not mentioned'}
               </div>
               <div style={{ padding: '0 16px 14px', fontSize: 12.5, color: 'var(--text-tertiary)' }}>
-                ChatGPT and Gemini answers are in the full audit.
+                ChatGPT, Gemini and Claude answers are in the full audit.
               </div>
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function ReportContent(props: ReportContentProps) {
                 <tr>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>Engines</td>
                   <td style={{ textAlign: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>1</td>
-                  <td style={{ textAlign: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 600 }}>3</td>
+                  <td style={{ textAlign: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 600 }}>4</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>Competitors compared</td>
@@ -655,7 +655,7 @@ export default function ReportContent(props: ReportContentProps) {
       {/* Sticky CTA */}
       <div id="sticky-cta" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, background: 'var(--bg-surface)', borderTop: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)', padding: '14px clamp(16px, 4vw, 24px)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 12.5, color: 'var(--text-tertiary)' }}>30 prompts · 3 engines · 3 competitors · up to 15 findings · fix plan</div>
+          <div style={{ fontSize: 12.5, color: 'var(--text-tertiary)' }}>30 prompts · 4 engines · 3 competitors · up to 15 findings · fix plan</div>
           <button style={{ background: 'var(--accent-default)', color: 'var(--text-on-accent)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-ui)' }}>
             Get the full audit — $79
           </button>

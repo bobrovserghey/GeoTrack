@@ -28,7 +28,7 @@ const TOKEN_STATS = JSON.parse(
 const CATEGORY_PROMPT_COUNT = 26; // standard profile quota
 const BRAND_PROMPT_COUNT = 4;
 const PROMPT_REPEATS = 2;
-const ENGINES = ['perplexity', 'chatgpt', 'gemini'] as const;
+const ENGINES = ['perplexity', 'chatgpt', 'gemini', 'claude'] as const;
 
 function makePrompts(): BundledPromptEntry[] {
   const category: BundledPromptEntry[] = Array.from({ length: CATEGORY_PROMPT_COUNT }, (_, i) => ({
@@ -48,7 +48,9 @@ function makePrompts(): BundledPromptEntry[] {
   return [...category, ...brand];
 }
 
-function makeUsageFor(engineId: 'perplexity' | 'chatgpt' | 'gemini'): UsageRecord {
+type StandardEngineId = 'perplexity' | 'chatgpt' | 'gemini' | 'claude';
+
+function makeUsageFor(engineId: StandardEngineId): UsageRecord {
   const stats = TOKEN_STATS.engines[engineId];
   const { avgTokensIn: tokensIn, avgTokensOut: tokensOut } = stats;
   let costUsd: number;
@@ -56,15 +58,22 @@ function makeUsageFor(engineId: 'perplexity' | 'chatgpt' | 'gemini'): UsageRecor
     costUsd = calcCallCost('perplexity', 'sonar', tokensIn, tokensOut, { requestCount: 1 });
   } else if (engineId === 'chatgpt') {
     costUsd = calcCallCost('openai', 'gpt-4o-mini-search-preview', tokensIn, tokensOut, { webSearchCalls: 1 });
-  } else {
+  } else if (engineId === 'gemini') {
     costUsd = calcCallCost('gemini', 'gemini-2.0-flash', tokensIn, tokensOut, { groundingCalls: 1 });
+  } else {
+    costUsd = calcCallCost('anthropic', 'claude-haiku-4-5-20251001', tokensIn, tokensOut, { webSearchCalls: 1 });
   }
-  const providerMap = { perplexity: 'perplexity', chatgpt: 'openai', gemini: 'gemini' } as const;
-  const modelMap = { perplexity: 'sonar', chatgpt: 'gpt-4o-mini-search-preview', gemini: 'gemini-2.0-flash' } as const;
+  const providerMap = { perplexity: 'perplexity', chatgpt: 'openai', gemini: 'gemini', claude: 'anthropic' } as const;
+  const modelMap = {
+    perplexity: 'sonar',
+    chatgpt: 'gpt-4o-mini-search-preview',
+    gemini: 'gemini-2.0-flash',
+    claude: 'claude-haiku-4-5-20251001',
+  } as const;
   return { provider: providerMap[engineId], model: modelMap[engineId], tokensIn, tokensOut, costUsd };
 }
 
-function makeAnswer(engineId: 'perplexity' | 'chatgpt' | 'gemini'): EngineAnswer {
+function makeAnswer(engineId: StandardEngineId): EngineAnswer {
   return {
     text: `${engineId} response`,
     sources: [{ url: 'https://example.com' }],
@@ -73,15 +82,15 @@ function makeAnswer(engineId: 'perplexity' | 'chatgpt' | 'gemini'): EngineAnswer
   };
 }
 
-function makeAdapter(id: 'perplexity' | 'chatgpt' | 'gemini'): EngineAdapter {
+function makeAdapter(id: StandardEngineId): EngineAdapter {
   return {
     id,
     ask: vi.fn().mockResolvedValue(makeAnswer(id)),
   };
 }
 
-function makeRegistry(id: 'perplexity' | 'chatgpt' | 'gemini'): EngineRegistryEntry {
-  const concurrency = { perplexity: 3, chatgpt: 5, gemini: 5 }[id];
+function makeRegistry(id: StandardEngineId): EngineRegistryEntry {
+  const concurrency = { perplexity: 3, chatgpt: 5, gemini: 5, claude: 5 }[id];
   return { id, provider: id, model: 'test-model', concurrencyLimit: concurrency, retryOnStatus: [429, 503], maxRetries: 1, timeoutMs: 5000 };
 }
 
@@ -111,7 +120,7 @@ const UNLIMITED_BUDGET: Budget = {
 // ── standard profile load tests ───────────────────────────────────────────────
 
 describe('engine-poll standard profile harness', () => {
-  it('generates exactly 180 responses for 30 prompts × 3 engines × 2 repeats (cold cache)', async () => {
+  it('generates exactly 240 responses for 30 prompts × 4 engines × 2 repeats (cold cache)', async () => {
     const adapters = ENGINES.map(makeAdapter);
     const registry = ENGINES.map(makeRegistry);
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
@@ -130,7 +139,7 @@ describe('engine-poll standard profile harness', () => {
     expect(result.data!.hardCeilingHit).toBe(false);
   });
 
-  it('records usage for all 180 non-cached calls', async () => {
+  it('records usage for all 240 non-cached calls', async () => {
     const adapters = ENGINES.map(makeAdapter);
     const registry = ENGINES.map(makeRegistry);
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
@@ -141,7 +150,7 @@ describe('engine-poll standard profile harness', () => {
     expect(result.usage.every((u) => u.costUsd > 0)).toBe(true);
   });
 
-  it('splits 180 responses evenly: 60 per engine', async () => {
+  it('splits 240 responses evenly: 60 per engine', async () => {
     const adapters = ENGINES.map(makeAdapter);
     const registry = ENGINES.map(makeRegistry);
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
@@ -159,7 +168,7 @@ describe('engine-poll standard profile harness', () => {
     const result = await pollEngines(BASE_INPUT, adapters, makeEmptyStore(), registry, UNLIMITED_BUDGET, { getRetryDelay: () => 0 });
 
     const brandResponses = result.data!.responses.filter((r) => r.promptId.startsWith('brand-'));
-    expect(brandResponses.length).toBe(BRAND_PROMPT_COUNT * ENGINES.length * PROMPT_REPEATS); // 4×3×2=24
+    expect(brandResponses.length).toBe(BRAND_PROMPT_COUNT * ENGINES.length * PROMPT_REPEATS); // 4×4×2=32
     expect(brandResponses.every((r) => r.fromCache === false)).toBe(true);
   });
 
@@ -199,7 +208,7 @@ describe('engine-poll standard profile harness', () => {
     for (const engineId of ENGINES) {
       const stats = TOKEN_STATS.engines[engineId];
       const engineUsage = result.usage.filter((u) => {
-        const providerMap = { perplexity: 'perplexity', chatgpt: 'openai', gemini: 'gemini' };
+        const providerMap = { perplexity: 'perplexity', chatgpt: 'openai', gemini: 'gemini', claude: 'anthropic' };
         return u.provider === providerMap[engineId];
       });
       expect(engineUsage.length).toBe((CATEGORY_PROMPT_COUNT + BRAND_PROMPT_COUNT) * PROMPT_REPEATS);
@@ -218,7 +227,7 @@ describe('engine-poll standard profile harness', () => {
 
     expect(result.data!.hardCeilingHit).toBe(true);
     expect(result.status).toBe('partial');
-    // Hard ceiling hit: far fewer than 180 responses
-    expect(result.data!.responses.length).toBeLessThan(180);
+    // Hard ceiling hit: far fewer than 240 responses
+    expect(result.data!.responses.length).toBeLessThan(240);
   });
 });
