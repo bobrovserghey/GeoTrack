@@ -93,16 +93,25 @@ function impactColor(impact: string): string {
   return impact.toLowerCase() === 'critical' ? 'var(--severity-critical-fg)' : 'var(--severity-warning-fg)';
 }
 
-// expectedScoreDelta can be negative (buildFindings scales a template's
-// maxDelta, which is signed) — the sign is meaningful (gain vs. further loss
-// if left unfixed) and must be shown as-is, not forced to a fixed "+" like an
-// earlier version of this table did.
+// expectedScoreDelta is shown with its own sign, never forced to a fixed "+"
+// like an earlier version of the Fix plan table did (`+${Math.abs(...)}`).
+// In practice it is always <= 0: every template in packages/core findings
+// templates.ts has a negative maxDelta, and buildFindings only scales it by a
+// factor in [0, 1]. So the delta reads as "this much score is being lost
+// today" — the minus sign is the point, and the `> 0` branches below exist
+// only so a future positive template renders sensibly rather than silently.
+//
+// Both the label and the colour match the already-shipped T-43 web report
+// chip (apps/web/src/app/report/[auditId]/report-content.tsx), which renders
+// the same value as `{delta > 0 ? '+' : ''}{delta.toFixed(1)}` in
+// var(--band-low-fg). Keeping PDF and web identical here is the 1:1 rule, so
+// the zero case follows the web report too rather than inventing a colour.
 function scoreDeltaLabel(delta: number): string {
   return delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
 }
 
 function scoreDeltaColor(delta: number): string {
-  return delta < 0 ? 'var(--band-low-fg)' : 'var(--band-high-fg)';
+  return delta > 0 ? 'var(--band-high-fg)' : 'var(--band-low-fg)';
 }
 
 const th: CSSProperties = {

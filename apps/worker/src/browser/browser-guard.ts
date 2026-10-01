@@ -72,7 +72,24 @@ export function shouldBlockInternalRequest(
     return { blocked: true, reason: `scheme not allowed: ${parsed.protocol}` };
   }
 
-  if (parsed.origin !== allowedOrigin) {
+  // allowedOrigin is normalized through the same parser as the request URL
+  // rather than compared as a raw string: otherwise the comparison silently
+  // depends on how the caller spelled it ("https://h:443" and "HTTPS://H" are
+  // the same origin but different strings), and a caller that passed a
+  // perfectly reasonable value would see every request blocked with no clue
+  // why. An unusable allowedOrigin fails closed, never open.
+  let normalizedAllowedOrigin: string;
+  try {
+    const allowed = new URL(allowedOrigin);
+    if (!ALLOWED_SCHEMES.has(allowed.protocol)) {
+      return { blocked: true, reason: `allowedOrigin must be http(s): ${allowedOrigin}` };
+    }
+    normalizedAllowedOrigin = allowed.origin;
+  } catch {
+    return { blocked: true, reason: `allowedOrigin is not a valid URL: ${allowedOrigin}` };
+  }
+
+  if (parsed.origin !== normalizedAllowedOrigin) {
     return { blocked: true, reason: `origin not allowed: ${parsed.origin}` };
   }
 

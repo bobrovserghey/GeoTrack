@@ -20,10 +20,40 @@ export type InternalRenderContextOptions = {
   baseUrl: string;
 };
 
+// `new URL()` alone is a derivation, not a validation: `new URL('localhost:3000')`
+// does NOT throw — WHATWG parses it as a non-special scheme (protocol
+// 'localhost:', origin the *string* "null"). A schemeless or file:/ftp: baseUrl
+// would therefore produce an allowedOrigin that no http(s) request can ever
+// match, and every request would be aborted with ERR_BLOCKED_BY_CLIENT — safe
+// (fails closed) but undiagnosable. Fail loudly on the config instead.
+// These messages end up in the step's `notes` (see steps/report-pdf.ts), which
+// are logged and persisted — so they must never echo the raw baseUrl back. A
+// misconfiguration that lands a connection string here (postgres://user:pass@…)
+// or a URL with ?apikey=… would otherwise write the secret straight to the log,
+// which CLAUDE.md forbids. Only the scheme and host are ever quoted, never
+// userinfo, path or query.
+function resolveAllowedOrigin(baseUrl: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    // Unparseable: nothing can be safely extracted, so quote nothing at all.
+    throw new Error('createInternalRenderContext: baseUrl is not a valid URL');
+  }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(
+      `createInternalRenderContext: baseUrl must be http(s), got scheme ${parsed.protocol} for host ${parsed.host || '(none)'}`,
+    );
+  }
+  return parsed.origin;
+}
+
 export async function createInternalRenderContext(
   options: InternalRenderContextOptions,
 ): Promise<BrowserContext> {
-  const allowedOrigin = new URL(options.baseUrl).origin;
+  // Deliberately before chromium.launch(): a bad baseUrl must throw without
+  // leaving an orphaned Chromium process behind.
+  const allowedOrigin = resolveAllowedOrigin(options.baseUrl);
   const browser = await chromium.launch({ headless: true });
 
   // Only the BrowserContext is handed back, so the caller has no handle on the
