@@ -116,7 +116,24 @@ pnpm prompts:generate-categories  # сгенерировать канониче�
 
 ## Текущее состояние
 
-Готово и смёрджено в main: T-01, T-02, T-03, T-04, T-05, T-06, T-07, T-08, T-09, T-10, T-11, T-12, T-13, T-14a, T-14b, T-15, T-16, T-17, T-18, T-19, T-20, T-21, T-22, T-23, T-24, T-25, T-26, T-27, T-28, T-29, T-30, T-31, T-32, T-33, T-34, T-35, T-36, T-37, T-38, T-39, T-40, T-41, T-42, T-43, T-78, T-44.
+Готово и смёрджено в main: T-01, T-02, T-03, T-04, T-05, T-06, T-07, T-08, T-09, T-10, T-11, T-12, T-13, T-14a, T-14b, T-15, T-16, T-17, T-18, T-19, T-20, T-21, T-22, T-23, T-24, T-25, T-26, T-27, T-28, T-29, T-30, T-31, T-32, T-33, T-34, T-35, T-36, T-37, T-38, T-39, T-40, T-41, T-42, T-43, T-78, T-44, T-00.
+
+**Примечание по T-00.** Scope сужен по решению продакта: только деплой
+(Vercel — `apps/web`, Railway/Docker — `apps/worker`) и проверка обязательных
+переменных окружения; Sentry/PostHog/Langfuse — отдельная будущая задача.
+Для `apps/web` проверка двухуровневая: на этапе сборки
+(`apps/web/scripts/check-env.mjs`, обязательна — Vercel не запускает
+`next start`, только собирает serverless-функции) и при старте
+(`instrumentation.ts`). `apps/worker` получил первый настоящий HTTP-вход
+(`server.ts`) — раньше он только экспортировал Inngest-хендлер, никуда не
+смонтированный. Корневой `package.json` закрепляет `packageManager`
+(`pnpm@9.15.9`) — CI и `Dockerfile` используют ту же версию. Новая
+зависимость `tsx` (`apps/worker`, prod) — `node --experimental-strip-types`
+не резолвит относительные импорты `.js` → `.ts` в многофайловом графе (см.
+`docs/specs/debt.md`). Открытые пункты вне рамок задачи — в `debt.md`
+(edge-case'ы `FREE_DAILY_CEILING=0`/нечислового значения в `rate-limit.ts`,
+hardening `Dockerfile` под Chromium, сборка Docker-образа не проверялась
+вживую).
 
 **Примечание по T-44.** PDF генерируется через отдельный внутренний роут
 (`/internal/report-render/[auditId]`, гейт — `AUDIT_SERVICE_KEY`, не
