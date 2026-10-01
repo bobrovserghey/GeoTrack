@@ -61,10 +61,14 @@ export default tseslint.config(
 
   // BOUNDARY: worker cannot import from web app;
   // direct undici/playwright imports forbidden — use safe-fetch and Playwright factory (ADR-015)
-  // playwright-factory.ts is the one allowed entry point for playwright itself
+  // playwright-factory.ts and internal-render-factory.ts (ADR-025) are the
+  // allowed entry points for playwright itself
   {
     files: ['apps/worker/**/*.ts'],
-    ignores: ['apps/worker/src/browser/playwright-factory.ts'],
+    ignores: [
+      'apps/worker/src/browser/playwright-factory.ts',
+      'apps/worker/src/browser/internal-render-factory.ts',
+    ],
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [

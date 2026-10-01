@@ -6,6 +6,7 @@ import { normalizeDomain, generateProgressToken, checkRateLimits } from '@geotra
 import type { RateLimitDeps } from '@geotrack/core';
 import { getAuditProfile, getMethodology } from '@geotrack/config';
 import { eq, and, gte, count } from 'drizzle-orm';
+import { isValidServiceKey } from '@/lib/service-auth';
 
 const inngest = new Inngest({
   id: 'geotrack-web',
@@ -22,12 +23,6 @@ async function verifyTurnstile(token: string): Promise<boolean> {
   });
   const data = (await res.json()) as { success: boolean };
   return data.success;
-}
-
-function validateServiceKey(headers: Headers): boolean {
-  const serviceKey = process.env.AUDIT_SERVICE_KEY;
-  if (!serviceKey) return false;
-  return headers.get('x-service-key') === serviceKey;
 }
 
 function getClientIp(request: Request): string {
@@ -56,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid url' }, { status: 422 });
   }
 
-  const isInternal = validateServiceKey(request.headers);
+  const isInternal = isValidServiceKey(request.headers);
 
   if (!isInternal) {
     if (!turnstileToken) {
