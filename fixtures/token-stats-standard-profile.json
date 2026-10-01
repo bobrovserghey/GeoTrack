@@ -1,6 +1,7 @@
 {
   "measuredAt": "2026-09-20",
-  "note": "Token counts sourced from fixtures/engines/*/ask-basic.json (single-call samples). Timing estimates use p95 latencies: perplexity=5s, chatgpt=7s, gemini=3.5s. estimatedCostColdUsd fields are informational snapshots; cost assertions in tests use calcCallCost directly.",
+  "claudeAddedAt": "2026-09-30",
+  "note": "Token counts sourced from fixtures/engines/*/ask-basic.json (single-call samples). measuredAt covers perplexity/chatgpt/gemini; the claude entry was added 2026-09-30 (claudeAddedAt) and the other three were not remeasured. Timing estimates use measured p95 latencies: perplexity=5s, chatgpt=7s, gemini=3.5s; claude=6s is an assumed estimate, not a measurement — placed between chatgpt (7s) and gemini (3.5s), which also do web search. estimatedCostColdUsd fields are informational snapshots; cost assertions in tests use calcCallCost directly.",
   "profile": "standard",
   "promptCount": 30,
   "promptRepeats": 2,
@@ -35,9 +36,19 @@
       "p95LatencyS": 3.5,
       "theoreticalTimeS": 42,
       "estimatedCostColdUsd": 0.853
+    },
+    "claude": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-5-20251001",
+      "avgTokensIn": 512,
+      "avgTokensOut": 98,
+      "concurrencyLimit": 5,
+      "p95LatencyS": 6,
+      "theoreticalTimeS": 72,
+      "estimatedCostColdUsd": 0.660
     }
   },
-  "totalEstimatedCostColdUsd": 1.944,
+  "totalEstimatedCostColdUsd": 2.604,
   "softCeilingUsd": 6.0,
   "hardCeilingUsd": 8.0,
   "timingBudgetS": 180,

@@ -65,7 +65,7 @@
 
 ### 2.4 S8, S9. Выбор тарифа, оплата, цены
 
-**Состав тарифов.** Standard: три движка, 30 вопросов с веб-поиском и 10 без него, один рынок, три конкурента. Extended: 50 вопросов, до трёх рынков, пять конкурентов, 15-минутный разбор. Строки таблицы тарифов на S9 и в карточках выбора на S8 обновляются.
+**Состав тарифов.** Standard: четыре движка (Perplexity, ChatGPT, Gemini, Claude), 30 вопросов с веб-поиском и 10 без него, один рынок, три конкурента. Extended: те же четыре движка, 50 вопросов, до трёх рынков, пять конкурентов, 15-минутный разбор. Строки таблицы тарифов на S9 и в карточках выбора на S8 обновляются.
 
 **Вопросы покупателей.** На S8, после выбора тарифа и до оплаты, — необязательный блок «Questions your buyers ask»: до пяти полей, пример в плейсхолдере («We're 5 people with no IT — what should we use instead of spreadsheets?»), подсказка «We'll ask AI assistants these, in your buyers' words». Блок можно свернуть.
 
@@ -146,7 +146,7 @@ Using the Geotrack design system, update the landing page artboards (desktop and
 ```text
 Using the Geotrack design system, update the plan choice, checkout and pricing artboards.
 
-1) Plan contents. Standard $79: three engines, 30 questions with web search and 10 without, one market, three competitors. Extended $199: 50 questions, up to three markets, five competitors, 15-minute review call. Update the plan cards on the plan choice page and the rows of the pricing table.
+1) Plan contents. Standard $79: four engines (Perplexity, ChatGPT, Gemini, Claude), 30 questions with web search and 10 without, one market, three competitors. Extended $199: the same four engines, 50 questions, up to three markets, five competitors, 15-minute review call. Update the plan cards on the plan choice page and the rows of the pricing table.
 
 2) On the plan choice page, after the plan is selected and before payment, add an optional collapsible block "Questions your buyers ask": up to five text fields, placeholder "We're 5 people with no IT — what should we use instead of spreadsheets?", helper "We'll ask AI assistants these, in your buyers' words".
 

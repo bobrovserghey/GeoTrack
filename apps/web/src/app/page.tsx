@@ -214,7 +214,7 @@ export default function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
             {[
               { n: '01', title: 'Paste your URL', body: 'No signup, no install. Just the web address you want checked.' },
-              { n: '02', title: 'We ask ChatGPT, Perplexity and Gemini', body: '30+ buyer questions in your category, plus a crawl of your site and its machine-readable files.' },
+              { n: '02', title: 'We ask ChatGPT, Perplexity, Gemini and Claude', body: '30+ buyer questions in your category, plus a crawl of your site and its machine-readable files.' },
               { n: '03', title: 'You get a score, evidence and fixes', body: 'A 0–10 score, the exact AI answers we saw, and a prioritized list of what to fix first.' },
             ].map(({ n, title, body }) => (
               <div key={n} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-lg)', padding: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -314,7 +314,7 @@ export default function HomePage() {
                 <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>one-time</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16, flex: '1 1 0%' }}>
-                {['30 prompts across ChatGPT, Perplexity, Gemini', '3 competitors compared', 'Up to 15 findings with fixes', 'PDF report', 'Report within 24 hours.'].map(f => (
+                {['30 prompts across ChatGPT, Perplexity, Gemini and Claude', '3 competitors compared', 'Up to 15 findings with fixes', 'PDF report', 'Report within 24 hours.'].map(f => (
                   <div key={f} style={{ display: 'flex', gap: 8, fontSize: 13, color: 'var(--text-secondary)' }}>
                     <svg width="14" height="14" viewBox="0 0 16 16" style={{ flexShrink: 0, marginTop: 2 }}><path d="M3 8.5L6.2 11.5L13 4.5" stroke="var(--band-high-fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
                     {f}
@@ -401,8 +401,8 @@ export default function HomePage() {
           <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 700, margin: '0 0 32px', color: 'var(--text-primary)' }}>Frequently asked questions</h2>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {[
-              { q: 'How does Geotrack score visibility?', a: 'We ask ChatGPT, Perplexity and Gemini a set of buyer questions in your category, crawl your site for machine-readability (robots.txt, llms.txt, structured data), and combine both into five pillar scores that average into one 0–10 score.' },
-              { q: 'Which AI assistants do you check?', a: 'ChatGPT, Perplexity and Gemini today. We name every engine we query in the report — nothing is checked anonymously or left out of the evidence.' },
+              { q: 'How does Geotrack score visibility?', a: 'We ask ChatGPT, Perplexity, Gemini and Claude a set of buyer questions in your category, crawl your site for machine-readability (robots.txt, llms.txt, structured data), and combine both into five pillar scores that average into one 0–10 score.' },
+              { q: 'Which AI assistants do you check?', a: 'ChatGPT, Perplexity, Gemini and Claude today. We name every engine we query in the report — nothing is checked anonymously or left out of the evidence.' },
               { q: 'Do you store or share our data?', a: 'We store your audit history so you can track score changes over time. We never sell or share your data, and competitor audits only use publicly available information.' },
               { q: 'How is this different from SEO tools?', a: 'SEO tools measure ranking in search results. We measure whether AI assistants can find, crawl and correctly describe you when someone asks a question in chat — a related but separate signal.' },
               { q: 'How often should we re-run the audit?', a: 'Monthly is enough for most teams. Re-run sooner after a site redesign, a migration, or a change to robots.txt.' },
@@ -432,7 +432,7 @@ export default function HomePage() {
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '48px clamp(16px, 4vw, 24px) 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
             <img src={LOGO_SVG} alt="Geotrack" style={{ height: 22, width: 'auto', alignSelf: 'flex-start' }} />
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: 260 }}>See what ChatGPT, Perplexity and Gemini tell your buyers about you.</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, maxWidth: 260 }}>See what ChatGPT, Perplexity, Gemini and Claude tell your buyers about you.</div>
           </div>
           <div className="gt-ftr-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 24 }}>
             <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 12 }}>
