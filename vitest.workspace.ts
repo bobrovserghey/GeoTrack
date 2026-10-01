@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineWorkspace } from 'vitest/config';
 
 export default defineWorkspace([
@@ -26,6 +27,13 @@ export default defineWorkspace([
     },
   },
   {
+    // Mirrors the `@/*` -> `./src/*` path mapping in apps/web/tsconfig.json so
+    // API route handlers (which import via `@/lib/...`) are testable at all.
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)),
+      },
+    },
     test: {
       name: 'web',
       root: './apps/web',

@@ -3,12 +3,15 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { REQUIRED_WEB_ENV } from '../env.js';
 
-// The list of required web env vars exists in three places that cannot import
+// The list of required web env vars exists in four places that cannot import
 // one another:
 //   1. src/lib/env.ts            — the source of truth (runtime check)
 //   2. scripts/check-env.mjs     — plain JS, runs under bare `node` before
 //                                  `next build`, so it cannot import the .ts
 //   3. .github/workflows/ci.yml  — dummy values so the `Build web` step runs
+//   4. .env.example              — what a developer copies to .env.local; drift
+//                                  here means a local setup that fails only at
+//                                  `next build` time, with no test catching it
 // Drift between them is silent and defeats the point of T-00: the build-time
 // gate would stop covering a variable while every test still passes. These
 // tests make drift a CI failure instead.
@@ -30,7 +33,12 @@ function parseCiBuildWebEnv(): string[] {
   return [...step[1].matchAll(/^ {10}([A-Z0-9_]+):/gm)].map((m) => m[1]);
 }
 
-describe('required web env list stays in sync across its three copies', () => {
+function parseEnvExample(): string[] {
+  const source = readFileSync(join(WEB_ROOT, '.env.example'), 'utf8');
+  return [...source.matchAll(/^([A-Z0-9_]+)=/gm)].map((m) => m[1]!);
+}
+
+describe('required web env list stays in sync across its four copies', () => {
   it('check-env.mjs lists exactly the same variables, in the same order', () => {
     expect(parseCheckEnvScript()).toEqual([...REQUIRED_WEB_ENV]);
   });
@@ -40,7 +48,16 @@ describe('required web env list stays in sync across its three copies', () => {
     expect(parseCiBuildWebEnv().slice().sort()).toEqual([...REQUIRED_WEB_ENV].slice().sort());
   });
 
+  it('.env.example documents every required variable', () => {
+    // .env.example may legitimately list extra optional variables, so this is a
+    // subset check in one direction only: nothing required may be missing.
+    const documented = new Set(parseEnvExample());
+    const missing = REQUIRED_WEB_ENV.filter((name) => !documented.has(name));
+    expect(missing).toEqual([]);
+  });
+
   it('parses a non-empty list from each copy (guards the regexes themselves)', () => {
+    expect(parseEnvExample().length).toBeGreaterThan(0);
     // Without this, a regex that silently matched nothing would make both
     // assertions above vacuously compare two empty arrays.
     expect(REQUIRED_WEB_ENV.length).toBeGreaterThan(0);

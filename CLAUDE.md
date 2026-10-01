@@ -43,7 +43,7 @@ pnpm prompts:generate-categories  # сгенерировать канониче�
 - Модель доступа к отчёту и админке (ADR-006)
 - Модуль `packages/core/net/safe-fetch` и фабрика контекстов Playwright (ADR-015)
 - Справочник локалей и правило «промпты генерируются на языке локали, а не переводятся» (ADR-019)
-- Список внешних провайдеров и ключей: Perplexity, OpenAI, Google (Gemini), Anthropic (Claude, ADR-024), SerpAPI, Paddle, Supabase
+- Список внешних провайдеров и ключей: Perplexity, OpenAI, Google (Gemini), Anthropic (Claude, ADR-024), SerpAPI, Paddle, Supabase, Resend (ADR-026)
 
 ## Архитектурные правила v1.2 (план разработки 2026-09-24)
 

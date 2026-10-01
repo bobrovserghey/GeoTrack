@@ -373,6 +373,29 @@ export default function ReportContent(props: ReportContentProps) {
   const band = bandClass(overallScore);
   const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  async function handleBuy() {
+    if (!auditId || checkoutLoading) return;
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teaserAuditId: auditId }),
+      });
+      const json = (await res.json()) as { checkoutUrl?: string; error?: string };
+      if (json.checkoutUrl) {
+        window.location.href = json.checkoutUrl;
+        return;
+      }
+      console.error('[checkout] failed to start checkout:', json.error);
+    } catch (err) {
+      console.error('[checkout] network error starting checkout:', err);
+    }
+    setCheckoutLoading(false);
+  }
+
   const bandLabelMap: Record<string, string> = {
     low: 'Rarely mentioned',
     mid: 'Occasionally mentioned',
@@ -656,8 +679,12 @@ export default function ReportContent(props: ReportContentProps) {
       <div id="sticky-cta" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, background: 'var(--bg-surface)', borderTop: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)', padding: '14px clamp(16px, 4vw, 24px)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 12.5, color: 'var(--text-tertiary)' }}>30 prompts · 4 engines · 3 competitors · up to 15 findings · fix plan</div>
-          <button style={{ background: 'var(--accent-default)', color: 'var(--text-on-accent)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', flexShrink: 0, fontFamily: 'var(--font-ui)' }}>
-            Get the full audit — $79
+          <button
+            onClick={handleBuy}
+            disabled={checkoutLoading}
+            style={{ background: 'var(--accent-default)', color: 'var(--text-on-accent)', border: 'none', borderRadius: 'var(--radius-md)', padding: '11px 20px', fontSize: 14, fontWeight: 600, cursor: checkoutLoading ? 'default' : 'pointer', flexShrink: 0, fontFamily: 'var(--font-ui)' }}
+          >
+            {checkoutLoading ? 'Redirecting…' : 'Get the full audit — $79'}
           </button>
         </div>
       </div>
