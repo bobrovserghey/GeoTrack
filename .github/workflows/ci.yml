@@ -14,8 +14,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 12
 
       - uses: actions/setup-node@v4
         with:
@@ -33,3 +31,23 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      # T-00: a build-breaking regression here was previously invisible to CI
+      # (lint/typecheck/test all pass without ever running `next build`) —
+      # it was only caught by a manual local build. Values below are
+      # placeholders to satisfy apps/web/scripts/check-env.mjs so the build
+      # can run; they are not real secrets and are never used at runtime.
+      - name: Build web
+        run: pnpm --filter geotrack-web build
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+          NEXT_PUBLIC_SUPABASE_URL: https://ci.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci
+          SUPABASE_SERVICE_ROLE_KEY: ci
+          ADMIN_SECRET: ci
+          AUDIT_SERVICE_KEY: ci
+          TURNSTILE_SECRET_KEY: ci
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: ci
+          NEXT_PUBLIC_APP_URL: https://ci.example
+          INNGEST_EVENT_KEY: ci
+          FREE_DAILY_CEILING: '50'

@@ -1,0 +1,40 @@
+# Build context for apps/worker/Dockerfile is the repo root (see railway.json),
+# and that Dockerfile does `COPY . .`. Docker does NOT honour .gitignore — without
+# this file the context is ~1.5GB and two concrete things break:
+#
+#  1. Host node_modules get baked into the image. On a local (darwin-arm64) build
+#     that means wrong-platform native binaries — the esbuild binary `tsx` depends
+#     on would be a macOS one inside a linux container, so `CMD tsx src/server.ts`
+#     fails at container start. `pnpm install` inside the image must do the
+#     resolving, not a copied host tree.
+#  2. Any real `.env.local` / `.env` would be copied into an image layer, i.e.
+#     secrets persisted in the image even if a later layer deletes them.
+
+# 1. Dependencies — must be installed inside the image, never copied in.
+node_modules
+**/node_modules
+
+# 2. Secrets — never into an image layer.
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Build output and caches — regenerated in the image, pure context weight.
+.next
+apps/web/.next
+dist
+**/dist
+.turbo
+**/.turbo
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# VCS and tooling — not needed to build or run the worker.
+.git
+.gitignore
+.github
+.claude
+
+# OS cruft.
+.DS_Store
+**/.DS_Store
