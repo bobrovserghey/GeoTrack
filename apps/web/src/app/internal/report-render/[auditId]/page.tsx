@@ -259,12 +259,19 @@ async function loadFromDb(
   const appendixMentions =
     appendixRunIds.length > 0
       ? await db
-          .select({ engineRunId: mentions.engineRunId, position: mentions.position })
+          .select({ engineRunId: mentions.engineRunId, brand: mentions.brand })
           .from(mentions)
           .where(inArray(mentions.engineRunId, appendixRunIds))
       : [];
+  // "Mentioned" means the audited brand itself showed up in this run's answer —
+  // not "some brand (possibly a competitor) ranked #1", which is what an earlier
+  // version of this check did (`position === 1` with no brand filter). Uses the
+  // same targetBrand heuristic as the competitors table above, so the appendix
+  // and the competitors section agree on what "the target brand" means.
   const mentionedRunIds = new Set(
-    appendixMentions.filter((m) => m.position === 1).map((m) => m.engineRunId),
+    appendixMentions
+      .filter((m) => m.brand.toLowerCase() === targetBrand)
+      .map((m) => m.engineRunId),
   );
 
   const appendixRows: PdfAppendixRow[] = appendixEngineRuns.map((run) => ({

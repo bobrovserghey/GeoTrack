@@ -93,6 +93,18 @@ function impactColor(impact: string): string {
   return impact.toLowerCase() === 'critical' ? 'var(--severity-critical-fg)' : 'var(--severity-warning-fg)';
 }
 
+// expectedScoreDelta can be negative (buildFindings scales a template's
+// maxDelta, which is signed) — the sign is meaningful (gain vs. further loss
+// if left unfixed) and must be shown as-is, not forced to a fixed "+" like an
+// earlier version of this table did.
+function scoreDeltaLabel(delta: number): string {
+  return delta > 0 ? `+${delta.toFixed(1)}` : delta.toFixed(1);
+}
+
+function scoreDeltaColor(delta: number): string {
+  return delta < 0 ? 'var(--band-low-fg)' : 'var(--band-high-fg)';
+}
+
 const th: CSSProperties = {
   textAlign: 'left',
   padding: '6px 8px',
@@ -223,7 +235,7 @@ export default function ReportPdfContent(props: ReportPdfContentProps) {
             <div style={{ breakInside: 'avoid', border: '1px solid var(--border-subtle)', borderRadius: 6, padding: 12, marginBottom: 10 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: impactColor(section.exampleFinding.impact), textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
                 {section.exampleFinding.impact}
-                {section.exampleFinding.expectedScoreDelta !== null && ` · ${section.exampleFinding.expectedScoreDelta.toFixed(1)} score`}
+                {section.exampleFinding.expectedScoreDelta !== null && ` · ${scoreDeltaLabel(section.exampleFinding.expectedScoreDelta)} score`}
                 {section.exampleFinding.effortLabel && ` · ${section.exampleFinding.effortLabel}`}
               </div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{section.exampleFinding.title}</div>
@@ -250,8 +262,14 @@ export default function ReportPdfContent(props: ReportPdfContentProps) {
               {fixPlan.map((item, i) => (
                 <tr key={i} style={{ breakInside: 'avoid' }}>
                   <td style={i === fixPlan.length - 1 ? tdLast : td}>{item.title}</td>
-                  <td style={{ ...(i === fixPlan.length - 1 ? tdLast : td), fontFamily: 'var(--font-mono)', color: 'var(--band-high-fg)' }}>
-                    {item.expectedScoreDelta !== null ? `+${Math.abs(item.expectedScoreDelta).toFixed(1)}` : '—'}
+                  <td
+                    style={{
+                      ...(i === fixPlan.length - 1 ? tdLast : td),
+                      fontFamily: 'var(--font-mono)',
+                      color: item.expectedScoreDelta !== null ? scoreDeltaColor(item.expectedScoreDelta) : 'var(--text-tertiary)',
+                    }}
+                  >
+                    {item.expectedScoreDelta !== null ? scoreDeltaLabel(item.expectedScoreDelta) : '—'}
                   </td>
                   <td style={{ ...(i === fixPlan.length - 1 ? tdLast : td), color: 'var(--text-tertiary)' }}>{item.effortLabel ?? '—'}</td>
                 </tr>
