@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldBlockRequest } from '../browser/browser-guard.js';
+import { shouldBlockRequest, shouldBlockInternalRequest } from '../browser/browser-guard.js';
 
 describe('shouldBlockRequest — scheme', () => {
   it('blocks file: scheme', () => {
@@ -78,5 +78,45 @@ describe('shouldBlockRequest — resource type', () => {
 
   it('allows script resource type', () => {
     expect(shouldBlockRequest('https://example.com/app.js', 'script')).toMatchObject({ blocked: false });
+  });
+});
+
+describe('shouldBlockInternalRequest', () => {
+  const ALLOWED = 'https://geotrack.internal:8443';
+
+  it('allows a request to the configured origin, including a non-80/443 port', () => {
+    expect(shouldBlockInternalRequest('https://geotrack.internal:8443/report-render/x', 'document', ALLOWED)).toMatchObject({ blocked: false });
+  });
+
+  it('allows localhost on a dev port when that is the configured origin', () => {
+    expect(shouldBlockInternalRequest('http://localhost:3000/internal/report-render/x', 'document', 'http://localhost:3000')).toMatchObject({ blocked: false });
+  });
+
+  it('allows an IP-literal origin when that is the configured origin (container networking)', () => {
+    expect(shouldBlockInternalRequest('http://10.0.0.5:8080/internal/report-render/x', 'document', 'http://10.0.0.5:8080')).toMatchObject({ blocked: false });
+  });
+
+  it('blocks a different host than the configured origin', () => {
+    expect(shouldBlockInternalRequest('https://evil.example/', 'document', ALLOWED)).toMatchObject({ blocked: true });
+  });
+
+  it('blocks a different port on the same hostname than the configured origin', () => {
+    expect(shouldBlockInternalRequest('https://geotrack.internal:9999/', 'document', ALLOWED)).toMatchObject({ blocked: true });
+  });
+
+  it('blocks a different scheme on the same host/port than the configured origin', () => {
+    expect(shouldBlockInternalRequest('http://geotrack.internal:8443/', 'document', ALLOWED)).toMatchObject({ blocked: true });
+  });
+
+  it('still blocks disallowed schemes even against the configured origin check', () => {
+    expect(shouldBlockInternalRequest('file:///etc/passwd', 'document', ALLOWED)).toMatchObject({ blocked: true });
+  });
+
+  it('still blocks disallowed resource types regardless of origin', () => {
+    expect(shouldBlockInternalRequest(`${ALLOWED}/font.woff2`, 'font', ALLOWED)).toMatchObject({ blocked: true });
+  });
+
+  it('blocks an invalid URL', () => {
+    expect(shouldBlockInternalRequest('not a url', 'document', ALLOWED)).toMatchObject({ blocked: true });
   });
 });

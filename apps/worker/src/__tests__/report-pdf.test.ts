@@ -124,13 +124,13 @@ describe('generateReportPdf', () => {
     expect(pdfOptions?.footerTemplate).toContain('Confidential');
   });
 
-  it('passes the service key through to the render context factory', async () => {
+  it('passes the service key and base URL through to the render context factory', async () => {
     const createRenderContext = vi.fn(async () => makeFakeContext());
-    const deps = makeDeps({ serviceKey: 'super-secret', createRenderContext });
+    const deps = makeDeps({ serviceKey: 'super-secret', baseUrl: 'https://geotrack.example', createRenderContext });
 
     await generateReportPdf(makeInput(), deps);
 
-    expect(createRenderContext).toHaveBeenCalledWith({ serviceKey: 'super-secret' });
+    expect(createRenderContext).toHaveBeenCalledWith({ serviceKey: 'super-secret', baseUrl: 'https://geotrack.example' });
   });
 
   it('fails without throwing when the render route responds with a non-ok status', async () => {

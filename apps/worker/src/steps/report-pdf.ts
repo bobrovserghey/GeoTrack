@@ -63,7 +63,7 @@ export type ReportPdfInput = {
   domain: string;
 };
 
-export type RenderContextFactory = (options: { serviceKey: string }) => Promise<BrowserContext>;
+export type RenderContextFactory = (options: { serviceKey: string; baseUrl: string }) => Promise<BrowserContext>;
 
 export type ReportPdfDeps = {
   baseUrl: string;
@@ -86,7 +86,7 @@ export async function generateReportPdf(
 
   let context: BrowserContext | null = null;
   try {
-    context = await createRenderContext({ serviceKey });
+    context = await createRenderContext({ serviceKey, baseUrl });
     const page = await context.newPage();
     const url = `${baseUrl.replace(/\/+$/, '')}/internal/report-render/${auditId}`;
     const response = await page.goto(url, { waitUntil: 'networkidle' });

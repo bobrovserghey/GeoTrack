@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import { eq, inArray, sql } from 'drizzle-orm';
-import { createClient } from '@geotrack/db/client';
+import { getDb } from '@/lib/db';
 import {
   audits,
   scores,
@@ -65,18 +65,20 @@ function techCheckLabel(criterion: string, details: Record<string, unknown>): st
 // Same pattern as the T-43 report page. notFound() is deliberately never called
 // from inside this function: it throws a Next.js control-flow error that a
 // catch-all here would swallow.
-async function loadReportPdfProps(
-  auditId: string,
-  databaseUrl: string,
-): Promise<ReportPdfContentProps | null> {
+//
+// Uses the shared getDb() singleton (apps/web/src/lib/db.ts), not a fresh
+// createClient() per request: the worker hits this route once per audit per
+// PDF render, and a brand-new postgres.js connection pool per request would
+// never be closed (see docs/specs/debt.md).
+async function loadReportPdfProps(auditId: string): Promise<ReportPdfContentProps | null> {
   // Both catches log before degrading: a silent 404 leaves the worker with
   // nothing but "internal render route returned 404" and loses the root cause
   // (which is not always the expected non-UUID auditId). Same precedent as
   // opengraph-image.tsx. Only the auditId and the error are logged — never the
   // connection string or the service key.
-  let db: ReturnType<typeof createClient>;
+  let db: ReturnType<typeof getDb>;
   try {
-    db = createClient(databaseUrl);
+    db = getDb();
   } catch (err) {
     console.error(`[internal-report-render] DB client init failed, returning 404 for auditId=${auditId}:`, err);
     return null;
@@ -91,7 +93,7 @@ async function loadReportPdfProps(
 }
 
 async function loadFromDb(
-  db: ReturnType<typeof createClient>,
+  db: ReturnType<typeof getDb>,
   auditId: string,
 ): Promise<ReportPdfContentProps | null> {
   const [audit] = await db.select().from(audits).where(eq(audits.id, auditId)).limit(1);
@@ -311,10 +313,7 @@ export default async function InternalReportRenderPage({
   const requestHeaders = await headers();
   if (!isValidServiceKey(requestHeaders)) notFound();
 
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) notFound();
-
-  const props = await loadReportPdfProps(auditId, databaseUrl);
+  const props = await loadReportPdfProps(auditId);
   if (!props) notFound();
 
   return <ReportPdfContent {...props} />;
