@@ -51,3 +51,8 @@ jobs:
           NEXT_PUBLIC_APP_URL: https://ci.example
           INNGEST_EVENT_KEY: ci
           FREE_DAILY_CEILING: '50'
+          PADDLE_API_KEY: ci
+          PADDLE_WEBHOOK_SECRET: ci
+          PADDLE_PRICE_ID_STANDARD: ci
+          PADDLE_PRICE_ID_EXTENDED: ci
+          RESEND_API_KEY: ci

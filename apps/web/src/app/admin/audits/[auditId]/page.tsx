@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db';
 import { audits, auditEvents, engineRuns } from '@geotrack/db';
 import { eq, asc } from 'drizzle-orm';
 import { RestartButton } from './RestartButton';
+import { RefundButton } from './RefundButton';
 import Link from 'next/link';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -76,7 +77,12 @@ export default async function AuditDetailPage({
       {audit.status === 'needs_attention' && (
         <section style={{ marginBottom: '2rem', padding: '1rem', background: '#fff5f5', border: '1px solid #fcc', borderRadius: 6 }}>
           <h3 style={{ margin: '0 0 0.75rem', color: '#c00', fontSize: '1rem' }}>Admin actions — needs attention</h3>
-          <RestartButton auditId={auditId} />
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <RestartButton auditId={auditId} />
+            {/* Refund only makes sense for a paid audit — a teaser has no
+                order/payment to refund, and transition() requires isPaid. */}
+            {audit.auditType !== 'teaser' && <RefundButton auditId={auditId} />}
+          </div>
         </section>
       )}
 

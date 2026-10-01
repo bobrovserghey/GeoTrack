@@ -21,6 +21,11 @@ export const REQUIRED_WEB_ENV = [
   'NEXT_PUBLIC_APP_URL',
   'INNGEST_EVENT_KEY',
   'FREE_DAILY_CEILING',
+  'PADDLE_API_KEY',
+  'PADDLE_WEBHOOK_SECRET',
+  'PADDLE_PRICE_ID_STANDARD',
+  'PADDLE_PRICE_ID_EXTENDED',
+  'RESEND_API_KEY',
 ] as const;
 
 export function validateWebEnv(env: Record<string, string | undefined> = process.env): void {
