@@ -105,8 +105,11 @@ type SitemapFetch =
   | { kind: 'failed' };
 
 /**
- * A 2xx (`ok`) and a 404 (`missing`) are both answers about the sitemap; only
- * `failed` (429, 5xx-less network error, host halt) leaves us without data.
+ * A 2xx (`ok`) and a 4xx other than 429 (`missing` — the host says "there is no
+ * sitemap here") are both answers about the sitemap. `failed` means we have no
+ * data at all: 429, 5xx, a network error or a host halt. A 5xx is the server
+ * failing, not a statement about the sitemap, so it must not be recorded as
+ * `sitemapPresent: false` (a −5 finding in scoreB5).
  */
 function sitemapAnswered(sm: SitemapFetch): boolean {
   return sm.kind === 'ok' || sm.kind === 'missing';
@@ -120,14 +123,20 @@ async function fetchSitemap(
 ): Promise<SitemapFetch> {
   try {
     const res = await gate.fetch(`${origin}/sitemap.xml`);
-    if (res.status === 429) {
-      degraded.push('sitemap.xml: 429');
+    // 429 and 5xx are "we do not know", not "no sitemap" — same rule as
+    // `makeProbe` in machine-readable-check.ts.
+    if (res.status === 429 || res.status >= 500) {
+      degraded.push(`sitemap.xml: ${res.status}`);
       return { kind: 'failed' };
     }
     if (!res.ok) return { kind: 'missing' };
     return { kind: 'ok', xml: await res.text() };
   } catch (err) {
-    degraded.push(`sitemap.xml: ${err instanceof Error ? err.message : 'request failed'}`);
+    // Short canonical strings, matching the B2/B5/B6 notes for the same events;
+    // the gate's own HostHaltedError message would be a different vocabulary.
+    degraded.push(
+      err instanceof HostHaltedError ? 'sitemap.xml: stopped on 429' : 'sitemap.xml: request failed',
+    );
     return { kind: 'failed' };
   }
 }
@@ -397,15 +406,22 @@ async function checkB6(
     }
   }
 
-  // With no sitemap answer and no page answered there is nothing to score:
-  // scoreB6 would otherwise hand out its default 6/10 "nothing is stale" points
-  // for measurements that never happened (see scoring/pillar-b.ts).
-  if (!sitemapAnswered(sm) && pagesAnswered === 0) {
+  // With no page answered there is nothing honest to score, even if the sitemap
+  // answered. scoreB6 (scoring/pillar-b.ts) derives at most 4 of its 10 points
+  // from `sitemapLastmod`; the other 6 are a DEFAULT awarded whenever
+  // `pagesWithLastModified + stalePageCount === 0` — i.e. exactly when no page
+  // was reached. So a sitemap-only answer would still collect 6 undeserved
+  // points out of 10. Reporting `measured: false` here deliberately throws away
+  // a real `sitemapLastmod` signal: that is the honest trade, because the
+  // default dwarfs it. The underlying modelling flaw (scoreB6 handing out 6/10
+  // on `total6 === 0`) is recorded in docs/specs/debt.md — pillar-b.ts is
+  // protected scoring config and changing it would move live scores.
+  if (pagesAnswered === 0) {
     return {
       measured: false,
       notMeasuredReason: halted
-        ? 'host answered 429: no sitemap and no page could be checked'
-        : 'no sitemap and no page could be checked',
+        ? 'host answered 429: no page could be checked for freshness'
+        : 'no page could be checked for freshness',
     };
   }
 

@@ -81,4 +81,24 @@ describe('crawl — robots.txt (RFC 9309)', () => {
     const paths = await crawledPaths('User-agent: GeoTrackOther\nDisallow: /\n', ['/open']);
     expect(paths).toContain('/open');
   });
+
+  it('Crawl-delay between two user-agent lines does not unlock a Disallow: /', async () => {
+    // Crawl-delay is an ignored record (RFC 9309 §2.2.4), so the two user-agent
+    // lines form ONE group {GeoTrack, *} governed by "Disallow: /": nothing may
+    // be crawled, the start URL included. Closing the agent list on an ignored
+    // record made this crawl the whole site.
+    const paths = await crawledPaths('User-agent: GeoTrack\nCrawl-delay: 10\n\nUser-agent: *\nDisallow: /\n', [
+      '/a',
+      '/b',
+    ]);
+    expect(paths).toEqual([]);
+  });
+
+  it('an explicitly empty Disallow for us wins over a Disallow: / for *', async () => {
+    const paths = await crawledPaths('User-agent: GeoTrack\nDisallow:\n\nUser-agent: *\nDisallow: /\n', [
+      '/a',
+      '/b',
+    ]);
+    expect(paths).toEqual(['/', '/a', '/b']);
+  });
 });

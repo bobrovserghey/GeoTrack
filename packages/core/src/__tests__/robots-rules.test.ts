@@ -128,21 +128,51 @@ describe('isPathAllowed (RFC 9309)', () => {
     expect(allowed('User-agent: *\nDisallow: /раздел*\n', '/%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB/1')).toBe(false);
   });
 
-  it('a non-rule directive ends the agent list (no group merging)', () => {
-    // Crawl-delay closes the GeoTrack group: it governs, has no rules → allowed.
-    const txt = 'User-agent: GeoTrack\nCrawl-delay: 5\n\nUser-agent: *\nDisallow: /\n';
-    expect(allowed(txt, '/x')).toBe(true);
+  it('an ignored record does not end the agent list (RFC 9309 §2.2.4)', () => {
+    // Authority: RFC 9309 §2.2.4 requires records other than user-agent/allow/
+    // disallow to be IGNORED, so the two "User-agent:" lines are consecutive
+    // start-of-group lines — ONE group with agents {geotrack, *} and the rule
+    // "Disallow: /". Google's reference parser agrees: it sets the group
+    // separator only on allow/disallow. Treating Crawl-delay as a group boundary
+    // instead produced a matching specific group with zero rules, which silently
+    // discarded "Disallow: /" and under-blocked. Do not "re-fix" this.
+    const txt = 'User-agent: GeoTrack\nCrawl-delay: 10\n\nUser-agent: *\nDisallow: /\n';
+    expect(allowed(txt, '/x')).toBe(false);
     // Same for Sitemap / Host / Noindex / unknown keys.
     for (const line of ['Sitemap: https://e.test/s.xml', 'Host: e.test', 'Noindex: /n', 'Unknown-key: 1']) {
-      expect(allowed(`User-agent: GeoTrack\n${line}\n\nUser-agent: *\nDisallow: /\n`, '/x')).toBe(true);
+      expect(allowed(`User-agent: GeoTrack\n${line}\n\nUser-agent: *\nDisallow: /\n`, '/x')).toBe(false);
     }
+    // An agent we are not still has its own group here, so it is unaffected.
+    expect(allowed(txt, '/x', 'OtherBot')).toBe(false); // the * in the merged group
   });
 
-  it('a non-rule directive does not leak another agent\'s Allow into the * group', () => {
+  it('an explicitly rule-less specific group governs and does not fall back to *', () => {
+    // "Disallow:" is a rule line: it closes the agent list and leaves a real,
+    // deliberately empty GeoTrack group. Falling back to the "*" rules here
+    // (`specific.length ? specific : wildcard`) would wrongly block everything.
+    const txt = 'User-agent: GeoTrack\nDisallow:\n\nUser-agent: *\nDisallow: /\n';
+    expect(allowed(txt, '/x')).toBe(true);
+    expect(allowed(txt, '/')).toBe(true);
+    // Another agent is governed by the "*" group as usual.
+    expect(allowed(txt, '/x', 'OtherBot')).toBe(false);
+  });
+
+  it('an ignored record between two user-agent lines makes one group, Allow included', () => {
+    // Same authority as above (RFC 9309 §2.2.4 + Google's parser): Crawl-delay is
+    // ignored, so "*" and "SomeBot" start one group whose "Allow: /admin"
+    // legitimately applies to "*" too. Equal-length tie → Allow wins, so /admin
+    // is allowed for every agent. This is a property of the group syntax, not a
+    // leak: the earlier expectation here encoded the same mistaken premise.
     const txt =
       'User-agent: *\nCrawl-delay: 1\n\nUser-agent: SomeBot\nAllow: /admin\n\nUser-agent: *\nDisallow: /admin\n';
-    expect(allowed(txt, '/admin')).toBe(false);
+    expect(allowed(txt, '/admin')).toBe(true);
     expect(allowed(txt, '/admin', 'SomeBot')).toBe(true);
+    // With a rule in place of the ignored record the groups really are separate,
+    // and SomeBot's Allow stays out of the "*" rules.
+    const separated =
+      'User-agent: *\nDisallow: /a\n\nUser-agent: SomeBot\nAllow: /admin\n\nUser-agent: *\nDisallow: /admin\n';
+    expect(allowed(separated, '/admin')).toBe(false);
+    expect(allowed(separated, '/admin', 'SomeBot')).toBe(true);
   });
 
   it('a version suffix in the robots.txt User-agent value is tolerated', () => {

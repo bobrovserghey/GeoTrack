@@ -57,9 +57,15 @@ function normalisePercentEncoding(input: string): string {
 function parseGroups(robotsTxt: string): Group[] {
   const groups: Group[] = [];
   let current: Group | null = null;
-  // A group stays open across blank lines; the first user-agent line after any
-  // other directive (a rule, but also Crawl-delay/Sitemap/Host/unknown keys)
-  // starts a new group, so a non-rule line cannot merge two groups' agents.
+  // A group stays open across blank lines; only a user-agent line that follows a
+  // rule (allow/disallow) starts a new group. Records other than user-agent,
+  // allow and disallow — Crawl-delay, Sitemap, Host, anything unknown — MUST be
+  // ignored (RFC 9309 §2.2.4), which leaves the user-agent lines around them
+  // adjacent, i.e. one group with all of their agents. Google's reference parser
+  // behaves the same way: it sets the group separator only on allow/disallow.
+  // Closing the agent list on an ignored record under-blocks: it would turn a
+  // rule-less "User-agent: X\nCrawl-delay: N" into a matching specific group
+  // with zero rules and discard a following "User-agent: *\nDisallow: /".
   let collectingAgents = false;
 
   const text = robotsTxt.charCodeAt(0) === 0xfeff ? robotsTxt.slice(1) : robotsTxt;
@@ -78,12 +84,13 @@ function parseGroups(robotsTxt: string): Group[] {
         collectingAgents = true;
       }
       current.agents.push(productToken(value));
-    } else {
+    } else if (key === 'allow' || key === 'disallow') {
       collectingAgents = false;
-      if (key !== 'allow' && key !== 'disallow') continue;
       // Rules before any user-agent line belong to no group.
       if (!current) continue;
-      // An empty value matches nothing: "Disallow:" permits everything.
+      // An empty value matches nothing: "Disallow:" permits everything. The
+      // group still exists with zero rules, so an explicitly rule-less specific
+      // group governs and must NOT fall back to "*" (see isPathAllowed).
       if (value) {
         current.rules.push({ allow: key === 'allow', pattern: normalisePercentEncoding(value) });
       }
@@ -142,6 +149,10 @@ export function isPathAllowed(robotsTxt: string, userAgent: string, rawPath: str
     if (g.agents.includes(token)) specific = [...(specific ?? []), ...g.rules];
     if (g.agents.includes('*')) wildcard = [...(wildcard ?? []), ...g.rules];
   }
+  // Nullish, not truthy: an empty `specific` means a group for our token exists
+  // and deliberately carries no rules ("User-agent: X\nDisallow:"), which
+  // governs — it must not fall back to "*". Ignored records cannot manufacture
+  // such a group (§2.2.4), so an empty `specific` is always the site's intent.
   const rules = specific ?? wildcard;
   if (!rules) return true;
 

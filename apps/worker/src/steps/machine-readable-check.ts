@@ -16,6 +16,12 @@ export type MachineReadableCheckDeps = {
   fetchFn: FetchFn;
   /** Pause between requests to one host; safe-fetch applies its own on top. Defaults to 0. */
   domainPauseMs?: number;
+  /**
+   * Ceiling for one queued request; on timeout the host queue is released and
+   * the probe degrades. Defaults to the host-gate default (60 s). Same knob as
+   * `TechCheckDeps.taskTimeoutMs`.
+   */
+  taskTimeoutMs?: number;
 };
 
 // ── Input ────────────────────────────────────────────────────────────────────
@@ -199,7 +205,9 @@ export async function collectMachineReadableCheck(
   const origin = input.origin.replace(/\/+$/, '');
   const { keyPages } = input;
   // E4 and E5 run in parallel; the gate keeps their requests to one host sequential.
-  const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 0);
+  const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 0, {
+    taskTimeoutMs: deps.taskTimeoutMs,
+  });
   const degraded = new Degradations();
   const probe = makeProbe(gate, degraded);
 

@@ -159,8 +159,14 @@ describe('techCheck — a halted host leaves B5/B6 unmeasured, not falsely measu
     );
   });
 
-  it('a fetched sitemap keeps B5/B6 measured even with zero page results', async () => {
-    // The sitemap answer is real data; only the page probes were lost to the 429.
+  it('a fetched sitemap keeps B5 measured with zero page results, but not B6', async () => {
+    // B5: the sitemap answer is real data worth 5 of its 15 points and its page
+    // half early-returns to 0, so staying measured is conservative.
+    // B6 is different and must report measured:false here: scoreB6 derives at
+    // most 4 of 10 points from sitemapLastmod and DEFAULTS the other 6 whenever
+    // no page answered, so a sitemap-only answer would collect 6 undeserved
+    // points. Expectation changed on that authority (see the comment on the
+    // pagesAnswered guard in steps/tech-check.ts and docs/specs/debt.md).
     const fetchFn = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
       if (init?.headers) return new Response('<html></html>', { status: 200 }); // B2 bot probes
       if (url.endsWith('/sitemap.xml')) return new Response(SITEMAP_XML, { status: 200 });
@@ -169,10 +175,15 @@ describe('techCheck — a halted host leaves B5/B6 unmeasured, not falsely measu
     const input = makeInput({ keyPages: ['https://example.com/a'] });
     const result = await techCheck(input, makeDeps(fetchFn));
     const { b5, b6 } = result.data!;
-    if (!b5.measured || !b6.measured) throw new Error('sitemap data should keep B5/B6 measured');
+    if (!b5.measured) throw new Error('sitemap data should keep B5 measured');
     expect(b5.sitemapPresent).toBe(true);
     expect(b5.pageResults).toEqual([]);
-    expect(b6.sitemapLastmod).toBe('2025-01-01');
+    expect(b6.measured).toBe(false);
+    if (b6.measured) throw new Error('unreachable');
+    expect(b6.notMeasuredReason).toMatch(/429/);
+    const scored = scorePillarB(result.data!, methodology, new Date('2026-01-01'));
+    expect(scored.unmeasuredCriteria).toContain('b6');
+    expect(scored.criterionScores.b6.score).toBe(0);
   });
 
   it('a 404 sitemap is an answer: B5/B6 stay measured', async () => {
@@ -184,6 +195,24 @@ describe('techCheck — a halted host leaves B5/B6 unmeasured, not falsely measu
     const result = await techCheck(makeInput(), makeDeps(fetchFn));
     expect(result.data!.b5.measured).toBe(true);
     expect(result.data!.b6.measured).toBe(true);
+  });
+
+  it.each([500, 503])('a %i sitemap is not an answer: it must not count as "no sitemap"', async (status) => {
+    // 5xx is the server failing, not a statement about the sitemap. With the
+    // pages halted too, the host answered nothing at all, so neither B5 nor B6
+    // may be reported as measured and sitemapPresent:false must not be recorded.
+    const fetchFn = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.headers) throw new Error('ECONNRESET'); // B2 bot probes: no 429 halt
+      if (url.endsWith('/sitemap.xml')) return new Response('', { status });
+      return new Response('slow down', { status: 429 });
+    });
+    const result = await techCheck(makeInput(), makeDeps(fetchFn));
+    const { b5, b6 } = result.data!;
+    expect(b5.measured).toBe(false);
+    expect(b6.measured).toBe(false);
+    const scored = scorePillarB(result.data!, methodology, new Date('2026-01-01'));
+    expect(scored.unmeasuredCriteria).toEqual(expect.arrayContaining(['b5', 'b6']));
+    expect(result.notes.some((n) => n.includes(`sitemap.xml: ${status}`))).toBe(true);
   });
 
   it('B2 reports measured:false when the host halted before any bot request', async () => {

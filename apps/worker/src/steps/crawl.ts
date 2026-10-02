@@ -21,6 +21,14 @@ const HREF_RE = /href=["']([^"'#?][^"']*?)["']/gi;
  * but it means "you are asking too often", not "there are no rules". Crawling a
  * host that just told us to back off would also contradict the 429 host halt in
  * `net/host-gate.ts`, so we treat it as unreachable. Google's parser does the same.
+ *
+ * Second deliberate departure: redirect exhaustion. §2.3.1.2 says more than five
+ * hops should be treated as "unavailable" (§2.3.1.3 — allow all), but `fetchFn`
+ * follows redirects itself and surfaces exhaustion as a thrown error, which the
+ * `catch` below maps to `unreachable` (crawl nothing). We keep it that way on
+ * purpose: the direction is conservative, and recognising the case would mean
+ * matching on an error message, which is fragile because `fetchFn` is injected
+ * and need not be safe-fetch. See docs/specs/debt.md.
  */
 type RobotsFetch =
   | { kind: 'rules'; text: string }
