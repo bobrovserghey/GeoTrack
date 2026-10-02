@@ -1,4 +1,5 @@
-import { transition, type AuditStatus } from '@geotrack/core';
+import { NonRetriableError } from 'inngest';
+import { transition, TransitionError, type AuditStatus, type TransitionEvent } from '@geotrack/core';
 import { crawlStub } from '../steps/crawl-stub.js';
 import { enginePollStub } from '../steps/engine-poll-stub.js';
 import { brandPromptsStub } from '../steps/brand-prompts-stub.js';
@@ -7,8 +8,30 @@ export type AuditEventPayload = Record<string, unknown>;
 
 export type DisposableCheckDep = (email: string) => Promise<{ blocked: boolean; reason?: string }>;
 
+// Thrown by transitionStatus when the audit is no longer in the expected
+// `from` status (an admin cancelled/restarted it, or another run moved it).
+export class StatusConflictError extends Error {
+  constructor(
+    public readonly auditId: string,
+    public readonly from: AuditStatus,
+    public readonly to: AuditStatus,
+  ) {
+    super(`audit ${auditId}: status is no longer "${from}", refusing to move it to "${to}"`);
+    this.name = 'StatusConflictError';
+  }
+}
+
 export type AuditRunDeps = {
-  updateAuditStatus(auditId: string, status: AuditStatus): Promise<void>;
+  getAuditStatus(auditId: string): Promise<AuditStatus>;
+  // Atomic compare-and-set: UPDATE ... WHERE status = from, plus the
+  // `status.changed` event, in one transaction. Throws StatusConflictError
+  // when the audit is not in `from`.
+  transitionStatus(
+    auditId: string,
+    from: AuditStatus,
+    to: AuditStatus,
+    payload: AuditEventPayload,
+  ): Promise<void>;
   insertAuditEvent(auditId: string, eventType: string, payload: AuditEventPayload): Promise<void>;
   getAuditIsPaid(auditId: string): Promise<boolean>;
   getAuditEmailNormalized(auditId: string): Promise<string | null>;
@@ -30,24 +53,39 @@ export async function auditRunHandler(
   deps: AuditRunDeps,
   categoryHint?: string,
 ): Promise<void> {
-  const isPaid = await deps.getAuditIsPaid(auditId);
-  const emailNormalized = await deps.getAuditEmailNormalized(auditId);
+  // DB reads live inside step.run: Inngest memoizes the result, so a replay
+  // sees the values of the first pass instead of whatever the row holds now
+  // (a read in the function body can change between passes and shift the set
+  // of steps in the middle of an already-executed history).
+  const { isPaid, emailKnown } = await step.run('load-audit', async () => ({
+    isPaid: await deps.getAuditIsPaid(auditId),
+    emailKnown: (await deps.getAuditEmailNormalized(auditId)) !== null,
+  }));
 
-  if (emailNormalized) {
-    await step.run('disposable-email.check', async () => {
-      const result = await deps.checkDisposableEmail(emailNormalized);
-      if (result.blocked) {
-        throw new Error(`DISPOSABLE_EMAIL:${result.reason ?? 'unknown'}`);
+  // One status change = one step. The expected `from` is part of the contract:
+  // the DB is the source of truth, so a status that is neither `from` nor the
+  // already-applied target means somebody else (an admin) moved the audit and
+  // this run must stop instead of overwriting it.
+  const move = (
+    stepId: string,
+    from: AuditStatus,
+    event: TransitionEvent,
+    extra: AuditEventPayload = {},
+  ) =>
+    step.run(stepId, async () => {
+      const to = transition(from, event, { isPaid });
+      const current = await deps.getAuditStatus(auditId);
+      if (current === to) return; // already applied — a retry after a lost step result
+      if (current !== from) {
+        throw new NonRetriableError(
+          `audit ${auditId}: step "${stepId}" expects status "${from}", found "${current}"`,
+        );
       }
+      await deps.transitionStatus(auditId, from, to, { to, ...extra });
     });
-  }
 
   // 1. queued → running
-  await step.run('status.running', async () => {
-    const next = transition('queued', 'orchestrator_accepted');
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-  });
+  await move('status.running', 'queued', 'orchestrator_accepted');
 
   // 2. Stub step: crawl
   await step.run('crawl.stub', async () => {
@@ -68,11 +106,7 @@ export async function auditRunHandler(
     });
   } else {
     // 3. running → waiting_category, wait for user (10m timeout → auto-select)
-    await step.run('status.waiting-category', async () => {
-      const next = transition('running', 'waiting_for_category');
-      await deps.updateAuditStatus(auditId, next);
-      await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-    });
+    await move('status.waiting-category', 'running', 'waiting_for_category');
 
     const categoryEvent = await step.waitForEvent('wait-category', {
       event: 'geotrack/audit.category.selected',
@@ -81,15 +115,9 @@ export async function auditRunHandler(
     });
 
     // waiting_category → running (whether user selected or auto-selected on timeout)
-    await step.run('status.running-after-category', async () => {
-      const autoSelected = !categoryEvent;
-      const next = transition('waiting_category', 'category_selected');
-      await deps.updateAuditStatus(auditId, next);
-      await deps.insertAuditEvent(auditId, 'status.changed', {
-        to: next,
-        autoSelected,
-        categoryId: categoryEvent?.data?.categoryId ?? null,
-      });
+    await move('status.running-after-category', 'waiting_category', 'category_selected', {
+      autoSelected: !categoryEvent,
+      categoryId: categoryEvent?.data?.categoryId ?? null,
     });
   }
 
@@ -105,34 +133,38 @@ export async function auditRunHandler(
     return result;
   });
 
-  // 5. running → waiting_email (teaser result is visible; wait for email before brand prompts)
-  await step.run('status.waiting-email', async () => {
-    const next = transition('running', 'waiting_for_email');
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-  });
+  // 5. Teaser: running → waiting_email, wait for the email before brand
+  // prompts. A paid audit already has the buyer's email (copied from the
+  // teaser), so it must not wait for an event that will never come.
+  if (!(isPaid && emailKnown)) {
+    await move('status.waiting-email', 'running', 'waiting_for_email');
 
-  const emailEvent = await step.waitForEvent('wait-email', {
-    event: 'geotrack/audit.email.provided',
-    match: 'data.auditId',
-    timeout: '7d',
-  });
-
-  if (!emailEvent) {
-    // 7-day timeout — complete without brand prompts
-    await step.run('status.completed-email-timeout', async () => {
-      const next = transition('waiting_email', 'email_timeout', { isPaid });
-      await deps.updateAuditStatus(auditId, next);
-      await deps.insertAuditEvent(auditId, 'status.changed', { to: next, emailTimeout: true });
+    const emailEvent = await step.waitForEvent('wait-email', {
+      event: 'geotrack/audit.email.provided',
+      match: 'data.auditId',
+      timeout: '7d',
     });
-    return;
+
+    if (!emailEvent) {
+      // 7-day timeout — complete without brand prompts
+      await move('status.completed-email-timeout', 'waiting_email', 'email_timeout', { emailTimeout: true });
+      return;
+    }
+
+    // 6. waiting_email → running (email provided, continue with brand prompts)
+    await move('status.running-after-email', 'waiting_email', 'email_provided');
   }
 
-  // 6. waiting_email → running (email provided, continue with brand prompts)
-  await step.run('status.running-after-email', async () => {
-    const next = transition('waiting_email', 'email_provided');
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
+  // Defence in depth (the web route rejects disposable addresses at
+  // submission): checked once the audit is `running`, so a rejection can
+  // still be turned into step_failed. Retrying cannot change the verdict.
+  await step.run('disposable-email.check', async () => {
+    const email = await deps.getAuditEmailNormalized(auditId);
+    if (!email) return;
+    const result = await deps.checkDisposableEmail(email);
+    if (result.blocked) {
+      throw new NonRetriableError(`DISPOSABLE_EMAIL:${result.reason ?? 'unknown'}`);
+    }
   });
 
   // 7. Stub step: brand prompts (expensive; runs only after email is captured)
@@ -148,18 +180,39 @@ export async function auditRunHandler(
   });
 
   // 8. running → completed
-  await step.run('status.completed', async () => {
-    const next = transition('running', 'steps_completed', { isPaid });
-    await deps.updateAuditStatus(auditId, next);
-    await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-  });
+  await move('status.completed', 'running', 'steps_completed');
 
   // 9. completed → in_review (paid audits only)
   if (isPaid) {
-    await step.run('status.in-review', async () => {
-      const next = transition('completed', 'sent_to_review', { isPaid: true });
-      await deps.updateAuditStatus(auditId, next);
-      await deps.insertAuditEvent(auditId, 'status.changed', { to: next });
-    });
+    await move('status.in-review', 'completed', 'sent_to_review');
   }
+}
+
+const MAX_REASON_LENGTH = 500;
+
+// onFailure path: the run has exhausted its retries (or hit a non-retriable
+// error). `step_failed` is defined only from `running` (ADR-012: paid →
+// needs_attention, teaser → failed). From any other status there is no defined
+// failure transition — the table is a protected invariant — so the status is
+// left alone and the failure is only recorded; see docs/specs/debt.md.
+export async function auditRunFailureHandler(
+  auditId: string,
+  error: { message?: string } | undefined,
+  deps: AuditRunDeps,
+): Promise<void> {
+  const reason = String(error?.message ?? 'unknown error').slice(0, MAX_REASON_LENGTH);
+  const status = await deps.getAuditStatus(auditId);
+  const isPaid = await deps.getAuditIsPaid(auditId);
+
+  let to: AuditStatus | null = null;
+  try {
+    to = transition(status, 'step_failed', { isPaid });
+  } catch (err) {
+    if (!(err instanceof TransitionError)) throw err;
+  }
+
+  if (to) {
+    await deps.transitionStatus(auditId, status, to, { to, failed: true, reason });
+  }
+  await deps.insertAuditEvent(auditId, 'run.failed', { status, to, reason });
 }
