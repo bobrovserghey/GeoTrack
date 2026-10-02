@@ -531,3 +531,16 @@ Inngest), вне production — по-прежнему `noopDeps`. **Следст
   (`ENV NODE_ENV=production`), но при запуске воркера мимо образа (nixpacks,
   ручной `pnpm start` на VPS) и эта защита, и проверка env в `server.ts` молча
   отключатся.
+
+## 2026-10-02, вход в админку — что осталось после фикса (независимое ревью, баг #2)
+
+- `next` с кодпойнтами > U+00FF на странице логина даёт 500 (`ERR_INVALID_CHAR`
+  в `Location`); cookie к этому моменту уже выставлена, админ фактически
+  вошёл. Было и до фикса.
+- Нет теста на место вызова `safeNextPath` в `admin/login/page.tsx` — защиту
+  от open redirect можно снять незаметно.
+- `middleware.ts` кладёт в `next` только `pathname` без query: глубокие ссылки
+  теряют фильтр (`?status=...`).
+- Сравнение секрета в `loginAction` и `admin-auth.ts` не constant-time
+  (`timingSafeEqual`). Расхождение с CLAUDE.md («Supabase Auth с белым списком
+  email») остаётся: админка — один общий `ADMIN_SECRET` без личности админа.
