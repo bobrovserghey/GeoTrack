@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ADMIN_COOKIE, hashSecret } from '@/lib/admin-auth';
+import { ADMIN_COOKIE, hashSecret, safeNextPath } from '@/lib/admin-auth';
 
 async function loginAction(formData: FormData) {
   'use server';
@@ -21,7 +21,10 @@ async function loginAction(formData: FormData) {
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 
-  redirect(next || '/admin');
+  // `next` is attacker-controlled (it travels via ?next= into a hidden input),
+  // so it must be reduced to an app-internal path before redirect() — raw
+  // values like `https://evil.example` would be honoured verbatim.
+  redirect(safeNextPath(next));
 }
 
 export default async function LoginPage({
@@ -41,7 +44,7 @@ export default async function LoginPage({
         {params.error && (
           <p style={{ color: '#c00', marginBottom: '1rem', fontSize: '0.875rem' }}>Invalid secret. Try again.</p>
         )}
-        <input type="hidden" name="next" value={params.next ?? ''} />
+        <input type="hidden" name="next" value={safeNextPath(params.next ?? null)} />
         <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>
           Admin secret
         </label>
