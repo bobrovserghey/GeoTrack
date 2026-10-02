@@ -119,7 +119,7 @@ async function mapWithConcurrency<T, R>(
 ): Promise<R[]> {
   const results = new Array<R>(items.length);
   let next = 0;
-  let firstError: { error: unknown } | null = null;
+  let firstError = null as { error: unknown } | null;
 
   const lane = async (): Promise<void> => {
     while (next < items.length) {
