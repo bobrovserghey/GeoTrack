@@ -584,3 +584,21 @@ Inngest), вне production — по-прежнему `noopDeps`. **Следст
 - Сравнение секрета в `loginAction` и `admin-auth.ts` не constant-time
   (`timingSafeEqual`). Расхождение с CLAUDE.md («Supabase Auth с белым списком
   email») остаётся: админка — один общий `ADMIN_SECRET` без личности админа.
+
+## 2026-10-02, состав промптов standard-профиля (независимое ревью)
+
+`generatePromptBundle` брал первые N категорийных промптов по приоритету, а
+приоритеты в наборе идут блоками по типам (discovery 1–16, problem-led 17–26,
+comparison 27–34, alternative 35–38, local 39–40). Для standard (26) это давало
+16 discovery + 10 problem-led и ни одного comparison/alternative/local (для
+teaser — только discovery), хотя методология задаёт пропорцию discovery 35% /
+comparison+alternatives 25% / problem-led 20% / local 5%. Теперь типы берутся
+пропорционально составу полного набора (метод наибольших остатков), внутри типа
+— по приоритету; extended (40) не меняется. В `apps/` функция пока не вызывается,
+CI-eval на этот путь не завязан.
+
+Не исправлено (профили v2 — защищённый инвариант): `PROFILE_QUOTAS` в
+`packages/config/src/schemas/prompt-bundle.ts` (standard 26+4) расходится с
+`audit-profiles.v2.json` (standard: 20 категорийных + 6 клиентских + 4 бренд с
+поиском, плюс 6+4 без поиска). Какая из двух моделей верна — решение продакта
+до подключения бандла в пайплайн.
