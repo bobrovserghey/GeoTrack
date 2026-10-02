@@ -7,6 +7,7 @@
   },
   "scripts": {
     "lint": "eslint .",
+    "db:migrate": "pnpm --filter @geotrack/db db:migrate",
     "typecheck": "tsc --noEmit -p packages/core && tsc --noEmit -p packages/config && tsc --noEmit -p packages/db && tsc --noEmit -p packages/ui && tsc --noEmit -p apps/web && tsc --noEmit -p apps/worker",
     "test": "vitest run --workspace vitest.workspace.ts",
     "test:watch": "vitest --workspace vitest.workspace.ts",
