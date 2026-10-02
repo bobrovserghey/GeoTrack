@@ -18,6 +18,9 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
+// admin-auth hashes the session cookie with node:crypto, which the default
+// Edge runtime does not provide — every /admin request would 500 there.
 export const config = {
+  runtime: 'nodejs',
   matcher: ['/admin/:path*'],
 };
