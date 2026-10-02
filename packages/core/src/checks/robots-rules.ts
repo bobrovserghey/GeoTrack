@@ -12,7 +12,8 @@ function parseGroups(robotsTxt: string): Group[] {
   // follows rules starts a new one.
   let collectingAgents = false;
 
-  for (const rawLine of robotsTxt.replace(/^﻿/, '').split(/\r\n|\r|\n/)) {
+  const text = robotsTxt.charCodeAt(0) === 0xfeff ? robotsTxt.slice(1) : robotsTxt;
+  for (const rawLine of text.split(/\r\n|\r|\n/)) {
     const line = rawLine.replace(/#.*$/, '').trim();
     if (!line) continue;
     const colon = line.indexOf(':');

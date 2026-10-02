@@ -4,6 +4,8 @@ import type {
   E5AgentInterfaceFacts,
   MachineReadableCheckOutput,
 } from '@geotrack/core/steps/machine-readable-check';
+import { createGatedFetch, HostHaltedError } from '../net/host-gate.js';
+import type { GatedFetch } from '../net/host-gate.js';
 
 // ── Injectable types ─────────────────────────────────────────────────────────
 
@@ -11,6 +13,8 @@ export type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 
 export type MachineReadableCheckDeps = {
   fetchFn: FetchFn;
+  /** Pause between requests to one host; safe-fetch applies its own on top. Defaults to 0. */
+  domainPauseMs?: number;
 };
 
 // ── Input ────────────────────────────────────────────────────────────────────
@@ -57,15 +61,24 @@ function hasCatalogContent(body: string): boolean {
   }
 }
 
-async function probe(fetchFn: FetchFn, url: string): Promise<{ ok: boolean; body: string }> {
-  try {
-    const res = await fetchFn(url);
-    if (!res.ok) return { ok: false, body: '' };
-    const body = await res.text();
-    return { ok: true, body };
-  } catch {
-    return { ok: false, body: '' };
-  }
+type Probe = (url: string) => Promise<{ ok: boolean; body: string }>;
+
+// A 404 is an answer ("not there"); a thrown error, 429 or 5xx means we do not know.
+function makeProbe(gate: GatedFetch, degraded: string[]): Probe {
+  return async (url) => {
+    try {
+      const res = await gate.fetch(url);
+      if (res.status === 429 || res.status >= 500) degraded.push(`${url}: ${res.status}`);
+      if (!res.ok) return { ok: false, body: '' };
+      const body = await res.text();
+      return { ok: true, body };
+    } catch (err) {
+      degraded.push(
+        err instanceof HostHaltedError ? `${url}: skipped after 429` : `${url}: request failed`,
+      );
+      return { ok: false, body: '' };
+    }
+  };
 }
 
 // ── E4 — machine-readable data ────────────────────────────────────────────────
@@ -73,13 +86,13 @@ async function probe(fetchFn: FetchFn, url: string): Promise<{ ok: boolean; body
 async function collectE4(
   origin: string,
   keyPages: string[],
-  fetchFn: FetchFn,
+  probe: Probe,
 ): Promise<E4MachineReadableFacts> {
   const pricingUrl = keyPages.find((u) => matchesPathPattern(u, PRICING_PATTERNS)) ?? null;
   const pricingPageFound = pricingUrl !== null;
   let pricingStructured = false;
   if (pricingUrl) {
-    const { ok, body } = await probe(fetchFn, pricingUrl);
+    const { ok, body } = await probe(pricingUrl);
     if (ok) pricingStructured = hasPricingStructure(body);
   }
 
@@ -87,7 +100,7 @@ async function collectE4(
   let openApiSpecUrl: string | null = null;
   for (const path of OPENAPI_PATHS) {
     const url = `${origin}${path}`;
-    const { ok, body } = await probe(fetchFn, url);
+    const { ok, body } = await probe(url);
     if (ok && body.length >= 10) {
       openApiSpecFound = true;
       openApiSpecUrl = url;
@@ -104,7 +117,7 @@ async function collectE4(
   } else {
     for (const path of ['/docs', '/api-docs', '/swagger', '/redoc']) {
       const url = `${origin}${path}`;
-      const { ok } = await probe(fetchFn, url);
+      const { ok } = await probe(url);
       if (ok) {
         apiDocsFound = true;
         apiDocsUrl = url;
@@ -117,7 +130,7 @@ async function collectE4(
   let productCatalogUrl: string | null = null;
   for (const path of CATALOG_PATHS) {
     const url = `${origin}${path}`;
-    const { ok, body } = await probe(fetchFn, url);
+    const { ok, body } = await probe(url);
     if (ok && hasCatalogContent(body)) {
       productCatalogFound = true;
       productCatalogUrl = url;
@@ -140,8 +153,8 @@ async function collectE4(
 
 // ── E5 — agent interfaces ─────────────────────────────────────────────────────
 
-async function collectE5(origin: string, fetchFn: FetchFn): Promise<E5AgentInterfaceFacts> {
-  const llms = await probe(fetchFn, `${origin}/llms.txt`);
+async function collectE5(origin: string, probe: Probe): Promise<E5AgentInterfaceFacts> {
+  const llms = await probe(`${origin}/llms.txt`);
   const llmsTxtFound = llms.ok;
   const llmsTxtValid = llms.ok && llms.body.trim().length > 0;
 
@@ -149,7 +162,7 @@ async function collectE5(origin: string, fetchFn: FetchFn): Promise<E5AgentInter
   let agentsJsonUrl: string | null = null;
   for (const path of ['/agents.json', '/.well-known/agents.json']) {
     const url = `${origin}${path}`;
-    const { ok } = await probe(fetchFn, url);
+    const { ok } = await probe(url);
     if (ok) {
       agentsJsonFound = true;
       agentsJsonUrl = url;
@@ -157,10 +170,10 @@ async function collectE5(origin: string, fetchFn: FetchFn): Promise<E5AgentInter
     }
   }
 
-  const webMcp = await probe(fetchFn, `${origin}/.well-known/webmcp-manifest.json`);
+  const webMcp = await probe(`${origin}/.well-known/webmcp-manifest.json`);
   const webMcpManifestFound = webMcp.ok;
 
-  const mcp = await probe(fetchFn, `${origin}/.well-known/mcp.json`);
+  const mcp = await probe(`${origin}/.well-known/mcp.json`);
   const mcpServerFound = mcp.ok;
 
   return {
@@ -182,12 +195,21 @@ export async function collectMachineReadableCheck(
 ): Promise<StepResult<MachineReadableCheckOutput>> {
   const origin = input.origin.replace(/\/+$/, '');
   const { keyPages } = input;
-  const { fetchFn } = deps;
+  // E4 and E5 run in parallel; the gate keeps their requests to one host sequential.
+  const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 0);
+  const degraded: string[] = [];
+  const probe = makeProbe(gate, degraded);
 
   const [e4, e5] = await Promise.all([
-    collectE4(origin, keyPages, fetchFn),
-    collectE5(origin, fetchFn),
+    collectE4(origin, keyPages, probe),
+    collectE5(origin, probe),
   ]);
 
-  return { status: 'ok', data: { e4, e5 }, artifacts: [], usage: [], notes: [] };
+  return {
+    status: degraded.length > 0 ? 'partial' : 'ok',
+    data: { e4, e5 },
+    artifacts: [],
+    usage: [],
+    notes: degraded.map((d) => `degraded: ${d}`),
+  };
 }
