@@ -3,7 +3,7 @@ import { pollEngines } from '../steps/engine-poll.js';
 import type { EnginePollInput } from '@geotrack/core';
 import type { EngineAdapter, EngineAnswer, EngineRegistryEntry, UsageRecord, Budget } from '@geotrack/core';
 import type { BundledPromptEntry } from '@geotrack/core';
-import type { CacheStore, CacheEntry } from '../cache/category-cache.js';
+import { BrandedPromptCacheError, type CacheStore, type CacheEntry } from '../cache/category-cache.js';
 
 // ── fixtures ──────────────────────────────────────────────────────────────────
 
@@ -479,6 +479,19 @@ describe('cache write failure', () => {
     expect(result.notes.some((n) => n.includes('cache write failed'))).toBe(true);
     expect(onCacheError).toHaveBeenCalledOnce();
     expect(JSON.stringify([result.notes, onCacheError.mock.calls])).not.toContain('s3cret');
+  });
+});
+
+describe('cache write: ADR-021 violation', () => {
+  // Сбой хранилища проглатывается, но попытка закэшировать брендовый промпт — баг вызывающего кода.
+  it('does not swallow BrandedPromptCacheError', async () => {
+    const store: CacheStore = {
+      findEntries: vi.fn().mockResolvedValue([]),
+      insertEntry: vi.fn().mockRejectedValue(new BrandedPromptCacheError('brand-01')),
+    };
+    await expect(
+      pollEngines(BASE_INPUT, [makeAdapter('perplexity', [makeAnswer()])], store, [makeRegistry()], BUDGET, NO_DELAY),
+    ).rejects.toThrow(BrandedPromptCacheError);
   });
 });
 

@@ -11,7 +11,7 @@ import type {
   EnginePollResponse,
 } from '@geotrack/core';
 import type { CacheStore, CacheLookupKey } from '../cache/category-cache.js';
-import { getCacheEntries, setCacheEntry } from '../cache/category-cache.js';
+import { BrandedPromptCacheError, getCacheEntries, setCacheEntry } from '../cache/category-cache.js';
 
 // ── options ───────────────────────────────────────────────────────────────────
 
@@ -266,6 +266,8 @@ export async function pollEngines(
                 now,
               );
             } catch (err) {
+              // Нарушение ADR-021 — баг вызывающего кода, а не сбой хранилища: не замалчиваем.
+              if (err instanceof BrandedPromptCacheError) throw err;
               reportCacheError('write', adapter.id, prompt.id, err);
             }
           }
