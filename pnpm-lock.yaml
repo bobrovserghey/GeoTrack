@@ -38,6 +38,9 @@ importers:
       '@marsidev/react-turnstile':
         specifier: ^1.0.0
         version: 1.6.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@paddle/paddle-js':
+        specifier: ^1.6.5
+        version: 1.6.5
       '@supabase/supabase-js':
         specifier: ^2.45.0
         version: 2.116.0(@opentelemetry/api@1.9.1)
@@ -1497,6 +1500,9 @@ packages:
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
+
+  '@paddle/paddle-js@1.6.5':
+    resolution: {integrity: sha512-uFRvptUzYRqRlqTU5XmfcZWC9BGVYpZNdANd3giJjZbJlHesnE4gn8PyjtYpesU1ar2ZGPuJxHvrrSIV9jjdVw==}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -4177,6 +4183,8 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.11.0(@opentelemetry/api@1.9.1)
+
+  '@paddle/paddle-js@1.6.5': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true

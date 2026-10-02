@@ -31,11 +31,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { checkoutUrl } = await createPaddleTransaction(
+    const { transactionId } = await createPaddleTransaction(
       { apiKey },
       { priceId, customData: { teaserAuditId } },
     );
-    return NextResponse.json({ checkoutUrl });
+    return NextResponse.json({ transactionId });
   } catch (err) {
     console.error('[checkout] failed to create Paddle transaction:', err);
     return NextResponse.json({ error: 'checkout failed' }, { status: 502 });

@@ -3,7 +3,17 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 // Paddle Billing (not Classic — Classic isn't issued to new merchants).
 // See docs/specs/T-45.md and docs/adr/ADR-007-paddle-payments.md.
 
-const DEFAULT_PADDLE_BASE_URL = 'https://api.paddle.com';
+// Sandbox and live are fully separate Paddle environments with separate base
+// URLs — a sandbox key sent to api.paddle.com (or vice versa) is rejected
+// with 403, not routed. The key's own prefix (`pdl_sdbx_` / `pdl_live_`)
+// already encodes which environment it belongs to, so deriving the base URL
+// from it means the two can never drift out of sync with each other.
+const PADDLE_LIVE_BASE_URL = 'https://api.paddle.com';
+const PADDLE_SANDBOX_BASE_URL = 'https://sandbox-api.paddle.com';
+
+function resolvePaddleBaseUrl(apiKey: string): string {
+  return apiKey.startsWith('pdl_sdbx_') ? PADDLE_SANDBOX_BASE_URL : PADDLE_LIVE_BASE_URL;
+}
 
 // Tolerance for the Paddle-Signature `ts` field: wide enough to absorb
 // network latency and Paddle's own retry delays, tight enough to reject a
@@ -64,19 +74,22 @@ export type CreateTransactionInput = {
 
 export type CreateTransactionResult = {
   transactionId: string;
-  checkoutUrl: string;
 };
 
-// Uses Paddle's Transactions API to get a hosted checkout.url, rather than
-// the @paddle/paddle-js overlay widget: no new client-side dependency, and
-// the existing teaser-page button keeps its exact 1:1-ported markup — it
-// only gains an onClick that fetches this and redirects. See T-45.md.
+// Uses Paddle's Transactions API purely to mint a transaction id: the checkout
+// itself is opened client-side by the Paddle.js overlay
+// (`Checkout.open({ transactionId })` in report-content.tsx via
+// lib/paddle-client.ts). Paddle Billing has no server-redirect hosted
+// checkout, so the response's `checkout.url` is not used here — and it is only
+// populated at all when the Paddle dashboard has a default payment link, so it
+// must never be treated as required. See the 2026-10-01 amendment to
+// docs/specs/T-45.md and docs/adr/ADR-007-paddle-payments.md.
 export async function createPaddleTransaction(
   deps: PaddleApiDeps,
   input: CreateTransactionInput,
 ): Promise<CreateTransactionResult> {
   const fetchFn = deps.fetch ?? globalThis.fetch;
-  const baseUrl = deps.baseUrl ?? DEFAULT_PADDLE_BASE_URL;
+  const baseUrl = deps.baseUrl ?? resolvePaddleBaseUrl(deps.apiKey);
 
   const res = await fetchFn(`${baseUrl}/transactions`, {
     method: 'POST',
@@ -94,13 +107,13 @@ export async function createPaddleTransaction(
     throw new Error(`Paddle API error: ${res.status}`);
   }
 
-  const data = (await res.json()) as { data: { id: string; checkout?: { url?: string } } };
-  const checkoutUrl = data.data.checkout?.url;
-  if (!checkoutUrl) {
-    throw new Error('Paddle transaction response missing checkout.url');
+  const data = (await res.json()) as { data?: { id?: string } };
+  const transactionId = data.data?.id;
+  if (!transactionId) {
+    throw new Error('Paddle transaction response missing data.id');
   }
 
-  return { transactionId: data.data.id, checkoutUrl };
+  return { transactionId };
 }
 
 export type CreateRefundInput = {
@@ -117,7 +130,7 @@ export async function createPaddleRefund(
   input: CreateRefundInput,
 ): Promise<CreateRefundResult> {
   const fetchFn = deps.fetch ?? globalThis.fetch;
-  const baseUrl = deps.baseUrl ?? DEFAULT_PADDLE_BASE_URL;
+  const baseUrl = deps.baseUrl ?? resolvePaddleBaseUrl(deps.apiKey);
 
   const res = await fetchFn(`${baseUrl}/adjustments`, {
     method: 'POST',
@@ -129,8 +142,11 @@ export async function createPaddleRefund(
     // `partial`, and a partial adjustment requires an `items` array — omitting
     // both makes the request fail validation, so the refund would never happen.
     // `full` refunds the whole transaction and needs no item list.
-    // STILL TO BE CONFIRMED against Paddle sandbox before the Refund button is
-    // used on live money — see docs/specs/debt.md, T-45.
+    // Confirmed against the real Paddle sandbox API on 2026-10-01: the request
+    // is accepted as-is, and the response comes back `pending_approval` rather
+    // than `approved` — a successful HTTP response means "refund requested",
+    // not "money already returned". See the 2026-10-01 amendment in
+    // docs/specs/T-45.md and docs/runbooks/paid-no-report.md.
     body: JSON.stringify({
       action: 'refund',
       type: 'full',
@@ -157,7 +173,7 @@ export async function getPaddleCustomerEmail(
   customerId: string,
 ): Promise<string> {
   const fetchFn = deps.fetch ?? globalThis.fetch;
-  const baseUrl = deps.baseUrl ?? DEFAULT_PADDLE_BASE_URL;
+  const baseUrl = deps.baseUrl ?? resolvePaddleBaseUrl(deps.apiKey);
 
   const res = await fetchFn(`${baseUrl}/customers/${customerId}`, {
     headers: { Authorization: `Bearer ${deps.apiKey}` },

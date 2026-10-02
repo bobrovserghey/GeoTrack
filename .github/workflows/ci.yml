@@ -53,6 +53,7 @@ jobs:
           FREE_DAILY_CEILING: '50'
           PADDLE_API_KEY: ci
           PADDLE_WEBHOOK_SECRET: ci
+          NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ci
           PADDLE_PRICE_ID_STANDARD: ci
           PADDLE_PRICE_ID_EXTENDED: ci
           RESEND_API_KEY: ci
