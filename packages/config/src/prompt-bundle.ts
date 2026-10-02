@@ -1,7 +1,6 @@
 import type { PromptBundle, BundledPromptEntry, ProfileId } from './schemas/prompt-bundle.js';
-import { PROFILE_QUOTAS } from './schemas/prompt-bundle.js';
 import type { Locale } from './schemas/prompt-set.js';
-import { getPromptSet } from './index.js';
+import { getPromptSet, getAuditProfileV2 } from './index.js';
 
 // ---------------------------------------------------------------------------
 // Brand prompt text generators per locale
@@ -24,6 +23,19 @@ function brandTexts(brandName: string, competitors: string[], locale: Locale): s
     `${brandName} reviews`,
     ...competitors.map((c) => `${brandName} vs ${c}`),
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Quotas
+// ---------------------------------------------------------------------------
+
+// Single source of truth is audit-profiles.v2.json: the bundle holds the
+// category and brand prompts that run WITH web search. Client prompts are a
+// separate per-client layer (ADR-021) and the no-search runs re-use these
+// prompts, so neither adds entries here.
+export function getProfileQuota(profileId: ProfileId): { categoryCount: number; brandCount: number } {
+  const { promptsWithSearch } = getAuditProfileV2(profileId);
+  return { categoryCount: promptsWithSearch.category, brandCount: promptsWithSearch.brand };
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +95,7 @@ export interface PromptBundleInput {
 
 export function generatePromptBundle(input: PromptBundleInput): PromptBundle {
   const { brandName, categoryId, locale, competitors, profileId } = input;
-  const { categoryCount, brandCount } = PROFILE_QUOTAS[profileId];
+  const { categoryCount, brandCount } = getProfileQuota(profileId);
 
   // Category prompts — a type-balanced selection of categoryCount, in priority order
   const promptSet = getPromptSet(categoryId, locale);

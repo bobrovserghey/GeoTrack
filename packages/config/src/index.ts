@@ -112,9 +112,9 @@ export { PromptSetSchema, PromptEntrySchema, LOCALES, PROMPT_TYPES } from './sch
 export { AuditProfileSchema, AuditProfilesFileSchema };
 export { AuditProfileV2Schema, AuditProfilesV2FileSchema } from './schemas/audit-profile-v2.js';
 export type { AuditProfileV2, AuditProfileV2Id } from './schemas/audit-profile-v2.js';
-export { generatePromptBundle } from './prompt-bundle.js';
+export { generatePromptBundle, getProfileQuota } from './prompt-bundle.js';
 export type { PromptBundleInput } from './prompt-bundle.js';
-export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, PROFILE_QUOTAS, BUNDLED_PROMPT_TYPES } from './schemas/prompt-bundle.js';
+export { PromptBundleSchema, BundledPromptEntrySchema, PROFILE_IDS, BUNDLED_PROMPT_TYPES } from './schemas/prompt-bundle.js';
 export type { PromptBundle, BundledPromptEntry, ProfileId } from './schemas/prompt-bundle.js';
 export { EngineRegistryEntrySchema, EngineRegistryFileSchema } from './schemas/engine-registry.js';
 export { ModelPriceSchema, ProviderPricesFileSchema } from './schemas/provider-prices.js';

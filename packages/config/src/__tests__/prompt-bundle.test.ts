@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { generatePromptBundle } from '../prompt-bundle.js';
 import { getPromptSet } from '../index.js';
-import { PromptBundleSchema, PROFILE_QUOTAS } from '../schemas/prompt-bundle.js';
+import { PromptBundleSchema } from '../schemas/prompt-bundle.js';
+import { getProfileQuota } from '../prompt-bundle.js';
+import { getAuditProfileV2 } from '../index.js';
 
 const CATEGORY_ID = 'crm-software';
 const BRAND = 'Acme CRM';
@@ -20,7 +22,7 @@ describe('generatePromptBundle', () => {
     expect(bundle.prompts).toHaveLength(12);
   });
 
-  it('standard: exactly 30 prompts (26 category + 4 brand)', () => {
+  it('standard: exactly 24 prompts (20 category + 4 brand)', () => {
     const bundle = generatePromptBundle({
       brandName: BRAND,
       categoryId: CATEGORY_ID,
@@ -28,10 +30,10 @@ describe('generatePromptBundle', () => {
       competitors: COMPETITORS_6,
       profileId: 'standard',
     });
-    expect(bundle.prompts).toHaveLength(30);
+    expect(bundle.prompts).toHaveLength(24);
   });
 
-  it('extended: exactly 50 prompts (40 category + 10 brand)', () => {
+  it('extended: exactly 40 prompts (30 category + 10 brand)', () => {
     const bundle = generatePromptBundle({
       brandName: BRAND,
       categoryId: CATEGORY_ID,
@@ -39,7 +41,7 @@ describe('generatePromptBundle', () => {
       competitors: COMPETITORS_6,
       profileId: 'extended',
     });
-    expect(bundle.prompts).toHaveLength(50);
+    expect(bundle.prompts).toHaveLength(40);
   });
 
   it('branded prompts have branded:true, category prompts have branded:false', () => {
@@ -50,7 +52,7 @@ describe('generatePromptBundle', () => {
       competitors: COMPETITORS_6,
       profileId: 'standard',
     });
-    const { categoryCount, brandCount } = PROFILE_QUOTAS['standard'];
+    const { categoryCount, brandCount } = getProfileQuota('standard');
     const categoryPrompts = bundle.prompts.slice(0, categoryCount);
     const brandPrompts = bundle.prompts.slice(categoryCount);
     expect(categoryPrompts.every((p) => !p.branded)).toBe(true);
@@ -95,7 +97,7 @@ describe('generatePromptBundle', () => {
       profileId: 'extended',
     });
     const priorities = bundle.prompts.map((p) => p.priority).sort((a, b) => a - b);
-    expect(priorities).toEqual(Array.from({ length: 50 }, (_, i) => i + 1));
+    expect(priorities).toEqual(Array.from({ length: 40 }, (_, i) => i + 1));
   });
 
   it('all prompt ids are unique within bundle', () => {
@@ -262,15 +264,15 @@ describe('generatePromptBundle — category type mix', () => {
     expect(counts['comparison']).toBeGreaterThan(0);
     expect(counts['alternative']).toBeGreaterThan(0);
     expect(counts['local']).toBeGreaterThan(0);
-    expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe(26);
+    expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe(20);
   });
 
   it('standard mix is proportional to the 40-prompt set', () => {
     expect(typesOf('standard')).toEqual({
-      discovery: 10,
-      'problem-led': 7,
-      comparison: 5,
-      alternative: 3,
+      discovery: 8,
+      'problem-led': 5,
+      comparison: 4,
+      alternative: 2,
       local: 1,
     });
   });
@@ -282,14 +284,12 @@ describe('generatePromptBundle — category type mix', () => {
     expect(counts['comparison']).toBeGreaterThan(0);
   });
 
-  it('extended is the full set unchanged', () => {
-    expect(typesOf('extended')).toEqual({
-      discovery: 16,
-      'problem-led': 10,
-      comparison: 8,
-      alternative: 4,
-      local: 2,
-    });
+  it('extended covers every type and sums to its 30 category prompts', () => {
+    const counts = typesOf('extended');
+    expect(Object.values(counts).reduce((a, b) => a + b, 0)).toBe(30);
+    for (const t of ['discovery', 'problem-led', 'comparison', 'alternative', 'local']) {
+      expect(counts[t], t).toBeGreaterThan(0);
+    }
   });
 
   it('keeps category prompts in ascending original priority order, without duplicates', () => {
@@ -310,5 +310,16 @@ describe('generatePromptBundle — category type mix', () => {
   it('gives the same standard mix for every category', () => {
     const ids = ['crm-software', 'accounting-software', 'ci-cd-platform'];
     for (const id of ids) expect(typesOf('standard', id)).toEqual(typesOf('standard'));
+  });
+});
+
+// audit-profiles.v2.json is the single source of truth for bundle sizes.
+describe('getProfileQuota', () => {
+  it.each(['teaser', 'standard', 'extended'] as const)('%s follows promptsWithSearch of the v2 profile', (id) => {
+    const { promptsWithSearch } = getAuditProfileV2(id);
+    expect(getProfileQuota(id)).toEqual({
+      categoryCount: promptsWithSearch.category,
+      brandCount: promptsWithSearch.brand,
+    });
   });
 });

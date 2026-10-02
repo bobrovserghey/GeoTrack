@@ -4,12 +4,6 @@ import { PROMPT_TYPES, LOCALES } from './prompt-set.js';
 export const PROFILE_IDS = ['teaser', 'standard', 'extended'] as const;
 export type ProfileId = (typeof PROFILE_IDS)[number];
 
-export const PROFILE_QUOTAS: Record<ProfileId, { categoryCount: number; brandCount: number }> = {
-  teaser:   { categoryCount: 10, brandCount: 2  },
-  standard: { categoryCount: 26, brandCount: 4  },
-  extended: { categoryCount: 40, brandCount: 10 },
-};
-
 export const BUNDLED_PROMPT_TYPES = [...PROMPT_TYPES, 'brand'] as const;
 
 export const BundledPromptEntrySchema = z.object({
