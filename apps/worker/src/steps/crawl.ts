@@ -1,4 +1,5 @@
 import { createSafeFetch } from '@geotrack/core/net/safe-fetch';
+import { isPathAllowed } from '@geotrack/core/checks/robots-rules';
 import type { StepResult } from '@geotrack/core';
 
 export type CrawlOutput = {
@@ -8,27 +9,17 @@ export type CrawlOutput = {
 
 type FetchFn = (url: string) => Promise<Response>;
 
+const CRAWLER_TOKEN = 'GeoTrack';
+
 const HREF_RE = /href=["']([^"'#?][^"']*?)["']/gi;
 
-async function fetchRobots(origin: string, fetchFn: FetchFn): Promise<string[]> {
+async function fetchRobots(origin: string, fetchFn: FetchFn): Promise<string> {
   try {
     const res = await fetchFn(`${origin}/robots.txt`);
-    if (!res.ok) return [];
-    const text = await res.text();
-    const disallowed: string[] = [];
-    let inScope = false;
-    for (const line of text.split('\n')) {
-      const trimmed = line.trim();
-      if (/^User-agent:/i.test(trimmed)) {
-        inScope = /:\s*\*/i.test(trimmed) || /:\s*GeoTrack/i.test(trimmed);
-      } else if (inScope && /^Disallow:/i.test(trimmed)) {
-        const path = trimmed.replace(/^Disallow:\s*/i, '').trim();
-        if (path) disallowed.push(path);
-      }
-    }
-    return disallowed;
+    if (!res.ok) return '';
+    return await res.text();
   } catch {
-    return [];
+    return '';
   }
 }
 
@@ -52,17 +43,13 @@ function extractLinks(html: string, baseUrl: URL): string[] {
   return links;
 }
 
-function isDisallowed(path: string, disallowed: string[]): boolean {
-  return disallowed.some((rule) => path.startsWith(rule));
-}
-
 export async function crawl(
   startUrl: string,
   maxPages: number,
   fetchFn: FetchFn = createSafeFetch(),
 ): Promise<StepResult<CrawlOutput>> {
   const origin = new URL(startUrl).origin;
-  const disallowed = await fetchRobots(origin, fetchFn);
+  const robotsTxt = await fetchRobots(origin, fetchFn);
 
   const visited = new Set<string>();
   const queue: string[] = [new URL(startUrl).href];
@@ -75,8 +62,8 @@ export async function crawl(
     if (visited.has(normalised)) continue;
     visited.add(normalised);
 
-    const parsedPath = new URL(normalised).pathname;
-    if (isDisallowed(parsedPath, disallowed)) continue;
+    const parsed = new URL(normalised);
+    if (!isPathAllowed(robotsTxt, CRAWLER_TOKEN, parsed.pathname + parsed.search)) continue;
 
     try {
       const res = await fetchFn(normalised);

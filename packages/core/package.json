@@ -11,6 +11,7 @@
     "./steps/competitor-detect": "./src/steps/competitor-detect.ts",
     "./contracts/model": "./src/contracts/model.ts",
     "./checks/robots": "./src/checks/robots.ts",
+    "./checks/robots-rules": "./src/checks/robots-rules.ts",
     "./steps/tech-check": "./src/steps/tech-check.ts",
     "./scoring/pillar-b": "./src/scoring/pillar-b.ts",
     "./scoring/pillar-a": "./src/scoring/pillar-a.ts",
