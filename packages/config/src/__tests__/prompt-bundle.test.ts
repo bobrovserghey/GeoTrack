@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { generatePromptBundle } from '../prompt-bundle.js';
-import { getPromptSet } from '../index.js';
+import { generatePromptBundle, getProfileQuota } from '../prompt-bundle.js';
+import { getPromptSet, getAuditProfileV2 } from '../index.js';
 import { PromptBundleSchema } from '../schemas/prompt-bundle.js';
-import { getProfileQuota } from '../prompt-bundle.js';
-import { getAuditProfileV2 } from '../index.js';
 
 const CATEGORY_ID = 'crm-software';
 const BRAND = 'Acme CRM';

@@ -32,7 +32,10 @@ function brandTexts(brandName: string, competitors: string[], locale: Locale): s
 // Single source of truth is audit-profiles.v2.json: the bundle holds the
 // category and brand prompts that run WITH web search. Client prompts are a
 // separate per-client layer (ADR-021) and the no-search runs re-use these
-// prompts, so neither adds entries here.
+// prompts, so neither adds entries here. `promptsWithSearchAdditionalLocale`
+// (extended: 20+5 per extra locale) is deliberately NOT applied: it is a
+// separate per-locale quota that belongs to the multi-locale run, which does
+// not exist yet — see docs/specs/debt.md.
 export function getProfileQuota(profileId: ProfileId): { categoryCount: number; brandCount: number } {
   const { promptsWithSearch } = getAuditProfileV2(profileId);
   return { categoryCount: promptsWithSearch.category, brandCount: promptsWithSearch.brand };
