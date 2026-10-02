@@ -37,6 +37,11 @@ describe('resolveAuditRunDeps', () => {
     vi.stubEnv('NODE_ENV', 'production');
     const mod = await load();
     expect(mod.auditRun).toBeDefined();
+    // Called with no argument, exactly as the Inngest handler calls it: the
+    // other tests pass `env` in explicitly, so without this line the default
+    // `env = process.env` — the only path production actually takes — is
+    // untested, and dropping it would keep the suite green.
+    expect(() => mod.resolveAuditRunDeps()).toThrow(NonRetriableError);
   });
 
   it('falls back to the no-op deps outside production', async () => {
