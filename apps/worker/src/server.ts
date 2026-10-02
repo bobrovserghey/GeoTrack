@@ -2,6 +2,7 @@ import http from 'node:http';
 import { writeSync } from 'node:fs';
 import { handler } from './index.js';
 import { validateWorkerEnv } from './env.js';
+import { wireAuditRunDeps } from './deps/wire.js';
 
 // Written with fs.writeSync rather than console.error because every call site
 // below is immediately followed by process.exit(): when stderr is a pipe (how
@@ -26,6 +27,18 @@ if (process.env.NODE_ENV === 'production') {
     // promises the process "падает с понятным сообщением" in the deploy log.
     fatal(err instanceof Error ? err.message : String(err));
   }
+}
+
+// T-79: connect the audit pipeline to the database before the port is bound.
+// In production DATABASE_URL is required (validateWorkerEnv above), so this
+// cannot silently fall back to the placeholder deps there.
+try {
+  if (!wireAuditRunDeps()) {
+    console.warn('geotrack-worker: DATABASE_URL is not set — audit-run uses placeholder deps (development only)');
+  }
+} catch (err) {
+  // A malformed DATABASE_URL: one clean line instead of a raw stack trace.
+  fatal(`geotrack-worker: could not connect the audit pipeline to the database: ${err instanceof Error ? err.message : String(err)}`);
 }
 
 // `Number(process.env.PORT ?? 3000)` is not enough: ?? only guards undefined,
