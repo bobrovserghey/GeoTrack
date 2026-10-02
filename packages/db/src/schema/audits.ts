@@ -1,6 +1,7 @@
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -9,11 +10,12 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 const now = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () => timestamp('updated_at', { withTimezone: true }).notNull().defaultNow();
@@ -44,7 +46,11 @@ export const users = pgTable('users', {
   authProvider: authProviderEnum('auth_provider'),
   createdAt: now(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  uniqueIndex('users_email_normalized_idx')
+    .on(t.emailNormalized)
+    .where(sql`${t.emailNormalized} IS NOT NULL`),
+]);
 
 export const audits = pgTable('audits', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -66,7 +72,10 @@ export const audits = pgTable('audits', {
   costUsd: numeric('cost_usd', { precision: 10, scale: 6 }).notNull().default('0'),
   createdAt: now(),
   updatedAt: updatedAt(),
-});
+}, (t) => [
+  index('audits_domain_normalized_status_idx').on(t.domainNormalized, t.status, t.createdAt),
+  index('audits_email_normalized_status_idx').on(t.emailNormalized, t.status, t.createdAt),
+]);
 
 export const auditEvents = pgTable('audit_events', {
   id: uuid('id').primaryKey().defaultRandom(),
