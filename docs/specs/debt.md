@@ -594,7 +594,7 @@ comparison 27–34, alternative 35–38, local 39–40). Для standard (26) э
 teaser — только discovery), хотя методология задаёт пропорцию discovery 35% /
 comparison+alternatives 25% / problem-led 20% / local 5%. Теперь типы берутся
 пропорционально составу полного набора (метод наибольших остатков), внутри типа
-— по приоритету; extended (40) не меняется. В `apps/` функция пока не вызывается,
+— по приоритету. В `apps/` функция пока не вызывается,
 CI-eval на этот путь не завязан.
 
 Расхождение `PROFILE_QUOTAS` (standard 26+4, extended 40+10) с
