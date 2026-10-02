@@ -28,12 +28,15 @@ export async function register() {
     // the one line the deploy-log reader gets. write()'s callback fires after
     // the flush, so the exit is deferred until then.
     //
-    // Deliberately no `node:fs`/`fs` import for a synchronous writeSync: this
-    // file is also compiled for the Edge runtime (the app has a middleware.ts),
-    // and webpack builds its module graph statically — a dynamic import() with
-    // a literal specifier is still a graph edge, so the runtime NEXT_RUNTIME
-    // guard above cannot prune it. Importing fs here fails `next build` with
-    // UnhandledSchemeError and breaks every deploy. process.stderr needs no
+    // Deliberately no `node:fs`/`fs` import for a synchronous writeSync, and it
+    // stays that way. Today the app has no Edge entry at all (middleware.ts
+    // declares `runtime: 'nodejs'`, so the build emits only
+    // .next/server/instrumentation.js), but the moment one comes back — an Edge
+    // middleware, an Edge route — this file gets compiled for Edge too, and
+    // webpack builds its module graph statically: a dynamic import() with a
+    // literal specifier is still a graph edge, so the runtime NEXT_RUNTIME guard
+    // above cannot prune it. Importing fs here would then fail `next build` with
+    // UnhandledSchemeError and break every deploy. process.stderr needs no
     // import.
     const message = err instanceof Error ? err.message : String(err);
     // Safety net armed BEFORE the write: if the callback never fires (stderr

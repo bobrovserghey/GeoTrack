@@ -539,3 +539,48 @@ Drizzle не знала (`users_email_normalized_idx` — частичный у�
 - Тест журнала по #5 проверяет наличие снимков и цепочку `prevId`, но не дрейф
   снимка от схемы (его ловит `drizzle-kit generate` → «No schema changes»,
   в CI не запускается).
+
+## 2026-10-02, audit-run — зависимости не подключены (независимое ревью, баг #1)
+
+`apps/worker/src/functions/audit-run.ts` работал на `noopDeps`:
+`setAuditRunDeps` нигде не вызывается, поэтому запуск пайплайна ничего не
+писал в БД, но завершался «успешно». Теперь в `NODE_ENV=production` без
+`setAuditRunDeps` функция падает с `NonRetriableError` (видно в дашборде
+Inngest), вне production — по-прежнему `noopDeps`. **Следствие для деплоя:**
+воркер в production будет честно проваливать каждый аудит, пока не появится
+задача на реальную привязку (`updateAuditStatus`/`insertAuditEvent`/… к БД и
+замену `crawlStub`/`enginePollStub`/`brandPromptsStub` настоящими шагами) —
+это и есть непосаженная часть пайплайна (см. CLAUDE.md, примечание по T-29/T-78).
+Отмечено в `docs/runbooks/deploy.md` (раздел 3), чтобы красные раны после
+первого синка с Inngest не выглядели как поломка деплоя.
+
+Что остаётся открытым (вне рамок этой правки, для задачи на привязку):
+
+- У `auditRun` нет `onFailure`-хендлера, поэтому провалившийся ран не переводит
+  аудит в `failed` — он навсегда остаётся `queued`, и страница прогресса
+  (`apps/web/src/app/report/[auditId]/audit-progress.tsx`) крутится без конца.
+  Регрессии относительно прежнего поведения нет (ран, «успешный» на `noopDeps`,
+  тоже оставлял `queued`), но при привязке понадобится `onFailure` →
+  `transition(..., 'failed')`.
+- Защита ловит только отсутствие зависимостей, но не заглушечность шагов: как
+  только `setAuditRunDeps()` будет вызван, прод снова начнёт «успешно» отдавать
+  пустые аудиты (`pagesFound: 0`, `mentionsFound: 0`), пока
+  `crawlStub`/`enginePollStub`/`brandPromptsStub` не заменят настоящими шагами.
+- `apps/worker/package.json` → `start: tsx src/server.ts` не выставляет
+  `NODE_ENV`. В Docker/Railway он приходит из `Dockerfile`
+  (`ENV NODE_ENV=production`), но при запуске воркера мимо образа (nixpacks,
+  ручной `pnpm start` на VPS) и эта защита, и проверка env в `server.ts` молча
+  отключатся.
+
+## 2026-10-02, вход в админку — что осталось после фикса (независимое ревью, баг #2)
+
+- `next` с кодпойнтами > U+00FF на странице логина даёт 500 (`ERR_INVALID_CHAR`
+  в `Location`); cookie к этому моменту уже выставлена, админ фактически
+  вошёл. Было и до фикса.
+- Нет теста на место вызова `safeNextPath` в `admin/login/page.tsx` — защиту
+  от open redirect можно снять незаметно.
+- `middleware.ts` кладёт в `next` только `pathname` без query: глубокие ссылки
+  теряют фильтр (`?status=...`).
+- Сравнение секрета в `loginAction` и `admin-auth.ts` не constant-time
+  (`timingSafeEqual`). Расхождение с CLAUDE.md («Supabase Auth с белым списком
+  email») остаётся: админка — один общий `ADMIN_SECRET` без личности админа.
