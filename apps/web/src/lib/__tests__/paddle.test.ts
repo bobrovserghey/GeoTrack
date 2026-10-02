@@ -73,7 +73,7 @@ describe('verifyPaddleSignature', () => {
 });
 
 describe('createPaddleTransaction', () => {
-  it('posts the expected request and returns the checkout URL', async () => {
+  it('posts the expected request and returns the transaction id', async () => {
     const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
       expect(url).toBe('https://api.paddle.com/transactions');
       expect(init.method).toBe('POST');
@@ -94,7 +94,24 @@ describe('createPaddleTransaction', () => {
       { priceId: 'pri_123', customData: { teaserAuditId: 'audit-1' } },
     );
 
-    expect(result).toEqual({ transactionId: 'txn_1', checkoutUrl: 'https://checkout.paddle.com/x' });
+    expect(result).toEqual({ transactionId: 'txn_1' });
+  });
+
+  it('routes a sandbox API key to the sandbox base URL', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      expect(url).toBe('https://sandbox-api.paddle.com/transactions');
+      return new Response(
+        JSON.stringify({ data: { id: 'txn_1', checkout: { url: 'https://checkout.paddle.com/x' } } }),
+        { status: 200 },
+      );
+    });
+
+    await createPaddleTransaction(
+      { apiKey: 'pdl_sdbx_apikey_test', fetch: fetchMock as unknown as typeof fetch },
+      { priceId: 'pri_123', customData: { teaserAuditId: 'audit-1' } },
+    );
+
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it('throws a readable error on a non-ok response', async () => {
@@ -107,14 +124,28 @@ describe('createPaddleTransaction', () => {
     ).rejects.toThrow('Paddle API error: 422');
   });
 
-  it('throws when the response has no checkout.url', async () => {
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: { id: 'txn_1' } }), { status: 200 }));
+  // Paddle only fills `checkout` when the dashboard has a default payment
+  // link; the overlay flow needs the transaction id alone, so a null checkout
+  // is a perfectly valid response and must not fail the request.
+  it('succeeds when the response has no checkout object', async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ data: { id: 'txn_1', checkout: null } }), { status: 200 }),
+    );
+    const result = await createPaddleTransaction(
+      { apiKey: 'k', fetch: fetchMock as unknown as typeof fetch },
+      { priceId: 'pri_123', customData: {} },
+    );
+    expect(result).toEqual({ transactionId: 'txn_1' });
+  });
+
+  it('throws when the response has no transaction id', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: {} }), { status: 200 }));
     await expect(
       createPaddleTransaction(
         { apiKey: 'k', fetch: fetchMock as unknown as typeof fetch },
         { priceId: 'pri_123', customData: {} },
       ),
-    ).rejects.toThrow('checkout.url');
+    ).rejects.toThrow('data.id');
   });
 });
 

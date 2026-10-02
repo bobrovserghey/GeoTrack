@@ -94,7 +94,7 @@
 
 Проверяемые переменные — это:
 
-- Vercel (`apps/web`): любая из 11 переменных в `apps/web/src/lib/env.ts`
+- Vercel (`apps/web`): любая из обязательных переменных в `apps/web/src/lib/env.ts`
   (то же, что перечислено в `apps/web/.env.example`).
 - Railway (`apps/worker`): `INNGEST_SIGNING_KEY` — **единственная**
   проверяемая переменная воркера (`apps/worker/src/env.ts`). `PORT` тоже

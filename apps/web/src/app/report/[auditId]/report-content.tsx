@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { EmailGate } from './email-gate';
+import { getPaddleClient } from '@/lib/paddle-client';
 
 // ---- types ------------------------------------------------------------------
 
@@ -384,12 +385,21 @@ export default function ReportContent(props: ReportContentProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teaserAuditId: auditId }),
       });
-      const json = (await res.json()) as { checkoutUrl?: string; error?: string };
-      if (json.checkoutUrl) {
-        window.location.href = json.checkoutUrl;
-        return;
+      const json = (await res.json()) as { transactionId?: string; error?: string };
+      if (json.transactionId) {
+        const paddle = await getPaddleClient();
+        if (paddle) {
+          // The overlay, not this handler, now owns the loading state from
+          // here — resetting it immediately lets the button re-enable while
+          // Paddle's checkout is open, instead of staying stuck disabled if
+          // the buyer closes the overlay without paying.
+          paddle.Checkout.open({ transactionId: json.transactionId });
+        } else {
+          console.error('[checkout] Paddle.js not configured (NEXT_PUBLIC_PADDLE_CLIENT_TOKEN missing)');
+        }
+      } else {
+        console.error('[checkout] failed to start checkout:', json.error);
       }
-      console.error('[checkout] failed to start checkout:', json.error);
     } catch (err) {
       console.error('[checkout] network error starting checkout:', err);
     }
