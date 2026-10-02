@@ -1,4 +1,5 @@
 import type {
+  EngineId,
   EngineAdapter,
   EngineAnswer,
   EngineRegistryEntry,
@@ -14,8 +15,17 @@ import { getCacheEntries, setCacheEntry } from '../cache/category-cache.js';
 
 // ── options ───────────────────────────────────────────────────────────────────
 
+// Только имя класса ошибки — текст исключения драйвера БД может содержать строку подключения.
+export type CacheErrorEvent = {
+  phase: 'read' | 'write';
+  engineId: EngineId;
+  promptId: string;
+  errorName: string;
+};
+
 export type PollOptions = {
   getRetryDelay?: (attempt: number) => number;
+  onCacheError?: (event: CacheErrorEvent) => void;
 };
 
 const DEFAULT_RETRY_DELAY = (attempt: number): number => Math.pow(2, attempt) * 1000;
@@ -93,7 +103,10 @@ function makeSpendTracker(budget: Budget): SpendTracker {
 
 // ── zero usage (for cache hits) ───────────────────────────────────────────────
 
-const ZERO_USAGE: UsageRecord = { provider: '', model: '', tokensIn: 0, tokensOut: 0, costUsd: 0 };
+// Свежий объект на каждый ответ: общая мутабельная ссылка протекала бы между ответами.
+function zeroUsage(): UsageRecord {
+  return { provider: '', model: '', tokensIn: 0, tokensOut: 0, costUsd: 0 };
+}
 
 const SKIPPED = Symbol('budget_skipped');
 
@@ -111,9 +124,24 @@ export async function pollEngines(
 
   const spend = makeSpendTracker(budget);
   const responses: EnginePollResponse[] = [];
-  const partialEngines = new Set<string>();
+  const partialEngines = new Set<EngineId>();
   const usageRecords: UsageRecord[] = [];
   const notes: string[] = [];
+  const noted = new Set<string>();
+  const noteOnce = (key: string, text: string): void => {
+    if (noted.has(key)) return;
+    noted.add(key);
+    notes.push(text);
+  };
+  const reportCacheError = (phase: 'read' | 'write', engineId: EngineId, promptId: string, err: unknown): void => {
+    noteOnce(`cache-${phase}-${engineId}`, `cache ${phase} failed for engine ${engineId}, continuing without cache`);
+    const errorName = err instanceof Error ? err.name : 'UnknownError';
+    try {
+      opts.onCacheError?.({ phase, engineId, promptId, errorName });
+    } catch {
+      // наблюдатель не должен ронять шаг
+    }
+  };
 
   const semaphores = new Map<string, Semaphore>(
     adapters.map((a) => {
@@ -145,7 +173,7 @@ export async function pollEngines(
             partialEngines.add(adapter.id);
           } else {
             if (result.budgetStatus === 'soft_exceeded') {
-              notes.push(`soft cost ceiling exceeded during engine ${adapter.id}`);
+              noteOnce(`soft-${adapter.id}`, `soft cost ceiling exceeded during engine ${adapter.id}`);
             }
             responses.push({
               promptId: prompt.id,
@@ -170,7 +198,14 @@ export async function pollEngines(
           engineId: adapter.id,
         };
 
-        const cached = await getCacheEntries(cacheStore, cacheKey, now);
+        let cachedAll: Awaited<ReturnType<typeof getCacheEntries>> = [];
+        try {
+          cachedAll = await getCacheEntries(cacheStore, cacheKey, now);
+        } catch (err) {
+          reportCacheError('read', adapter.id, prompt.id, err);
+        }
+        // Кэш мог быть наполнен профилем с большим числом повторов — лишние искажают знаменатели метрик.
+        const cached = cachedAll.filter((e) => e.repeatIndex < input.promptRepeats);
         const cachedIndices = new Set(cached.map((e) => e.repeatIndex));
         const missing = Array.from({ length: input.promptRepeats }, (_, i) => i).filter(
           (i) => !cachedIndices.has(i),
@@ -185,7 +220,7 @@ export async function pollEngines(
             responseText: entry.responseText,
             sources: entry.sources as { url: string; title?: string }[],
             fromCache: true,
-            usage: ZERO_USAGE,
+            usage: zeroUsage(),
           });
         }
 
@@ -205,7 +240,7 @@ export async function pollEngines(
             partialEngines.add(adapter.id);
           } else {
             if (result.budgetStatus === 'soft_exceeded') {
-              notes.push(`soft cost ceiling exceeded during engine ${adapter.id}`);
+              noteOnce(`soft-${adapter.id}`, `soft cost ceiling exceeded during engine ${adapter.id}`);
             }
             responses.push({
               promptId: prompt.id,
@@ -217,18 +252,22 @@ export async function pollEngines(
               usage: result.answer.usage,
             });
             usageRecords.push(result.answer.usage);
-            // Store in cache (non-blocking; errors silently dropped)
-            setCacheEntry(
-              cacheStore, cacheKey, ri,
-              {
-                responseText: result.answer.text,
-                sources: result.answer.sources,
-                usageTokensIn: result.answer.usage.tokensIn,
-                usageTokensOut: result.answer.usage.tokensOut,
-              },
-              false,
-              now,
-            ).catch(() => undefined);
+            // Оплаченный ответ уже в responses — сбой записи кэша его не отменяет.
+            try {
+              await setCacheEntry(
+                cacheStore, cacheKey, ri,
+                {
+                  responseText: result.answer.text,
+                  sources: result.answer.sources,
+                  usageTokensIn: result.answer.usage.tokensIn,
+                  usageTokensOut: result.answer.usage.tokensOut,
+                },
+                false,
+                now,
+              );
+            } catch (err) {
+              reportCacheError('write', adapter.id, prompt.id, err);
+            }
           }
         }
       }
@@ -240,7 +279,7 @@ export async function pollEngines(
   const hardCeilingHit = spend.isHardExceeded();
   if (hardCeilingHit) notes.push('hard cost ceiling reached, poll stopped');
 
-  const partialEngineList = [...partialEngines] as EnginePollOutput['partialEngines'];
+  const partialEngineList = [...partialEngines];
   const isPartial = partialEngineList.length > 0 || hardCeilingHit;
 
   return {
