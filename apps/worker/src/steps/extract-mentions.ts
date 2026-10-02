@@ -1,6 +1,6 @@
 import { normalizeDomain } from '@geotrack/core';
 import type { ModelAdapter, ModelAnswer } from '@geotrack/core/contracts/model';
-import type { StepResult, UsageRecord, EnginePollResponse, EngineId } from '@geotrack/core';
+import type { StepResult, UsageRecord, EnginePollResponse } from '@geotrack/core';
 import type { ExtractMentionsInput, ExtractMentionsOutput, EngineResponseFacts } from '@geotrack/core/steps/extract-mentions';
 
 // ── brand / competitor detection (regex, deterministic) ───────────────────────
@@ -105,52 +105,110 @@ async function extractBrandPosition(
   }
 }
 
+// ── bounded concurrency ───────────────────────────────────────────────────────
+
+// Совпадает с concurrencyLimit провайдеров в packages/config/src/engines.v1.json
+// (gemini/openai/anthropic: 5). При подключении шага (T-79) брать значение из
+// конфига/профиля, а не из этой константы.
+export const DEFAULT_EXTRACT_CONCURRENCY = 5;
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  let firstError = null as { error: unknown } | null;
+
+  const lane = async (): Promise<void> => {
+    while (next < items.length) {
+      const i = next++;
+      try {
+        results[i] = await fn(items[i]);
+      } catch (error) {
+        // не обрываем соседние задачи: слот освобождается, ошибка пробрасывается после всех
+        firstError ??= { error };
+      }
+    }
+  };
+
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane));
+  if (firstError) throw firstError.error;
+  return results;
+}
+
+function resolveConcurrency(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) return DEFAULT_EXTRACT_CONCURRENCY;
+  return Math.max(1, Math.floor(value));
+}
+
 // ── main step ─────────────────────────────────────────────────────────────────
+
+export type ExtractMentionsOptions = {
+  /** Максимум одновременных вызовов модели. Нечисловое/бесконечное значение → дефолт, меньше 1 → 1. */
+  concurrency?: number;
+};
+
+type ResponseOutcome = {
+  fact: EngineResponseFacts;
+  usage: UsageRecord | null;
+  failureKey: string | null;
+};
 
 export async function extractMentions(
   input: ExtractMentionsInput,
   model: ModelAdapter,
+  options: ExtractMentionsOptions = {},
 ): Promise<StepResult<ExtractMentionsOutput>> {
   const { responses, brandName, brandVariants, competitors } = input;
 
-  const usageRecords: UsageRecord[] = [];
-  const positionFailures: string[] = [];
+  const outcomes = await mapWithConcurrency(
+    responses,
+    resolveConcurrency(options.concurrency),
+    async (r: EnginePollResponse): Promise<ResponseOutcome> => {
+      const brandMentioned = detectBrandMention(r.responseText, brandName, brandVariants);
+      const competitorMentions = detectCompetitorMentions(r.responseText, competitors);
+      const citedDomains = extractDomains(r.sources);
 
-  const factsPromises = responses.map(async (r: EnginePollResponse) => {
-    const brandMentioned = detectBrandMention(r.responseText, brandName, brandVariants);
-    const competitorMentions = detectCompetitorMentions(r.responseText, competitors);
-    const citedDomains = extractDomains(r.sources);
+      let brandListPosition: number | null = null;
+      let normalizedPositionScore: number | null = null;
+      let usage: UsageRecord | null = null;
+      let failureKey: string | null = null;
 
-    let brandListPosition: number | null = null;
-    let normalizedPositionScore: number | null = null;
-
-    if (brandMentioned) {
-      const posResult = await extractBrandPosition(r.responseText, brandName, brandVariants, model);
-      if (posResult !== null) {
-        usageRecords.push(posResult.usage);
-        brandListPosition = posResult.position;
-        if (brandListPosition !== null) {
-          normalizedPositionScore = normalizePositionScore(brandListPosition);
+      if (brandMentioned) {
+        const posResult = await extractBrandPosition(r.responseText, brandName, brandVariants, model);
+        if (posResult !== null) {
+          usage = posResult.usage;
+          brandListPosition = posResult.position;
+          if (brandListPosition !== null) {
+            normalizedPositionScore = normalizePositionScore(brandListPosition);
+          }
+        } else {
+          failureKey = `${r.promptId}/${r.engineId}/${r.repeatIndex}`;
         }
-      } else {
-        positionFailures.push(`${r.promptId}/${r.engineId}/${r.repeatIndex}`);
       }
-    }
 
-    const fact: EngineResponseFacts = {
-      promptId: r.promptId,
-      engineId: r.engineId as EngineId,
-      repeatIndex: r.repeatIndex,
-      brandMentioned,
-      brandListPosition,
-      normalizedPositionScore,
-      competitorMentions,
-      citedDomains,
-    };
-    return fact;
-  });
+      return {
+        fact: {
+          promptId: r.promptId,
+          engineId: r.engineId,
+          repeatIndex: r.repeatIndex,
+          brandMentioned,
+          brandListPosition,
+          normalizedPositionScore,
+          competitorMentions,
+          citedDomains,
+        },
+        usage,
+        failureKey,
+      };
+    },
+  );
 
-  const facts = await Promise.all(factsPromises);
+  const facts = outcomes.map((o) => o.fact);
+  const usageRecords = outcomes.flatMap((o) => (o.usage ? [o.usage] : []));
+  const positionFailures = outcomes.flatMap((o) => (o.failureKey ? [o.failureKey] : []));
   const isPartial = positionFailures.length > 0;
 
   return {

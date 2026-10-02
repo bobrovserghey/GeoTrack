@@ -15,15 +15,15 @@
 2. Settings → API → `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`;
    `anon public` ключ → `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
    `service_role` ключ → `SUPABASE_SERVICE_ROLE_KEY` (секретный, не публиковать).
-3. Прогнать миграции против этой базы (см. `docs/specs/debt.md` — до этого
-   нужно пересчитать `when` в `packages/db/migrations/meta/_journal.json`,
-   иначе часть миграций 0001–0003 может не примениться):
+3. Прогнать миграции на **пустую** базу (`pnpm db:migrate` читает
+   `DATABASE_URL` и без неё падает; журнал и снимки исправлены в PR #57):
    ```bash
-   DATABASE_URL="..." pnpm db:migrate
+   DATABASE_URL="..." corepack pnpm db:migrate
    ```
-   Если скрипта `db:migrate` в `packages/db/package.json` ещё нет —
-   см. ту же запись в `debt.md`, там расписано, что `db:push`/`db:generate`
-   делают не то, что нужно для применения уже написанных файлов миграций.
+   Для одной БД выбирается один путь: **только `db:migrate`** (боевая/staging)
+   либо только `db:push` (одноразовая dev-БД). База, созданная через `db:push`,
+   не имеет таблицы `__drizzle_migrations` — `db:migrate` на ней упадёт.
+   Подробности и сценарии — `docs/specs/debt.md` («миграции drizzle»).
 
 ---
 
@@ -122,3 +122,62 @@
   их в Railway преждевременно.
 - DNS на кастомный домен — делается в Vercel/Railway дашбордах отдельно,
   вне рамок T-00.
+
+---
+
+## Чек-лист продакта (по порядку)
+
+Нужные аккаунты: Supabase, Vercel, Railway, Inngest Cloud, Cloudflare
+(Turnstile), Resend, Paddle (sandbox). Все 16 переменных `apps/web` должны быть
+**непустыми на этапе сборки** — иначе Vercel-сборка упадёт, это намеренно.
+
+**A. Supabase (новый проект под staging/prod, не dev-база из `db:push`)**
+- [ ] Project Settings → Database → Connection string → URI, **Transaction pooler**
+      (порт 6543); пароль с `!` и т.п. — percent-encode → `DATABASE_URL`
+- [ ] Settings → API: Project URL (без `/rest/v1/`), `anon`/publishable,
+      `service_role`/secret ключи
+- [ ] Положить значения в локальный `apps/web/.env.local` (не в чат) и сказать
+      агенту: он выполнит `db:migrate` и проверит таблицы
+
+**B. Inngest Cloud**
+- [ ] Создать приложение; **Event Key** → `INNGEST_EVENT_KEY` (web),
+      **Signing Key** → `INNGEST_SIGNING_KEY` (worker)
+- [ ] `INNGEST_DEV` в прод-окружениях **не задавать**
+
+**C. Cloudflare Turnstile и Resend**
+- [ ] Turnstile: виджет под домен Vercel → site key и secret key. Для staging
+      допустимы тестовые always-pass ключи Cloudflare (`1x00000000000000000000AA` /
+      `1x0000000000000000000000000000000AA`), в production — настоящие
+- [ ] Resend: API key (`RESEND_API_KEY`); для реальных писем — подтвердить домен
+      отправки (SPF/DKIM). Без домена письма уйдут только на адрес владельца
+
+**D. Vercel (`apps/web`)**
+- [ ] Import репозитория; Root Directory `apps/web`; Build Command **пустой**
+      (иначе выключится проверка env); Install `pnpm install --frozen-lockfile`
+- [ ] Environment Variables (Production и Preview) — все 16 из
+      `apps/web/.env.example`; секреты `ADMIN_SECRET`/`AUDIT_SERVICE_KEY` —
+      новые случайные (`openssl rand -hex 24`), не из локального `.env.local`
+- [ ] `NEXT_PUBLIC_APP_URL` — итоговый адрес Vercel (после первого деплоя
+      поправить и передеплоить)
+- [ ] Deploy; если сборка упала с `Missing required environment variable(s)` —
+      добавить названные переменные
+
+**E. Paddle (пока sandbox; боевой аккаунт — после T-51)**
+- [ ] Notifications → webhook destination: `https://<домен-vercel>/api/webhooks/paddle`
+      (событие `transaction.completed`), его секрет → `PADDLE_WEBHOOK_SECRET`
+- [ ] Checkout settings → default payment link: домен Vercel
+- [ ] Client-side token (`test_…`) → `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`; API key,
+      Price ID продукта(ов) — как в локальном sandbox
+
+**F. Railway (`apps/worker`)**
+- [ ] New Service → Deploy from GitHub repo (подхватит `railway.json`)
+- [ ] Variables: `INNGEST_SIGNING_KEY` (остальное Railway задаёт сам)
+- [ ] Networking → Generate Domain; `curl https://<домен>/healthz` → `ok`
+- [ ] Inngest Cloud → Sync app → `https://<домен>/api/inngest`
+- [ ] **Помнить:** до задачи T-79 каждый аудит на воркере проваливается
+      (ожидаемо). Реальные платежи не включать
+
+**G. Что проверит агент после вашего «готово»:** применённые миграции, `/healthz`,
+вход в админку, `/api/checkout` → оплата тестовой картой → вебхук 200 → платный
+аудит с `parent_audit_id`, отсутствие `INNGEST_DEV` и тестовых ключей в prod.
+
