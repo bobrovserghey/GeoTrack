@@ -5,6 +5,7 @@ import {
   normalizePositionScore,
   extractDomains,
   extractMentions,
+  DEFAULT_EXTRACT_CONCURRENCY,
 } from '../steps/extract-mentions.js';
 import type { ExtractMentionsInput } from '@geotrack/core';
 import type { ModelAdapter, ModelAnswer } from '@geotrack/core';
@@ -224,5 +225,139 @@ describe('extractMentions (full step)', () => {
     };
     const result = await extractMentions(input, adapter);
     expect(result.data?.facts).toHaveLength(2);
+  });
+});
+
+// ── bounded concurrency ───────────────────────────────────────────────────────
+
+type Pending = { id: number; resolve: (a: ModelAnswer) => void; reject: (e: Error) => void };
+
+function makeControlledAdapter() {
+  const pending: Pending[] = [];
+  const state = { active: 0, max: 0, started: 0 };
+  const adapter: ModelAdapter = {
+    generate: vi.fn().mockImplementation((prompt: string) => {
+      const id = Number(/item-(\d+)/.exec(prompt)?.[1]);
+      state.active++;
+      state.started++;
+      state.max = Math.max(state.max, state.active);
+      return new Promise<ModelAnswer>((resolve, reject) => {
+        pending.push({
+          id,
+          resolve: (a) => {
+            state.active--;
+            resolve(a);
+          },
+          reject: (e) => {
+            state.active--;
+            reject(e);
+          },
+        });
+      });
+    }),
+  };
+  return { adapter, pending, state };
+}
+
+const flush = () => new Promise<void>((r) => setImmediate(r));
+
+function makeItems(n: number): ExtractMentionsInput {
+  return {
+    ...BASE_INPUT,
+    responses: Array.from({ length: n }, (_, i) =>
+      makeResponse({ promptId: `p${i}`, responseText: `GeoTrack item-${i}` }),
+    ),
+  };
+}
+
+// Завершает вызовы по мере появления; позиция = id + 1
+async function drain(pending: Pending[], total: number, order: 'fifo' | 'lifo' = 'fifo') {
+  let done = 0;
+  let idle = 0;
+  while (done < total) {
+    await flush();
+    const p = order === 'fifo' ? pending.shift() : pending.pop();
+    if (!p) {
+      if (++idle > 1000) throw new Error(`drain stalled: done=${done}/${total}`);
+      continue;
+    }
+    idle = 0;
+    p.resolve(makeModelAnswer(`{"position":${p.id + 1}}`));
+    done++;
+  }
+}
+
+describe('extractMentions concurrency limit', () => {
+  it('never runs more model calls at once than the limit', async () => {
+    const { adapter, pending, state } = makeControlledAdapter();
+    const run = extractMentions(makeItems(20), adapter, { concurrency: 3 });
+    await flush();
+    expect(state.started).toBe(3);
+    expect(state.active).toBe(3);
+    await drain(pending, 20);
+    await run;
+    expect(state.max).toBe(3);
+    expect(state.started).toBe(20);
+  });
+
+  it('uses the default limit when none is given', async () => {
+    const { adapter, pending, state } = makeControlledAdapter();
+    const run = extractMentions(makeItems(30), adapter);
+    await flush();
+    expect(state.started).toBe(DEFAULT_EXTRACT_CONCURRENCY);
+    expect(DEFAULT_EXTRACT_CONCURRENCY).toBe(5);
+    await drain(pending, 30);
+    await run;
+    expect(state.max).toBe(DEFAULT_EXTRACT_CONCURRENCY);
+  });
+
+  it('falls back to a single lane for a limit below 1', async () => {
+    const { adapter, pending, state } = makeControlledAdapter();
+    const run = extractMentions(makeItems(4), adapter, { concurrency: 0 });
+    await drain(pending, 4);
+    await run;
+    expect(state.max).toBe(1);
+  });
+
+  it('keeps input order and content regardless of completion order', async () => {
+    const { adapter, pending } = makeControlledAdapter();
+    const input = makeItems(10);
+    const run = extractMentions(input, adapter, { concurrency: 4 });
+    await drain(pending, 10, 'lifo');
+    const result = await run;
+    const facts = result.data?.facts ?? [];
+    expect(facts.map((f) => f.promptId)).toEqual(input.responses.map((r) => r.promptId));
+    expect(facts.map((f) => f.brandListPosition)).toEqual(Array.from({ length: 10 }, (_, i) => i + 1));
+    expect(result.usage).toHaveLength(10);
+    expect(result.status).toBe('ok');
+  });
+
+  it('gives the same result for any limit', async () => {
+    const input = makeItems(12);
+    const a = await extractMentions(input, makeAdapter([makeModelAnswer('{"position":2}')]), { concurrency: 1 });
+    const b = await extractMentions(input, makeAdapter([makeModelAnswer('{"position":2}')]), { concurrency: 100 });
+    expect(a).toEqual(b);
+  });
+
+  it('a failing call does not cancel the rest or leak a slot', async () => {
+    const { adapter, pending, state } = makeControlledAdapter();
+    const run = extractMentions(makeItems(9), adapter, { concurrency: 3 });
+    await flush();
+    pending.shift()?.reject(new Error('boom'));
+    await flush();
+    expect(state.active).toBe(3);
+    expect(state.started).toBe(4);
+    await drain(pending, 8);
+    const result = await run;
+    expect(state.max).toBe(3);
+    expect(state.active).toBe(0);
+    expect(state.started).toBe(9);
+    expect(result.status).toBe('partial');
+    expect(result.notes[0]).toContain('p0/perplexity/0');
+    const facts = result.data?.facts ?? [];
+    expect(facts).toHaveLength(9);
+    expect(facts[0]?.brandListPosition).toBeNull();
+    expect(facts.slice(1).map((f) => f.brandListPosition)).toEqual([2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(result.usage).toHaveLength(8);
   });
 });
