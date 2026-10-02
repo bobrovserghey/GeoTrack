@@ -17,6 +17,13 @@ function makeViolation(
   return { id, impact, description: `${id} violation`, nodeCount };
 }
 
+/** HTML с заданной длиной видимого текста и опциональным inline-script/style. */
+function makeHtml(visibleChars: number, scriptChars = 0): string {
+  const text = 'x'.repeat(visibleChars);
+  const script = scriptChars > 0 ? `<script>var d="${'y'.repeat(scriptChars)}";</script>` : '';
+  return `<html><head>${script}<style>body{margin:0}</style></head><body><p>${text}</p></body></html>`;
+}
+
 function makePageResult(overrides: Partial<PageCheckResult> = {}): PageCheckResult {
   return {
     url: 'https://example.com',
@@ -24,7 +31,7 @@ function makePageResult(overrides: Partial<PageCheckResult> = {}): PageCheckResu
     hasCaptcha: false,
     captchaType: null,
     hasBlockingPopup: false,
-    rawHtmlLength: 5000,
+    rawHtml: makeHtml(5000),
     renderedTextLength: 5500,
     statusCode: 200,
     ...overrides,
@@ -169,6 +176,24 @@ describe('E2 — accessibility', () => {
     expect(result.status).toBe('partial');
   });
 
+  it('keyPages limited to 10; full audit of the capped set is status ok', async () => {
+    const keyPages = Array.from({ length: 15 }, (_, i) => `https://example.com/p${i}`);
+    const called: string[] = [];
+    const deps: AccessibilityCheckDeps = {
+      checkPage: async (url: string) => {
+        called.push(url);
+        return makePageResult({ url });
+      },
+    };
+    const result = await collectAccessibilityCheck(
+      makeInput({ keyPages, origin: 'https://example.com/origin' }),
+      deps,
+    );
+    expect(called.filter((u) => u !== 'https://example.com/origin')).toEqual(keyPages.slice(0, 10));
+    expect(result.data!.e2.pagesAudited).toBe(10);
+    expect(result.status).toBe('ok');
+  });
+
   it('no violations → all counts 0, measured: true', async () => {
     const pages = new Map([
       ['https://example.com', makePageResult({ url: 'https://example.com' })],
@@ -218,14 +243,14 @@ describe('E3 — barriers', () => {
     expect(result.data!.e3.antibotWallDetected).toBe(true);
   });
 
-  it('JS-only content — renderedTextLength > rawHtmlLength * 3', async () => {
+  it('JS-only content — renderedTextLength > visible raw text * 3', async () => {
     const pages = new Map([
       [
         'https://example.com',
         makePageResult({
           url: 'https://example.com',
-          rawHtmlLength: 2000,
-          renderedTextLength: 9001,
+          rawHtml: makeHtml(2000),
+          renderedTextLength: 6001,
         }),
       ],
     ]);
@@ -233,15 +258,85 @@ describe('E3 — barriers', () => {
     expect(result.data!.e3.jsOnlyContent).toBe(true);
   });
 
-  it('boundary: renderedTextLength == rawHtmlLength * 3 → jsOnlyContent false', async () => {
+  it('boundary: renderedTextLength == visible raw text * 3 → jsOnlyContent false', async () => {
     const pages = new Map([
       [
         'https://example.com',
         makePageResult({
           url: 'https://example.com',
-          rawHtmlLength: 2000,
+          rawHtml: makeHtml(2000),
           renderedTextLength: 6000,
         }),
+      ],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+  });
+
+  it('SPA shell: ~3 KB of HTML, almost no visible text, 6 KB rendered → true', async () => {
+    // Раньше 6000 > 3000 * 3 давало false: сравнивали с размером разметки.
+    const shell = `<html><head>${'<meta name="x" content="y">'.repeat(40)}</head><body><div id="root"></div><script src="/app.js"></script></body></html>`;
+    expect(shell.length).toBeGreaterThan(1000);
+    const pages = new Map([
+      [
+        'https://example.com',
+        makePageResult({ url: 'https://example.com', rawHtml: shell, renderedTextLength: 6000 }),
+      ],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('server-rendered page: raw visible text ≈ rendered text → false', async () => {
+    const pages = new Map([
+      [
+        'https://example.com',
+        makePageResult({
+          url: 'https://example.com',
+          rawHtml: makeHtml(5000),
+          renderedTextLength: 5200,
+        }),
+      ],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+  });
+
+  it('large inline script, little visible text, no JS-rendered growth → false', async () => {
+    const pages = new Map([
+      [
+        'https://example.com',
+        makePageResult({
+          url: 'https://example.com',
+          rawHtml: makeHtml(400, 50_000),
+          renderedTextLength: 420,
+        }),
+      ],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+  });
+
+  it('large inline script does not count as visible text: 400 visible + 50 KB script, 3 KB rendered → true', async () => {
+    const pages = new Map([
+      [
+        'https://example.com',
+        makePageResult({
+          url: 'https://example.com',
+          rawHtml: makeHtml(400, 50_000),
+          renderedTextLength: 3000,
+        }),
+      ],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('empty page below the rendered-text floor → false', async () => {
+    const pages = new Map([
+      [
+        'https://example.com',
+        makePageResult({ url: 'https://example.com', rawHtml: '', renderedTextLength: 300 }),
       ],
     ]);
     const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));

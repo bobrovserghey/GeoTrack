@@ -5,6 +5,7 @@ import type {
   E3BarrierFacts,
   AccessibilityCheckOutput,
 } from '@geotrack/core/steps/accessibility-check';
+import { extractText } from './html-text.js';
 
 // ── Injectable types ─────────────────────────────────────────────────────────
 
@@ -21,7 +22,8 @@ export type PageCheckResult = {
   hasCaptcha: boolean;
   captchaType: string | null;
   hasBlockingPopup: boolean;
-  rawHtmlLength: number;
+  /** HTML до выполнения JS: из него берётся видимый текст для сравнения с рендером. */
+  rawHtml: string;
   renderedTextLength: number;
   statusCode: number;
 };
@@ -31,6 +33,20 @@ export type CheckPageFn = (url: string) => Promise<PageCheckResult>;
 export type AccessibilityCheckDeps = {
   checkPage: CheckPageFn;
 };
+
+// Как в tech-check: не аудируем больше 10 ключевых страниц.
+const MAX_KEY_PAGES = 10;
+
+// Прежний множитель 3x сохранён, но сравниваем с видимым текстом сырого HTML, а не с
+// размером разметки (иначе SPA-оболочка с 3 КБ HTML не детектировалась). Пол по длине
+// рендера отсекает пустые/ошибочные страницы, где «втрое больше» — шум.
+const JS_ONLY_RATIO = 3;
+const JS_ONLY_MIN_RENDERED_CHARS = 500;
+
+function isJsOnlyContent(rawHtml: string, renderedTextLength: number): boolean {
+  if (renderedTextLength < JS_ONLY_MIN_RENDERED_CHARS) return false;
+  return renderedTextLength > extractText(rawHtml).length * JS_ONLY_RATIO;
+}
 
 // ── Input ────────────────────────────────────────────────────────────────────
 
@@ -98,7 +114,7 @@ async function collectE3(origin: string, checkPage: CheckPageFn): Promise<E3Barr
       captchaDetected: result.hasCaptcha,
       captchaType: result.captchaType,
       antibotWallDetected: result.statusCode === 403 || result.statusCode === 429,
-      jsOnlyContent: result.renderedTextLength > result.rawHtmlLength * 3,
+      jsOnlyContent: isJsOnlyContent(result.rawHtml, result.renderedTextLength),
       blockingPopupDetected: result.hasBlockingPopup,
     };
   } catch {
@@ -119,7 +135,8 @@ export async function collectAccessibilityCheck(
   input: AccessibilityCheckInput,
   deps: AccessibilityCheckDeps,
 ): Promise<StepResult<AccessibilityCheckOutput>> {
-  const { keyPages, origin } = input;
+  const { origin } = input;
+  const keyPages = input.keyPages.slice(0, MAX_KEY_PAGES);
   const { checkPage } = deps;
 
   const [e2Facts, e3Facts] = await Promise.all([
