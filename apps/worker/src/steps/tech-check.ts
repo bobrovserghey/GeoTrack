@@ -2,7 +2,6 @@ import { parseRobotsPermissions, AI_BOTS } from '@geotrack/core/checks/robots';
 import type { BotName } from '@geotrack/core/checks/robots';
 import type { TechCheckFacts, B2Result, B4Page, B5Page } from '@geotrack/core/steps/tech-check';
 import type { StepResult } from '@geotrack/core';
-import { extractText } from './html-text.js';
 
 // ---------------------------------------------------------------------------
 // Dependencies (injectable for testing)
@@ -55,8 +54,6 @@ const BOT_USER_AGENTS: Record<BotName, string> = {
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
-
-export { extractText };
 
 /** Extract canonical URL from HTML */
 function extractCanonical(html: string): string | null {

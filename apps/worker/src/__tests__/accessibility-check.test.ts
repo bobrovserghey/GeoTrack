@@ -343,6 +343,92 @@ describe('E3 — barriers', () => {
     expect(result.data!.e3.jsOnlyContent).toBe(false);
   });
 
+  it('незакрытый script с большим телом JS не считается видимым текстом → true', async () => {
+    // Ленивая регулярка не находила `</script>` и пропускала тело скрипта в «видимый
+    // текст»: 50 КБ JS «перевешивали» рендер и давали ложное отрицание.
+    const raw = `<html><body><div id="root"></div><script>var payload="${'y'.repeat(50_000)}";`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 3000 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('script, закрытый тегом с пробелом (`</script >`), не считается видимым текстом → true', async () => {
+    const raw = `<html><body><div id="root"></div><script>var payload="${'y'.repeat(50_000)}";</script ></body></html>`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 3000 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('закомментированная разметка с «>» внутри не считается видимым текстом → true', async () => {
+    const raw = `<html><body><!-- legacy markup a > b removed ${'z'.repeat(8400)} --><div id="root"></div></body></html>`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 3000 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('содержимое <template> инертно и не считается видимым текстом → true', async () => {
+    const raw = `<html><body><div id="root"></div><template><p>${'t'.repeat(3500)}</p></template></body></html>`;
+    expect(raw.length).toBeGreaterThan(3500);
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 6000 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+  });
+
+  it('İ (U+0130) в rawHtml не искажает вердикт: SSR-страница остаётся false', async () => {
+    // İ — единственный код-пойнт, который toLowerCase() удлиняет (i + U+0307). Разбор по
+    // параллельной строке в нижнем регистре сдвигал индексы на каждом вхождении, срезы
+    // «уезжали» за конец документа: видимый текст 1000 → 0, и SSR-страница получала
+    // ложный jsOnlyContent: true (1500 > 0 * 3).
+    const raw = `<html><body><script>var t="${'İ'.repeat(3000)}";</script><p>${'z'.repeat(1000)}</p></body></html>`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 1500 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+  });
+
+  it('HTML больше лимита: вердикт не выносится (false) и факт уходит в notes', async () => {
+    const cap = 8 * 1024 * 1024;
+    const raw = `<p>${'x'.repeat(cap + 1000)}</p>`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: cap * 3 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+    expect(result.notes.some((n) => n.startsWith('jsOnlyContentSkipped:'))).toBe(true);
+    expect(result.status).toBe('ok');
+  });
+
+  it('HTML в пределах лимита: вердикт выносится, записи в notes нет', async () => {
+    const raw = `<p>${'x'.repeat(2000)}</p>`;
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 6001 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(true);
+    expect(result.notes.some((n) => n.startsWith('jsOnlyContentSkipped:'))).toBe(false);
+  });
+
+  it('SSR-страница на 2.2 МБ с гидратационным JSON в <head> → false (усечение 2 МБ давало true)', async () => {
+    const state = `<script type="application/json" id="__STATE__">${'{"a":1}'.repeat(312_000)}</script>`;
+    const raw = `<html><head>${state}</head><body><p>${'x'.repeat(40_000)}</p></body></html>`;
+    expect(raw.length).toBeGreaterThan(2 * 1024 * 1024);
+    const pages = new Map([
+      ['https://example.com', makePageResult({ url: 'https://example.com', rawHtml: raw, renderedTextLength: 40_000 })],
+    ]);
+    const result = await collectAccessibilityCheck(makeInput(), stubDeps(pages));
+    expect(result.data!.e3.jsOnlyContent).toBe(false);
+    expect(result.notes.some((n) => n.startsWith('jsOnlyContentSkipped:'))).toBe(false);
+  });
+
   it('checkPage throws → e3.measured = false', async () => {
     const deps: AccessibilityCheckDeps = {
       checkPage: async (_url: string) => { throw new Error('connection refused'); },
@@ -366,5 +452,24 @@ describe('combined', () => {
     expect(result.data!.e2.measured).toBe(false);
     expect(result.data!.e3.measured).toBe(true);
     expect(result.status).toBe('partial');
+  });
+
+  it('усечение keyPages фиксируется в notes, статус остаётся ok', async () => {
+    const keyPages = Array.from({ length: 15 }, (_, i) => `https://example.com/p${i}`);
+    const result = await collectAccessibilityCheck(
+      makeInput({ keyPages, origin: 'https://example.com/origin' }),
+      stubDeps(new Map()),
+    );
+    expect(result.notes).toContain('keyPagesTruncated:15→10');
+    expect(result.status).toBe('ok');
+  });
+
+  it('без усечения записи keyPagesTruncated в notes нет', async () => {
+    const keyPages = Array.from({ length: 10 }, (_, i) => `https://example.com/p${i}`);
+    const result = await collectAccessibilityCheck(
+      makeInput({ keyPages, origin: 'https://example.com/origin' }),
+      stubDeps(new Map()),
+    );
+    expect(result.notes.some((n) => n.startsWith('keyPagesTruncated'))).toBe(false);
   });
 });
