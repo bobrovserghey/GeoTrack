@@ -86,3 +86,41 @@ describe('isBlockedIp — allowed ranges', () => {
     expect(isBlockedIp('::ffff:8.8.8.8')).toBe(false);
   });
 });
+
+describe('isBlockedIp — IPv6 forms that embed or alias an IPv4/loopback address', () => {
+  it.each([
+    ['::', 'unspecified address'],
+    ['0:0:0:0:0:0:0:0', 'unspecified address, uncompressed'],
+    ['::1', 'loopback'],
+    ['0:0:0:0:0:0:0:1', 'loopback, uncompressed'],
+    ['::127.0.0.1', 'IPv4-compatible loopback'],
+    ['::7f00:1', 'IPv4-compatible loopback, hex'],
+    ['::ffff:127.0.0.1', 'IPv4-mapped loopback'],
+    ['::ffff:7f00:1', 'IPv4-mapped loopback, hex'],
+    ['::ffff:169.254.169.254', 'IPv4-mapped metadata endpoint'],
+    ['64:ff9b::7f00:1', 'NAT64 loopback'],
+    ['64:ff9b::127.0.0.1', 'NAT64 loopback, dotted'],
+    ['64:ff9b::a9fe:a9fe', 'NAT64 metadata endpoint'],
+    ['64:ff9b:1::1', 'local-use NAT64 prefix'],
+    ['2002:7f00:1::', '6to4 loopback'],
+    ['2002:a9fe:a9fe::1', '6to4 metadata endpoint'],
+    ['2002:0a00:0001::', '6to4 10.0.0.1'],
+    ['2001:0:4136:e378:8000:63bf:3fff:fdd2', 'Teredo'],
+    ['fec0::1', 'deprecated site-local'],
+    ['ff02::1', 'multicast'],
+    ['fe80::1%eth0', 'link-local with zone id'],
+    ['not-an-ip::zz', 'unparseable'],
+  ])('blocks %s (%s)', (ip) => {
+    expect(isBlockedIp(ip)).toBe(true);
+  });
+
+  it.each([
+    ['2606:4700:4700::1111', 'Cloudflare DNS'],
+    ['2a00:1450:4001:81b::200e', 'Google'],
+    ['::ffff:8.8.8.8', 'IPv4-mapped public address'],
+    ['64:ff9b::808:808', 'NAT64 of a public address'],
+    ['2002:808:808::', '6to4 of a public address'],
+  ])('still allows %s (%s)', (ip) => {
+    expect(isBlockedIp(ip)).toBe(false);
+  });
+});
