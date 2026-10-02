@@ -3,6 +3,7 @@ import {
   getCacheEntries,
   setCacheEntry,
   getMissingRepeats,
+  BrandedPromptCacheError,
   type CacheLookupKey,
   type CacheEntry,
   type CacheStore,
@@ -76,9 +77,9 @@ describe('setCacheEntry', () => {
     expect(store.insertEntry).toHaveBeenCalledOnce();
   });
 
-  it('refuses to cache brand prompts (branded=true)', async () => {
+  it('throws when asked to cache a brand prompt (branded=true) and does not insert', async () => {
     const store = makeMockStore([]);
-    await setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW);
+    await expect(setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW)).rejects.toThrow(BrandedPromptCacheError);
     expect(store.insertEntry).not.toHaveBeenCalled();
   });
 
@@ -171,16 +172,16 @@ describe('prompt_set_version isolation', () => {
 });
 
 describe('brand prompt leak guard', () => {
-  it('branded=true: no entry is inserted even with repeated calls', async () => {
+  it('branded=true: every attempt throws and no entry is inserted', async () => {
     const store = makeMockStore([]);
-    await setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW);
-    await setCacheEntry(store, BASE_KEY, 1, ENTRY_VALUE, true, NOW);
+    await expect(setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW)).rejects.toThrow(BrandedPromptCacheError);
+    await expect(setCacheEntry(store, BASE_KEY, 1, ENTRY_VALUE, true, NOW)).rejects.toThrow(BrandedPromptCacheError);
     expect(store.insertEntry).not.toHaveBeenCalled();
   });
 
   it('branded=false after branded=true: non-brand prompt is cached', async () => {
     const store = makeMockStore([]);
-    await setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW);
+    await expect(setCacheEntry(store, BASE_KEY, 0, ENTRY_VALUE, true, NOW)).rejects.toThrow(BrandedPromptCacheError);
     await setCacheEntry(store, { ...BASE_KEY, promptId: 'discovery-002' }, 0, ENTRY_VALUE, false, NOW);
     expect(store.insertEntry).toHaveBeenCalledOnce();
   });

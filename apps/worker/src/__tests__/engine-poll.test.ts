@@ -3,7 +3,7 @@ import { pollEngines } from '../steps/engine-poll.js';
 import type { EnginePollInput } from '@geotrack/core';
 import type { EngineAdapter, EngineAnswer, EngineRegistryEntry, UsageRecord, Budget } from '@geotrack/core';
 import type { BundledPromptEntry } from '@geotrack/core';
-import type { CacheStore, CacheEntry } from '../cache/category-cache.js';
+import { BrandedPromptCacheError, type CacheStore, type CacheEntry } from '../cache/category-cache.js';
 
 // ── fixtures ──────────────────────────────────────────────────────────────────
 
@@ -413,5 +413,98 @@ describe('output format', () => {
     const store = makeStoreWithEntries([entry]);
     const result = await pollEngines(BASE_INPUT, [makeAdapter()], store, [makeRegistry()], BUDGET, NO_DELAY);
     expect(result.usage.length).toBe(0);
+  });
+});
+
+// ── review fixes ──────────────────────────────────────────────────────────────
+
+function cachedEntry(repeatIndex: number): CacheEntry {
+  return { repeatIndex, responseText: `cached ${repeatIndex}`, sources: [], usageTokensIn: 1, usageTokensOut: 1 };
+}
+
+describe('cache hit respects promptRepeats', () => {
+  it('serves only repeatIndex < promptRepeats from a cache filled by a larger profile', async () => {
+    const store = makeStoreWithEntries([cachedEntry(0), cachedEntry(1)]);
+    const adapter = makeAdapter();
+
+    const result = await pollEngines({ ...BASE_INPUT, promptRepeats: 1 }, [adapter], store, [makeRegistry()], BUDGET, NO_DELAY);
+
+    expect(result.data?.responses.map((r) => r.repeatIndex)).toEqual([0]);
+    expect(adapter.ask).not.toHaveBeenCalled();
+  });
+});
+
+describe('cache read failure', () => {
+  it('treats a failing findEntries as a miss, keeps paid answers and notes the degradation', async () => {
+    const store: CacheStore = {
+      findEntries: vi.fn().mockRejectedValue(new Error('connection refused')),
+      insertEntry: vi.fn().mockResolvedValue(undefined),
+    };
+    const input = { ...BASE_INPUT, prompts: [makePrompt('discovery-001'), makePrompt('discovery-002')] };
+
+    const result = await pollEngines(input, [makeAdapter('perplexity', [makeAnswer()])], store, [makeRegistry()], BUDGET, NO_DELAY);
+
+    expect(result.data?.responses).toHaveLength(2);
+    expect(result.data?.responses.every((r) => !r.fromCache)).toBe(true);
+    expect(result.notes.filter((n) => n.includes('cache read failed'))).toHaveLength(1);
+  });
+});
+
+describe('usage of cache hits', () => {
+  it('does not share one mutable usage object between responses', async () => {
+    const store = makeStoreWithEntries([cachedEntry(0), cachedEntry(1)]);
+
+    const result = await pollEngines({ ...BASE_INPUT, promptRepeats: 2 }, [makeAdapter()], store, [makeRegistry()], BUDGET, NO_DELAY);
+
+    const [a, b] = result.data!.responses;
+    expect(a.usage).not.toBe(b.usage);
+    a.usage.costUsd = 99;
+    expect(b.usage.costUsd).toBe(0);
+  });
+});
+
+describe('cache write failure', () => {
+  it('awaits the write, keeps the answer, notes it and reports via onCacheError without leaking the error message', async () => {
+    const store: CacheStore = {
+      findEntries: vi.fn().mockResolvedValue([]),
+      insertEntry: vi.fn().mockImplementation(
+        () => new Promise((_, reject) => setTimeout(() => reject(new Error('postgres://user:s3cret@host/db')), 5)),
+      ),
+    };
+    const onCacheError = vi.fn();
+
+    const result = await pollEngines(BASE_INPUT, [makeAdapter('perplexity', [makeAnswer()])], store, [makeRegistry()], BUDGET, { ...NO_DELAY, onCacheError });
+
+    expect(result.data?.responses).toHaveLength(1);
+    expect(result.notes.some((n) => n.includes('cache write failed'))).toBe(true);
+    expect(onCacheError).toHaveBeenCalledOnce();
+    expect(JSON.stringify([result.notes, onCacheError.mock.calls])).not.toContain('s3cret');
+  });
+});
+
+describe('cache write: ADR-021 violation', () => {
+  // Сбой хранилища проглатывается, но попытка закэшировать брендовый промпт — баг вызывающего кода.
+  it('does not swallow BrandedPromptCacheError', async () => {
+    const store: CacheStore = {
+      findEntries: vi.fn().mockResolvedValue([]),
+      insertEntry: vi.fn().mockRejectedValue(new BrandedPromptCacheError('brand-01')),
+    };
+    await expect(
+      pollEngines(BASE_INPUT, [makeAdapter('perplexity', [makeAnswer()])], store, [makeRegistry()], BUDGET, NO_DELAY),
+    ).rejects.toThrow(BrandedPromptCacheError);
+  });
+});
+
+describe('soft ceiling note', () => {
+  it('is written once per engine, not per response', async () => {
+    const lowSoft: Budget = { ...BUDGET, softCeilingUsd: 0.005 };
+    const input = { ...BASE_INPUT, prompts: [makePrompt('d-1'), makePrompt('d-2'), makePrompt('d-3', true)] };
+    const adapters = [makeAdapter('perplexity', [makeAnswer()]), makeAdapter('chatgpt', [makeAnswer()])];
+
+    const result = await pollEngines(input, adapters, makeEmptyStore(), [makeRegistry('perplexity'), makeRegistry('chatgpt')], lowSoft, NO_DELAY);
+
+    const soft = result.notes.filter((n) => n.includes('soft cost ceiling'));
+    expect(soft).toHaveLength(2);
+    expect(new Set(soft).size).toBe(2);
   });
 });

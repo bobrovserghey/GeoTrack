@@ -21,6 +21,13 @@ export interface CacheStore {
   insertEntry(key: CacheLookupKey, entry: CacheEntry, expiresAt: Date): Promise<void>;
 }
 
+export class BrandedPromptCacheError extends Error {
+  constructor(promptId: string) {
+    super(`refusing to cache branded/client prompt "${promptId}" (ADR-021)`);
+    this.name = 'BrandedPromptCacheError';
+  }
+}
+
 export function getCacheEntries(
   store: CacheStore,
   key: CacheLookupKey,
@@ -49,7 +56,8 @@ export async function setCacheEntry(
   branded: boolean,
   now: Date,
 ): Promise<void> {
-  if (branded) return;
+  // ADR-021: брендовые и клиентские промпты персональны — попытка закэшировать их это баг вызывающего кода.
+  if (branded) throw new BrandedPromptCacheError(key.promptId);
   const expiresAt = new Date(now.getTime() + TTL_DAYS * 24 * 60 * 60 * 1000);
   await store.insertEntry(key, { repeatIndex, ...value }, expiresAt);
 }
