@@ -129,6 +129,23 @@ describe('crawl', () => {
       expect(fetchFn).toHaveBeenCalledTimes(1);
     });
 
+    it('a 429 on robots.txt crawls nothing, despite being a 4xx', async () => {
+      const fetchFn = vi.fn().mockImplementation((url: string) =>
+        Promise.resolve(
+          new URL(url).pathname === '/robots.txt'
+            ? new Response('', { status: 429 })
+            : new Response(HOME_HTML, { status: 200, headers: { 'Content-Type': 'text/html' } }),
+        ),
+      );
+      const result = await crawl('https://example.com', 10, fetchFn);
+      expect(result.data?.pagesFound).toBe(0);
+      expect(result.data?.urls).toEqual([]);
+      expect(result.status).toBe('partial');
+      expect(result.notes.some((n) => n.includes('429'))).toBe(true);
+      // A host that asked us to slow down is not crawled at all.
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+    });
+
     it('a failed robots.txt request (DNS/TCP/timeout) crawls nothing', async () => {
       const fetchFn = vi.fn().mockImplementation((url: string) => {
         if (new URL(url).pathname === '/robots.txt') return Promise.reject(new Error('ETIMEDOUT'));

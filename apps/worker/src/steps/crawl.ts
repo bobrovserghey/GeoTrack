@@ -16,6 +16,11 @@ const HREF_RE = /href=["']([^"'#?][^"']*?)["']/gi;
 /**
  * RFC 9309 §2.3.1: 2xx — use the rules; 4xx ("unavailable", §2.3.1.3) — allow
  * all; 5xx and a failed request ("unreachable", §2.3.1.4) — disallow all.
+ *
+ * 429 is the one deliberate departure from the letter of §2.3.1.3: it is a 4xx,
+ * but it means "you are asking too often", not "there are no rules". Crawling a
+ * host that just told us to back off would also contradict the 429 host halt in
+ * `net/host-gate.ts`, so we treat it as unreachable. Google's parser does the same.
  */
 type RobotsFetch =
   | { kind: 'rules'; text: string }
@@ -25,7 +30,9 @@ type RobotsFetch =
 async function fetchRobots(origin: string, fetchFn: FetchFn): Promise<RobotsFetch> {
   try {
     const res = await fetchFn(`${origin}/robots.txt`);
-    if (res.status >= 500) return { kind: 'unreachable', reason: `robots.txt: HTTP ${res.status}` };
+    if (res.status === 429 || res.status >= 500) {
+      return { kind: 'unreachable', reason: `robots.txt: HTTP ${res.status}` };
+    }
     if (!res.ok) return { kind: 'unavailable' };
     return { kind: 'rules', text: await res.text() };
   } catch (err) {
