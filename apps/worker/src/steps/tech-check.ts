@@ -61,16 +61,6 @@ const BOT_USER_AGENTS: Record<BotName, string> = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Extract visible text from raw HTML (strip tags, collapse whitespace) */
-export function extractText(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 /** Extract canonical URL from HTML */
 function extractCanonical(html: string): string | null {
   const m = html.match(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i)

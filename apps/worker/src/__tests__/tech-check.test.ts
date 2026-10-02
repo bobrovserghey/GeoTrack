@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { techCheck, extractText } from '../steps/tech-check.js';
+import { techCheck } from '../steps/tech-check.js';
+import { extractText } from '../steps/html-text.js';
 import type { TechCheckInput, TechCheckDeps } from '../steps/tech-check.js';
 import { TechCheckFactsSchema } from '@geotrack/core/steps/tech-check';
 
