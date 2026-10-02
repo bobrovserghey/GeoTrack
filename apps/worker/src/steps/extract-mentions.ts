@@ -107,7 +107,10 @@ async function extractBrandPosition(
 
 // ── bounded concurrency ───────────────────────────────────────────────────────
 
-export const DEFAULT_EXTRACT_CONCURRENCY = 8;
+// Совпадает с concurrencyLimit провайдеров в packages/config/src/engines.v1.json
+// (gemini/openai/anthropic: 5). При подключении шага (T-79) брать значение из
+// конфига/профиля, а не из этой константы.
+export const DEFAULT_EXTRACT_CONCURRENCY = 5;
 
 async function mapWithConcurrency<T, R>(
   items: readonly T[],
@@ -122,7 +125,7 @@ async function mapWithConcurrency<T, R>(
     while (next < items.length) {
       const i = next++;
       try {
-        results[i] = await fn(items[i] as T);
+        results[i] = await fn(items[i]);
       } catch (error) {
         // не обрываем соседние задачи: слот освобождается, ошибка пробрасывается после всех
         firstError ??= { error };
@@ -131,7 +134,7 @@ async function mapWithConcurrency<T, R>(
   };
 
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane));
-  if (firstError) throw (firstError as { error: unknown }).error;
+  if (firstError) throw firstError.error;
   return results;
 }
 
@@ -143,7 +146,7 @@ function resolveConcurrency(value: number | undefined): number {
 // ── main step ─────────────────────────────────────────────────────────────────
 
 export type ExtractMentionsOptions = {
-  /** Максимум одновременных вызовов модели. */
+  /** Максимум одновременных вызовов модели. Нечисловое/бесконечное значение → дефолт, меньше 1 → 1. */
   concurrency?: number;
 };
 

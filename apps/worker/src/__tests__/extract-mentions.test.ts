@@ -273,10 +273,15 @@ function makeItems(n: number): ExtractMentionsInput {
 // Завершает вызовы по мере появления; позиция = id + 1
 async function drain(pending: Pending[], total: number, order: 'fifo' | 'lifo' = 'fifo') {
   let done = 0;
+  let idle = 0;
   while (done < total) {
     await flush();
     const p = order === 'fifo' ? pending.shift() : pending.pop();
-    if (!p) continue;
+    if (!p) {
+      if (++idle > 1000) throw new Error(`drain stalled: done=${done}/${total}`);
+      continue;
+    }
+    idle = 0;
     p.resolve(makeModelAnswer(`{"position":${p.id + 1}}`));
     done++;
   }
@@ -295,15 +300,15 @@ describe('extractMentions concurrency limit', () => {
     expect(state.started).toBe(20);
   });
 
-  it('uses a default limit of 8 when none is given', async () => {
+  it('uses the default limit when none is given', async () => {
     const { adapter, pending, state } = makeControlledAdapter();
     const run = extractMentions(makeItems(30), adapter);
     await flush();
     expect(state.started).toBe(DEFAULT_EXTRACT_CONCURRENCY);
-    expect(DEFAULT_EXTRACT_CONCURRENCY).toBe(8);
+    expect(DEFAULT_EXTRACT_CONCURRENCY).toBe(5);
     await drain(pending, 30);
     await run;
-    expect(state.max).toBe(8);
+    expect(state.max).toBe(DEFAULT_EXTRACT_CONCURRENCY);
   });
 
   it('falls back to a single lane for a limit below 1', async () => {
