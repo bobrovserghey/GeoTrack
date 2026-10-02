@@ -124,3 +124,19 @@ describe('isBlockedIp — IPv6 forms that embed or alias an IPv4/loopback addres
     expect(isBlockedIp(ip)).toBe(false);
   });
 });
+
+describe('isBlockedIp — additional special-purpose ranges', () => {
+  it.each(['192.0.0.192', '192.0.0.1', '192.88.99.1', '198.18.0.1', '198.19.255.254'])('blocks %s', (ip) => {
+    expect(isBlockedIp(ip)).toBe(true);
+  });
+
+  it('blocks IPv4-translated (SIIT) loopback but not a public one', () => {
+    expect(isBlockedIp('::ffff:0:7f00:1')).toBe(true);
+    expect(isBlockedIp('::ffff:0:808:808')).toBe(false);
+  });
+
+  it('does not block public neighbours of the new ranges', () => {
+    expect(isBlockedIp('198.20.0.1')).toBe(false);
+    expect(isBlockedIp('192.1.0.1')).toBe(false);
+  });
+});

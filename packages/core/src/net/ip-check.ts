@@ -19,6 +19,9 @@ function isBlockedIpv4(ip: string): boolean {
     inCidr(n, '169.254.0.0', 16) ||   // link-local + metadata 169.254.169.254
     inCidr(n, '100.64.0.0', 10) ||    // shared address space RFC 6598
     inCidr(n, '0.0.0.0', 8) ||        // "this" network
+    inCidr(n, '192.0.0.0', 24) ||     // IETF protocol assignments (incl. Oracle OCI metadata 192.0.0.192)
+    inCidr(n, '192.88.99.0', 24) ||   // deprecated 6to4 relay anycast
+    inCidr(n, '198.18.0.0', 15) ||    // benchmarking
     inCidr(n, '224.0.0.0', 4) ||      // multicast
     inCidr(n, '240.0.0.0', 4)         // reserved
   );
@@ -73,6 +76,11 @@ function isBlockedIpv6(ip: string): boolean {
 
   // ::ffff:0:0/96 — IPv4-mapped: judged by the embedded IPv4 address.
   if (firstFiveZero && f === 0xffff) return isBlockedIpv4(groupsToIpv4(hi, lo));
+
+  // ::ffff:0:0:0/96 — IPv4-translated (SIIT): judged by the embedded IPv4.
+  if (a === 0 && b === 0 && c === 0 && d === 0 && e === 0xffff && f === 0) {
+    return isBlockedIpv4(groupsToIpv4(hi, lo));
+  }
 
   // 64:ff9b::/96 — NAT64: judged by the embedded IPv4 address (a NAT64
   // gateway would forward 64:ff9b::7f00:1 to 127.0.0.1).
