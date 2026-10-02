@@ -142,8 +142,9 @@ describe('isPathAllowed (RFC 9309)', () => {
     for (const line of ['Sitemap: https://e.test/s.xml', 'Host: e.test', 'Noindex: /n', 'Unknown-key: 1']) {
       expect(allowed(`User-agent: GeoTrack\n${line}\n\nUser-agent: *\nDisallow: /\n`, '/x')).toBe(false);
     }
-    // An agent we are not still has its own group here, so it is unaffected.
-    expect(allowed(txt, '/x', 'OtherBot')).toBe(false); // the * in the merged group
+    // An agent we are not has no group of its own here: it is governed by the "*"
+    // that was merged into the single group, so it is disallowed for the same reason.
+    expect(allowed(txt, '/x', 'OtherBot')).toBe(false);
   });
 
   it('an explicitly rule-less specific group governs and does not fall back to *', () => {

@@ -150,9 +150,15 @@ export function isPathAllowed(robotsTxt: string, userAgent: string, rawPath: str
     if (g.agents.includes('*')) wildcard = [...(wildcard ?? []), ...g.rules];
   }
   // Nullish, not truthy: an empty `specific` means a group for our token exists
-  // and deliberately carries no rules ("User-agent: X\nDisallow:"), which
-  // governs — it must not fall back to "*". Ignored records cannot manufacture
-  // such a group (§2.2.4), so an empty `specific` is always the site's intent.
+  // and carries no rules, which still governs — it must not fall back to "*".
+  // Two shapes reach here: an explicit empty rule ("User-agent: X\nDisallow:")
+  // and a trailing group with no rules at all ("...\nDisallow: /\n\nUser-agent: X"
+  // at EOF). Both are the site naming us, so both govern. This matches
+  // google/robotstxt's RobotsMatcher::disallow(), which returns "allowed" once a
+  // specific agent was seen and its priorities stayed 0, and RFC 9309 §2.2.1
+  // ("the most specific group wins"). Do not change this to
+  // `specific.length > 0 ? specific : wildcard` — see the regression test
+  // "an explicitly rule-less specific group governs" in robots-rules.test.ts.
   const rules = specific ?? wildcard;
   if (!rules) return true;
 
