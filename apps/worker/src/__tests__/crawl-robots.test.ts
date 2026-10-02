@@ -61,6 +61,22 @@ describe('crawl — robots.txt (RFC 9309)', () => {
     expect(paths).not.toContain('/secret/x');
   });
 
+  it('a non-ASCII Disallow written in raw UTF-8 is honoured (localised sites, ADR-019)', async () => {
+    // crawl() matches URL.pathname, which is always percent-encoded, against the
+    // rule as written in robots.txt.
+    const encoded = new URL('/каталог/1', 'https://example.com').pathname;
+    const pages: Record<string, string> = {
+      '/robots.txt': 'User-agent: *\nDisallow: /каталог\n',
+      '/': '<html><body><a href="/каталог/1">ru</a><a href="/catalog/1">en</a></body></html>',
+      [encoded]: '<html><body>page</body></html>',
+      '/catalog/1': '<html><body>page</body></html>',
+    };
+    const result = await crawl('https://example.com', 20, makeHtmlFetch(pages));
+    const paths = (result.data?.urls ?? []).map((u) => new URL(u).pathname);
+    expect(paths).not.toContain(encoded);
+    expect(paths).toContain('/catalog/1');
+  });
+
   it('a GeoTrackOther group does not apply to us', async () => {
     const paths = await crawledPaths('User-agent: GeoTrackOther\nDisallow: /\n', ['/open']);
     expect(paths).toContain('/open');

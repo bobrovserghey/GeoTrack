@@ -13,13 +13,24 @@ const CRAWLER_TOKEN = 'GeoTrack';
 
 const HREF_RE = /href=["']([^"'#?][^"']*?)["']/gi;
 
-async function fetchRobots(origin: string, fetchFn: FetchFn): Promise<string> {
+/**
+ * RFC 9309 §2.3.1: 2xx — use the rules; 4xx ("unavailable", §2.3.1.3) — allow
+ * all; 5xx and a failed request ("unreachable", §2.3.1.4) — disallow all.
+ */
+type RobotsFetch =
+  | { kind: 'rules'; text: string }
+  | { kind: 'unavailable' }
+  | { kind: 'unreachable'; reason: string };
+
+async function fetchRobots(origin: string, fetchFn: FetchFn): Promise<RobotsFetch> {
   try {
     const res = await fetchFn(`${origin}/robots.txt`);
-    if (!res.ok) return '';
-    return await res.text();
-  } catch {
-    return '';
+    if (res.status >= 500) return { kind: 'unreachable', reason: `robots.txt: HTTP ${res.status}` };
+    if (!res.ok) return { kind: 'unavailable' };
+    return { kind: 'rules', text: await res.text() };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'request failed';
+    return { kind: 'unreachable', reason: `robots.txt: ${reason}` };
   }
 }
 
@@ -49,7 +60,20 @@ export async function crawl(
   fetchFn: FetchFn = createSafeFetch(),
 ): Promise<StepResult<CrawlOutput>> {
   const origin = new URL(startUrl).origin;
-  const robotsTxt = await fetchRobots(origin, fetchFn);
+  const robots = await fetchRobots(origin, fetchFn);
+
+  if (robots.kind === 'unreachable') {
+    // "Unreachable" means a complete disallow (RFC 9309 §2.3.1.4): we must not
+    // guess that everything is allowed, so nothing is crawled.
+    return {
+      status: 'partial',
+      data: { pagesFound: 0, urls: [] },
+      artifacts: [],
+      usage: [],
+      notes: [`${robots.reason}; unreachable robots.txt means a complete disallow (RFC 9309 §2.3.1.4)`],
+    };
+  }
+  const robotsTxt = robots.kind === 'rules' ? robots.text : '';
 
   const visited = new Set<string>();
   const queue: string[] = [new URL(startUrl).href];

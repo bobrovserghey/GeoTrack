@@ -100,10 +100,70 @@ describe('isPathAllowed (RFC 9309)', () => {
     expect(allowed(txt, '/search')).toBe(true);
   });
 
+  it('a raw UTF-8 rule matches the percent-encoded path (RFC 9309 §2.2.2)', () => {
+    const txt = 'User-agent: *\nDisallow: /café\n';
+    expect(allowed(txt, '/caf%C3%A9')).toBe(false);
+    expect(allowed(txt, '/caf%c3%a9')).toBe(false); // escape case is normalised
+    expect(allowed(txt, '/café')).toBe(false);
+    expect(allowed(txt, '/cafe')).toBe(true);
+  });
+
+  it('an already-encoded rule keeps working', () => {
+    const txt = 'User-agent: *\nDisallow: /caf%C3%A9\n';
+    expect(allowed(txt, '/caf%C3%A9')).toBe(false);
+    expect(allowed(txt, '/caf%C3%A9/menu')).toBe(false);
+  });
+
+  it('%2F is not a path separator', () => {
+    expect(allowed('User-agent: *\nDisallow: /a/b\n', '/a%2Fb')).toBe(true);
+    expect(allowed('User-agent: *\nDisallow: /a%2Fb\n', '/a/b')).toBe(true);
+    expect(allowed('User-agent: *\nDisallow: /a%2Fb\n', '/a%2Fb')).toBe(false);
+  });
+
+  it('* and $ survive percent-encoding normalisation', () => {
+    const txt = 'User-agent: *\nDisallow: /*/café$\n';
+    expect(allowed(txt, '/blog/caf%C3%A9')).toBe(false);
+    expect(allowed(txt, '/blog/caf%C3%A9/x')).toBe(true);
+    // Cyrillic path with a wildcard
+    expect(allowed('User-agent: *\nDisallow: /раздел*\n', '/%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB/1')).toBe(false);
+  });
+
+  it('a non-rule directive ends the agent list (no group merging)', () => {
+    // Crawl-delay closes the GeoTrack group: it governs, has no rules → allowed.
+    const txt = 'User-agent: GeoTrack\nCrawl-delay: 5\n\nUser-agent: *\nDisallow: /\n';
+    expect(allowed(txt, '/x')).toBe(true);
+    // Same for Sitemap / Host / Noindex / unknown keys.
+    for (const line of ['Sitemap: https://e.test/s.xml', 'Host: e.test', 'Noindex: /n', 'Unknown-key: 1']) {
+      expect(allowed(`User-agent: GeoTrack\n${line}\n\nUser-agent: *\nDisallow: /\n`, '/x')).toBe(true);
+    }
+  });
+
+  it('a non-rule directive does not leak another agent\'s Allow into the * group', () => {
+    const txt =
+      'User-agent: *\nCrawl-delay: 1\n\nUser-agent: SomeBot\nAllow: /admin\n\nUser-agent: *\nDisallow: /admin\n';
+    expect(allowed(txt, '/admin')).toBe(false);
+    expect(allowed(txt, '/admin', 'SomeBot')).toBe(true);
+  });
+
+  it('a version suffix in the robots.txt User-agent value is tolerated', () => {
+    expect(allowed('User-agent: GeoTrack/1.0\nDisallow: /x\n', '/x')).toBe(false);
+    expect(allowed('User-agent: GeoTrack/1.0\nDisallow: /x\n', '/y')).toBe(true);
+    // Still no substring matching, and "*" still works.
+    expect(allowed('User-agent: GeoTrackOther/2\nDisallow: /x\n', '/x')).toBe(true);
+    expect(allowed('User-agent: *\nDisallow: /x\n', '/x')).toBe(false);
+  });
+
   it('pathological pattern completes quickly', () => {
     const txt = `User-agent: *\nDisallow: /${'*a'.repeat(30)}b\n`;
     const start = Date.now();
     expect(allowed(txt, '/' + 'a'.repeat(5000))).toBe(true);
+    expect(Date.now() - start).toBeLessThan(500);
+  });
+
+  it('stays linear after normalisation (80 wildcards against a 200 000-char path)', () => {
+    const txt = `User-agent: *\nDisallow: /${'*a'.repeat(80)}b\n`;
+    const start = Date.now();
+    expect(allowed(txt, '/' + 'a'.repeat(200_000))).toBe(true);
     expect(Date.now() - start).toBeLessThan(500);
   });
 });

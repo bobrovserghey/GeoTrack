@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createGatedFetch, HostHaltedError } from '../net/host-gate.js';
+import { createGatedFetch, HostHaltedError, HostTaskTimeoutError } from '../net/host-gate.js';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -94,6 +94,38 @@ describe('createGatedFetch', () => {
     const gate = createGatedFetch(fetchFn, 60);
     const [, second] = await Promise.all([gate.timed('https://a.test/1'), gate.timed('https://a.test/2')]);
     expect(second.elapsedMs).toBeLessThan(50);
+  });
+
+  it('a hung task releases the queue after taskTimeoutMs instead of starving the host', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(new Response('ok'));
+    const gate = createGatedFetch(fetchFn, 0, { taskTimeoutMs: 20 });
+    const hung = gate.run('a.test', () => new Promise<void>(() => {}));
+    await expect(hung).rejects.toBeInstanceOf(HostTaskTimeoutError);
+    const res = await gate.fetch('https://a.test/x');
+    expect(res.status).toBe(200);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('a hung fetch also times out and does not halt the host', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<Response>(() => {}))
+      .mockResolvedValue(new Response('ok'));
+    const gate = createGatedFetch(fetchFn, 0, { taskTimeoutMs: 20 });
+    const [first, second] = await Promise.allSettled([
+      gate.fetch('https://a.test/1'),
+      gate.fetch('https://a.test/2'),
+    ]);
+    expect(first.status).toBe('rejected');
+    expect((first as PromiseRejectedResult).reason).toBeInstanceOf(HostTaskTimeoutError);
+    expect(second.status).toBe('fulfilled');
+  });
+
+  it('a task finishing before the timeout is unaffected', async () => {
+    const gate = createGatedFetch(vi.fn().mockResolvedValue(new Response('ok')), 0, {
+      taskTimeoutMs: 1000,
+    });
+    await expect(gate.run('a.test', async () => 'done')).resolves.toBe('done');
   });
 
   it('run() queues arbitrary tasks with the host and honours a halt', async () => {

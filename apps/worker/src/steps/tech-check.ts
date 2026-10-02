@@ -4,6 +4,7 @@ import type { TechCheckFacts, B2Result, B4Page, B5Page } from '@geotrack/core/st
 import type { StepResult } from '@geotrack/core';
 import { createGatedFetch, hostOf, HostHaltedError } from '../net/host-gate.js';
 import type { GatedFetch } from '../net/host-gate.js';
+import { Degradations } from './degradations.js';
 
 // ---------------------------------------------------------------------------
 // Dependencies (injectable for testing)
@@ -21,6 +22,11 @@ export type TechCheckDeps = {
   domainPauseMs?: number;
   /** Fixed "now" for staleness checks; defaults to Date.now(). */
   nowMs?: number;
+  /**
+   * Ceiling for one queued request or page render; on timeout the host queue is
+   * released and the check degrades. Defaults to the host-gate default (60 s).
+   */
+  taskTimeoutMs?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -93,13 +99,18 @@ function isStale(dateStr: string | null, nowMs: number): boolean {
   return nowMs - d.getTime() > EIGHTEEN_MONTHS_MS;
 }
 
-/** Reasons a check could not run in full because of network errors or a 429 stop. */
-type Degradations = string[];
-
 type SitemapFetch =
   | { kind: 'ok'; xml: string }
   | { kind: 'missing' }
   | { kind: 'failed' };
+
+/**
+ * A 2xx (`ok`) and a 404 (`missing`) are both answers about the sitemap; only
+ * `failed` (429, 5xx-less network error, host halt) leaves us without data.
+ */
+function sitemapAnswered(sm: SitemapFetch): boolean {
+  return sm.kind === 'ok' || sm.kind === 'missing';
+}
 
 // One request shared by B5 and B6.
 async function fetchSitemap(
@@ -177,8 +188,18 @@ async function checkB2(
   }
 
   if (stoppedOn429) degraded.push('B2: stopped on 429');
-  if (stoppedOn429 && results.length === 0) {
-    return { measured: false, notMeasuredReason: 'host answered 429 before any bot request' };
+  // Two ways to stop: our own request returned 429 (that result is recorded just
+  // above, so `results` is non-empty and B2 stays measured), or another check hit
+  // the 429 first and the gate refused ours (HostHaltedError, nothing recorded).
+  // The second path is what this guard covers; it must not depend on B2 being
+  // first in the gate queue, so reordering the Promise.all below stays safe.
+  if (results.length === 0) {
+    return {
+      measured: false,
+      notMeasuredReason: stoppedOn429
+        ? 'host answered 429 before any bot request'
+        : 'no bot request completed',
+    };
   }
   return { measured: true, results, stoppedOn429 };
 }
@@ -280,13 +301,19 @@ async function checkB5(
   }
 
   const pageResults: B5Page[] = [];
+  let halted = false;
   for (const url of input.keyPages.slice(0, 10)) {
     try {
       const { res, elapsedMs } = await gate.timed(url);
+      if (res.status === 429) {
+        // Not an observation about the page; the gate halts the host from here on.
+        degraded.push('B5: 429');
+        halted = true;
+        break;
+      }
       const html = await res.text();
       const canonical = extractCanonical(html);
       const isRedirect = res.status >= 300 && res.status < 400;
-      if (res.status === 429) degraded.push('B5: 429');
       pageResults.push({
         url,
         statusCode: res.status,
@@ -299,11 +326,25 @@ async function checkB5(
     } catch (err) {
       if (err instanceof HostHaltedError) {
         degraded.push('B5: stopped on 429');
+        halted = true;
         break;
       }
       pageResults.push({ url, statusCode: 0, canonical: null, isRedirect: false, ttfbMs: 0 });
       degraded.push('B5: request failed');
     }
+  }
+
+  // Nothing was observed at all — neither the sitemap nor a single page. Saying
+  // "measured" here would let pillar-B count b5's full maxScore against a score
+  // of 0 (see scoring/pillar-b.ts: scoreB5 early-returns on an empty list).
+  // A sitemap answer alone is still a partial measurement and stays measured.
+  if (!sitemapAnswered(sm) && pageResults.length === 0) {
+    return {
+      measured: false,
+      notMeasuredReason: halted
+        ? 'host answered 429: no sitemap and no page could be checked'
+        : 'no sitemap and no page could be checked',
+    };
   }
 
   return { measured: true, sitemapPresent, sitemapUrlCount, pageResults };
@@ -331,10 +372,17 @@ async function checkB6(
 
   let pagesWithLastModified = 0;
   let stalePageCount = 0;
+  let pagesAnswered = 0;
+  let halted = false;
   for (const url of input.keyPages.slice(0, 10)) {
     try {
       const res = await gate.fetch(url, { method: 'HEAD' });
-      if (res.status === 429) degraded.push('B6: 429');
+      if (res.status === 429) {
+        degraded.push('B6: 429');
+        halted = true;
+        break;
+      }
+      pagesAnswered++;
       const lm = res.headers.get('Last-Modified') ?? res.headers.get('last-modified');
       if (lm) {
         pagesWithLastModified++;
@@ -342,8 +390,23 @@ async function checkB6(
       }
     } catch (err) {
       degraded.push(err instanceof HostHaltedError ? 'B6: stopped on 429' : 'B6: request failed');
-      if (err instanceof HostHaltedError) break;
+      if (err instanceof HostHaltedError) {
+        halted = true;
+        break;
+      }
     }
+  }
+
+  // With no sitemap answer and no page answered there is nothing to score:
+  // scoreB6 would otherwise hand out its default 6/10 "nothing is stale" points
+  // for measurements that never happened (see scoring/pillar-b.ts).
+  if (!sitemapAnswered(sm) && pagesAnswered === 0) {
+    return {
+      measured: false,
+      notMeasuredReason: halted
+        ? 'host answered 429: no sitemap and no page could be checked'
+        : 'no sitemap and no page could be checked',
+    };
   }
 
   return { measured: true, sitemapLastmod, pagesWithLastModified, stalePageCount };
@@ -357,10 +420,15 @@ export async function techCheck(
   input: TechCheckInput,
   deps: TechCheckDeps,
 ): Promise<StepResult<TechCheckFacts>> {
-  const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 1000);
+  const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 1000, {
+    taskTimeoutMs: deps.taskTimeoutMs,
+  });
   const nowMs = deps.nowMs ?? Date.now();
-  const degraded: Degradations = [];
-  // B2 enqueues first so a 429 on the very first request is attributed to the bot probe.
+  const degraded = new Degradations();
+  // B2 enqueues first so a 429 on the very first request is attributed to the bot
+  // probe rather than to the sitemap. This is cosmetic only: every check decides
+  // its own `measured` flag from the data it actually collected, so changing the
+  // order below cannot turn an unmeasured criterion into a measured one.
   const b2Promise = checkB2(input, gate, degraded);
   const sitemap = fetchSitemap(input.origin, gate, degraded);
 
@@ -376,10 +444,10 @@ export async function techCheck(
   const data: TechCheckFacts = { b1, b2, b3, b4, b5, b6 };
 
   return {
-    status: degraded.length > 0 ? 'partial' : 'ok',
+    status: degraded.isEmpty ? 'ok' : 'partial',
     data,
     artifacts: [],
     usage: [],
-    notes: [`stepVersion:1`, ...degraded.map((d) => `degraded: ${d}`)],
+    notes: [`stepVersion:1`, ...degraded.toNotes()],
   };
 }

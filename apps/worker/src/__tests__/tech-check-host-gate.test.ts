@@ -1,6 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
+import { scorePillarB } from '@geotrack/core';
 import { techCheck } from '../steps/tech-check.js';
 import type { TechCheckInput, TechCheckDeps } from '../steps/tech-check.js';
+import { HostHaltedError } from '../net/host-gate.js';
+
+/** Minimal pillar-B methodology; mirrors packages/config/methodology.v1.json. */
+function makeMethodology(): Parameters<typeof scorePillarB>[1] {
+  return {
+    version: 1,
+    pillars: {
+      B: {
+        weight: 0.2,
+        criteria: {
+          b1: { id: 'b1', maxScore: 20 },
+          b2: { id: 'b2', maxScore: 25 },
+          b3: { id: 'b3', maxScore: 15 },
+          b4: { id: 'b4', maxScore: 15 },
+          b5: { id: 'b5', maxScore: 15 },
+          b6: { id: 'b6', maxScore: 10 },
+        },
+      },
+    },
+    blockers: [],
+    bands: [{ min: 0, max: 100, label: 'any' }],
+    interval: { hRepFallback: 0.3, hCovFactor: 0.5, hRepFactor: 0.3 },
+    basket: { realizationFactor: 0.7 },
+  };
+}
 
 const SITEMAP_XML = `<urlset>
   <url><loc>https://example.com/</loc><lastmod>2025-01-01</lastmod></url>
@@ -104,6 +130,113 @@ describe('techCheck — one request at a time per host (A)', () => {
     expect(result.data!.b5.measured).toBe(true);
     expect(fetchFn.mock.calls.length).toBeGreaterThan(5);
   });
+});
+
+describe('techCheck — a halted host leaves B5/B6 unmeasured, not falsely measured', () => {
+  const methodology = makeMethodology();
+  const allRequests429 = () => vi.fn().mockResolvedValue(new Response('slow down', { status: 429 }));
+
+  it('B5 and B6 report measured:false when nothing at all could be fetched', async () => {
+    const result = await techCheck(makeInput(), makeDeps(allRequests429()));
+    const { b5, b6 } = result.data!;
+    expect(b5.measured).toBe(false);
+    expect(b6.measured).toBe(false);
+    if (b5.measured || b6.measured) throw new Error('unreachable');
+    expect(b5.notMeasuredReason).toMatch(/429/);
+    expect(b6.notMeasuredReason).toMatch(/429/);
+    expect(result.status).toBe('partial');
+  });
+
+  it('pillar B does not count b5/b6 maxScore for measurements that never happened', async () => {
+    const result = await techCheck(makeInput(), makeDeps(allRequests429()));
+    const scored = scorePillarB(result.data!, methodology, new Date('2026-01-01'));
+    expect(scored.unmeasuredCriteria).toContain('b5');
+    expect(scored.unmeasuredCriteria).toContain('b6');
+    expect(scored.criterionScores.b6.score).toBe(0);
+    // b1 (robots.txt text, no request) + b2 (its own 429) only.
+    expect(scored.measuredMaxSum).toBe(
+      scored.criterionScores.b1.maxScore + scored.criterionScores.b2.maxScore,
+    );
+  });
+
+  it('a fetched sitemap keeps B5/B6 measured even with zero page results', async () => {
+    // The sitemap answer is real data; only the page probes were lost to the 429.
+    const fetchFn = vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+      if (init?.headers) return new Response('<html></html>', { status: 200 }); // B2 bot probes
+      if (url.endsWith('/sitemap.xml')) return new Response(SITEMAP_XML, { status: 200 });
+      return new Response('slow down', { status: 429 });
+    });
+    const input = makeInput({ keyPages: ['https://example.com/a'] });
+    const result = await techCheck(input, makeDeps(fetchFn));
+    const { b5, b6 } = result.data!;
+    if (!b5.measured || !b6.measured) throw new Error('sitemap data should keep B5/B6 measured');
+    expect(b5.sitemapPresent).toBe(true);
+    expect(b5.pageResults).toEqual([]);
+    expect(b6.sitemapLastmod).toBe('2025-01-01');
+  });
+
+  it('a 404 sitemap is an answer: B5/B6 stay measured', async () => {
+    const fetchFn = vi.fn().mockImplementation(async (url: string) =>
+      url.endsWith('/sitemap.xml')
+        ? new Response('', { status: 404 })
+        : new Response('<html></html>', { status: 200 }),
+    );
+    const result = await techCheck(makeInput(), makeDeps(fetchFn));
+    expect(result.data!.b5.measured).toBe(true);
+    expect(result.data!.b6.measured).toBe(true);
+  });
+
+  it('B2 reports measured:false when the host halted before any bot request', async () => {
+    // Independent of queue order: the gate can refuse B2's first request outright.
+    const fetchFn = vi.fn().mockImplementation(async (_url: string, init?: RequestInit) => {
+      if (init?.headers) throw new HostHaltedError('example.com');
+      return new Response('<html></html>', { status: 200 });
+    });
+    const result = await techCheck(makeInput(), makeDeps(fetchFn));
+    const b2 = result.data!.b2;
+    expect(b2.measured).toBe(false);
+    if (b2.measured) throw new Error('unreachable');
+    expect(b2.notMeasuredReason).toMatch(/429/);
+    expect(scorePillarB(result.data!, methodology, new Date('2026-01-01')).unmeasuredCriteria)
+      .toContain('b2');
+  });
+});
+
+describe('techCheck — a hung render does not stall the host queue', () => {
+  it('times the render out, degrades B3 and still completes the other checks', async () => {
+    const fetchFn = vi.fn().mockImplementation(async () => new Response('<html></html>', { status: 200 }));
+    const deps = makeDeps(fetchFn, {
+      getPageText: vi.fn().mockImplementation(() => new Promise(() => {})),
+      taskTimeoutMs: 20,
+    });
+    const result = await techCheck(makeInput(), deps);
+    const b3 = result.data!.b3;
+    expect(b3.measured).toBe(false);
+    if (b3.measured) throw new Error('unreachable');
+    expect(b3.notMeasuredReason).toMatch(/did not finish/);
+    // B2 (8 bots), the sitemap and the B5/B6 probes all got through.
+    expect(fetchFn.mock.calls.length).toBeGreaterThanOrEqual(11);
+    expect(result.data!.b5.measured).toBe(true);
+    expect(result.data!.b6.measured).toBe(true);
+    expect(result.status).toBe('partial');
+  }, 10_000);
+});
+
+describe('techCheck — degradation notes stay bounded', () => {
+  it('collapses repeats and caps the list when every request to 10 pages fails', async () => {
+    // Without deduping this produces one note per bot per page (40 for B2 alone)
+    // plus one per B5/B6 page — all of it persisted into StepResult.notes.
+    const keyPages = Array.from({ length: 10 }, (_, i) => `https://example.com/p${i}`);
+    const fetchFn = vi.fn().mockRejectedValue(new Error('ECONNRESET'));
+    const result = await techCheck(makeInput({ keyPages }), makeDeps(fetchFn));
+    expect(fetchFn.mock.calls.length).toBeGreaterThan(40);
+    const degradedNotes = result.notes.filter((n) => n.startsWith('degraded:'));
+    expect(degradedNotes.length).toBeLessThanOrEqual(11); // cap + suppression summary
+    expect(new Set(degradedNotes).size).toBe(degradedNotes.length);
+    // The information is kept: repeats are counted, not dropped.
+    expect(degradedNotes.some((n) => /\(x\d+\)/.test(n))).toBe(true);
+    expect(result.status).toBe('partial');
+  }, 10_000);
 });
 
 describe('techCheck — sitemap.xml is requested once (B)', () => {

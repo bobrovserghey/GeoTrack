@@ -13,6 +13,26 @@ export class HostHaltedError extends Error {
   }
 }
 
+/**
+ * Thrown when a queued task outlives `taskTimeoutMs`. The queue slot is released
+ * so one hung request (e.g. a Playwright render) cannot starve the whole host;
+ * callers treat it as a degradation like any other request failure.
+ */
+export class HostTaskTimeoutError extends Error {
+  constructor(readonly host: string, readonly timeoutMs: number) {
+    super(`Host ${host}: task did not finish in ${timeoutMs}ms; queue released`);
+    this.name = 'HostTaskTimeoutError';
+  }
+}
+
+export type GatedFetchOptions = {
+  /** Per-task ceiling before the queue slot is released. Defaults to 60000; 0 disables. */
+  taskTimeoutMs?: number;
+};
+
+/** Default ceiling for one queued request or render. */
+export const DEFAULT_TASK_TIMEOUT_MS = 60_000;
+
 type HostState = { tail: Promise<void>; lastEndMs: number | null; halted: boolean };
 
 export function hostOf(url: string): string {
@@ -33,8 +53,30 @@ export type GatedFetch = {
   run: <T>(host: string, task: () => Promise<T>) => Promise<T>;
 };
 
-export function createGatedFetch(fetchFn: FetchFn, pauseMs: number): GatedFetch {
+export function createGatedFetch(
+  fetchFn: FetchFn,
+  pauseMs: number,
+  options: GatedFetchOptions = {},
+): GatedFetch {
   const hosts = new Map<string, HostState>();
+  const taskTimeoutMs = options.taskTimeoutMs ?? DEFAULT_TASK_TIMEOUT_MS;
+
+  // The hung task keeps running detached — we cannot cancel an arbitrary promise —
+  // but it no longer holds the host's queue.
+  async function withTimeout<T>(host: string, task: () => Promise<T>): Promise<T> {
+    if (taskTimeoutMs <= 0) return task();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        task(),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new HostTaskTimeoutError(host, taskTimeoutMs)), taskTimeoutMs);
+        }),
+      ]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+  }
 
   async function schedule<T>(
     host: string,
@@ -59,7 +101,7 @@ export function createGatedFetch(fetchFn: FetchFn, pauseMs: number): GatedFetch 
         const wait = pauseMs - (Date.now() - state.lastEndMs);
         if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       }
-      const result = await task();
+      const result = await withTimeout(host, task);
       if (haltsHost(result)) state.halted = true;
       return result;
     } finally {

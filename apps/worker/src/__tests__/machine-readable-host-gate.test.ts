@@ -43,6 +43,16 @@ describe('collectMachineReadableCheck — host gate and status', () => {
     expect(result.status).toBe('partial');
   });
 
+  it('a halted host produces one counted note, not one per skipped probe', async () => {
+    const fetchFn = vi.fn().mockImplementation(async () => new Response('slow down', { status: 429 }));
+    const result = await collectMachineReadableCheck(input, { fetchFn });
+    const degradedNotes = result.notes.filter((n) => n.startsWith('degraded:'));
+    expect(new Set(degradedNotes).size).toBe(degradedNotes.length);
+    expect(degradedNotes.length).toBeLessThanOrEqual(3);
+    const skipped = degradedNotes.find((n) => n.includes('host halted'));
+    expect(skipped).toMatch(/\(x\d+\)/); // all remaining probes counted in one note
+  });
+
   it('a 5xx is not a definite "absent" answer', async () => {
     const fetchFn = vi.fn().mockImplementation(async (url: string) =>
       url.endsWith('/llms.txt') ? new Response('', { status: 503 }) : notFound(),

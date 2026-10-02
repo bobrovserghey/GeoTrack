@@ -94,4 +94,53 @@ describe('crawl', () => {
     const result = await crawl('https://example.com', 10, fetchFn);
     expect(result.status).toBe('ok');
   });
+
+  describe('unreachable robots.txt = complete disallow (RFC 9309 §2.3.1.4)', () => {
+    it('404 ("unavailable") still allows crawling', async () => {
+      const fetchFn = vi.fn().mockImplementation((url: string) =>
+        Promise.resolve(
+          new URL(url).pathname === '/robots.txt'
+            ? new Response('', { status: 404 })
+            : new Response('<html><body>Hello</body></html>', {
+                status: 200,
+                headers: { 'Content-Type': 'text/html' },
+              }),
+        ),
+      );
+      const result = await crawl('https://example.com', 10, fetchFn);
+      expect(result.status).toBe('ok');
+      expect(result.data?.pagesFound).toBe(1);
+    });
+
+    it('a 5xx on robots.txt crawls nothing', async () => {
+      const fetchFn = vi.fn().mockImplementation((url: string) =>
+        Promise.resolve(
+          new URL(url).pathname === '/robots.txt'
+            ? new Response('', { status: 503 })
+            : new Response(HOME_HTML, { status: 200, headers: { 'Content-Type': 'text/html' } }),
+        ),
+      );
+      const result = await crawl('https://example.com', 10, fetchFn);
+      expect(result.data?.pagesFound).toBe(0);
+      expect(result.data?.urls).toEqual([]);
+      expect(result.status).toBe('partial');
+      expect(result.notes.some((n) => n.includes('503'))).toBe(true);
+      // Only the robots.txt request was made: no page was fetched.
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('a failed robots.txt request (DNS/TCP/timeout) crawls nothing', async () => {
+      const fetchFn = vi.fn().mockImplementation((url: string) => {
+        if (new URL(url).pathname === '/robots.txt') return Promise.reject(new Error('ETIMEDOUT'));
+        return Promise.resolve(
+          new Response(HOME_HTML, { status: 200, headers: { 'Content-Type': 'text/html' } }),
+        );
+      });
+      const result = await crawl('https://example.com', 10, fetchFn);
+      expect(result.data?.pagesFound).toBe(0);
+      expect(result.status).toBe('partial');
+      expect(result.notes.some((n) => n.includes('ETIMEDOUT'))).toBe(true);
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+    });
+  });
 });

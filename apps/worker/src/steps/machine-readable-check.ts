@@ -6,6 +6,7 @@ import type {
 } from '@geotrack/core/steps/machine-readable-check';
 import { createGatedFetch, HostHaltedError } from '../net/host-gate.js';
 import type { GatedFetch } from '../net/host-gate.js';
+import { Degradations } from './degradations.js';
 
 // ── Injectable types ─────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ function hasCatalogContent(body: string): boolean {
 type Probe = (url: string) => Promise<{ ok: boolean; body: string }>;
 
 // A 404 is an answer ("not there"); a thrown error, 429 or 5xx means we do not know.
-function makeProbe(gate: GatedFetch, degraded: string[]): Probe {
+function makeProbe(gate: GatedFetch, degraded: Degradations): Probe {
   return async (url) => {
     try {
       const res = await gate.fetch(url);
@@ -73,8 +74,10 @@ function makeProbe(gate: GatedFetch, degraded: string[]): Probe {
       const body = await res.text();
       return { ok: true, body };
     } catch (err) {
+      // Every remaining probe hits the same halt, so the reason carries no URL:
+      // one counted note stands for all of them instead of one note per probe.
       degraded.push(
-        err instanceof HostHaltedError ? `${url}: skipped after 429` : `${url}: request failed`,
+        err instanceof HostHaltedError ? 'probe skipped: host halted after 429' : `${url}: request failed`,
       );
       return { ok: false, body: '' };
     }
@@ -197,7 +200,7 @@ export async function collectMachineReadableCheck(
   const { keyPages } = input;
   // E4 and E5 run in parallel; the gate keeps their requests to one host sequential.
   const gate = createGatedFetch(deps.fetchFn, deps.domainPauseMs ?? 0);
-  const degraded: string[] = [];
+  const degraded = new Degradations();
   const probe = makeProbe(gate, degraded);
 
   const [e4, e5] = await Promise.all([
@@ -206,10 +209,10 @@ export async function collectMachineReadableCheck(
   ]);
 
   return {
-    status: degraded.length > 0 ? 'partial' : 'ok',
+    status: degraded.isEmpty ? 'ok' : 'partial',
     data: { e4, e5 },
     artifacts: [],
     usage: [],
-    notes: degraded.map((d) => `degraded: ${d}`),
+    notes: degraded.toNotes(),
   };
 }
