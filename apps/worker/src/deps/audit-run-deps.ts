@@ -43,6 +43,9 @@ async function withSeqRetry<T>(run: () => Promise<T>): Promise<T> {
       return await run();
     } catch (err) {
       if (!isUniqueViolation(err) || attempt >= MAX_SEQ_RETRIES) throw err;
+      // The competing writer is about to commit: back off with jitter so the
+      // retry reads a max(seq) that already includes its row.
+      await new Promise((resolve) => setTimeout(resolve, attempt * 15 + Math.random() * 15));
     }
   }
 }

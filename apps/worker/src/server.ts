@@ -32,8 +32,13 @@ if (process.env.NODE_ENV === 'production') {
 // T-79: connect the audit pipeline to the database before the port is bound.
 // In production DATABASE_URL is required (validateWorkerEnv above), so this
 // cannot silently fall back to the placeholder deps there.
-if (!wireAuditRunDeps()) {
-  console.warn('geotrack-worker: DATABASE_URL is not set — audit-run uses placeholder deps (development only)');
+try {
+  if (!wireAuditRunDeps()) {
+    console.warn('geotrack-worker: DATABASE_URL is not set — audit-run uses placeholder deps (development only)');
+  }
+} catch (err) {
+  // A malformed DATABASE_URL: one clean line instead of a raw stack trace.
+  fatal(`geotrack-worker: could not connect the audit pipeline to the database: ${err instanceof Error ? err.message : String(err)}`);
 }
 
 // `Number(process.env.PORT ?? 3000)` is not enough: ?? only guards undefined,

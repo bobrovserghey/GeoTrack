@@ -57,9 +57,8 @@ export async function auditRunHandler(
   // sees the values of the first pass instead of whatever the row holds now
   // (a read in the function body can change between passes and shift the set
   // of steps in the middle of an already-executed history).
-  const { isPaid, emailKnown } = await step.run('load-audit', async () => ({
+  const { isPaid } = await step.run('load-audit', async () => ({
     isPaid: await deps.getAuditIsPaid(auditId),
-    emailKnown: (await deps.getAuditEmailNormalized(auditId)) !== null,
   }));
 
   // One status change = one step. The expected `from` is part of the contract:
@@ -134,9 +133,11 @@ export async function auditRunHandler(
   });
 
   // 5. Teaser: running → waiting_email, wait for the email before brand
-  // prompts. A paid audit already has the buyer's email (copied from the
-  // teaser), so it must not wait for an event that will never come.
-  if (!(isPaid && emailKnown)) {
+  // prompts. A paid audit never waits: nothing can send `email.provided` for
+  // it (the email route needs a progress token, a paid audit only has a report
+  // token), and the 7-day timeout path ends in `completed` without `in_review`,
+  // which would strand a paid audit with no review and no delivery.
+  if (!isPaid) {
     await move('status.waiting-email', 'running', 'waiting_for_email');
 
     const emailEvent = await step.waitForEvent('wait-email', {
@@ -163,7 +164,11 @@ export async function auditRunHandler(
     if (!email) return;
     const result = await deps.checkDisposableEmail(email);
     if (result.blocked) {
-      throw new NonRetriableError(`DISPOSABLE_EMAIL:${result.reason ?? 'unknown'}`);
+      const message = `DISPOSABLE_EMAIL:${result.reason ?? 'unknown'}`;
+      // `no_mx` also comes out of a transient DNS failure (hasMxRecord swallows
+      // resolver errors), so it stays retriable; only a disposable domain is a
+      // definite, retry-proof verdict.
+      throw result.reason === 'disposable' ? new NonRetriableError(message) : new Error(message);
     }
   });
 
@@ -188,19 +193,24 @@ export async function auditRunHandler(
   }
 }
 
-const MAX_REASON_LENGTH = 500;
-
 // onFailure path: the run has exhausted its retries (or hit a non-retriable
 // error). `step_failed` is defined only from `running` (ADR-012: paid →
 // needs_attention, teaser → failed). From any other status there is no defined
 // failure transition — the table is a protected invariant — so the status is
 // left alone and the failure is only recorded; see docs/specs/debt.md.
+//
+// audit_events are served to the report page through /api/progress, so the raw
+// error message (it can carry hosts, URLs, even keys) never goes into them: only
+// the error class is stored there; the message goes to the worker log.
 export async function auditRunFailureHandler(
   auditId: string,
-  error: { message?: string } | undefined,
+  error: { name?: string; message?: string } | undefined,
   deps: AuditRunDeps,
+  log: (message: string) => void = (m) => console.error(m),
 ): Promise<void> {
-  const reason = String(error?.message ?? 'unknown error').slice(0, MAX_REASON_LENGTH);
+  const errorName = String(error?.name ?? 'Error').slice(0, 100);
+  log(`audit-run failed for ${auditId}: ${errorName}: ${String(error?.message ?? '').slice(0, 1000)}`);
+
   const status = await deps.getAuditStatus(auditId);
   const isPaid = await deps.getAuditIsPaid(auditId);
 
@@ -212,7 +222,13 @@ export async function auditRunFailureHandler(
   }
 
   if (to) {
-    await deps.transitionStatus(auditId, status, to, { to, failed: true, reason });
+    try {
+      await deps.transitionStatus(auditId, status, to, { to, failed: true });
+    } catch (err) {
+      // The admin moved the audit in between: still record that the run failed.
+      if (!(err instanceof StatusConflictError)) throw err;
+      to = null;
+    }
   }
-  await deps.insertAuditEvent(auditId, 'run.failed', { status, to, reason });
+  await deps.insertAuditEvent(auditId, 'run.failed', { status, to, errorName });
 }

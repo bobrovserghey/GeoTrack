@@ -51,12 +51,15 @@ export const auditRun = inngest.createFunction(
   {
     id: 'audit-run',
     name: 'Run audit pipeline',
-    // One run per audit at a time: a duplicate/retried `audit.queued` or an
-    // admin restart on top of a live run must queue behind it. (Not
-    // `idempotency` — that would block admin_restart for 24h.)
+    // One live run per audit: a duplicate or retried `audit.queued` is skipped
+    // while a run for the same audit is active. (`concurrency` alone limits how
+    // many STEPS run at once, not how many runs, so it does not deduplicate.
+    // Not `idempotency` either — its 24h window would block a restart after a
+    // failed run.)
+    singleton: { key: 'event.data.auditId', mode: 'skip' },
     concurrency: { limit: 1, key: 'event.data.auditId' },
     onFailure: ({ event, error }) =>
-      auditRunFailureHandler(auditIdOfFailedRun(event as never), error, resolveAuditRunDeps()),
+      auditRunFailureHandler(auditIdOfFailedRun(event), error, resolveAuditRunDeps()),
   },
   { event: 'geotrack/audit.queued' },
   ({ event, step }) =>

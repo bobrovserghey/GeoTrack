@@ -904,3 +904,27 @@ lastmod + 6 дефолтных из пункта 6). Поведение совп
   из `engines.v1.json`, проверить лимит длительности шага Inngest; бюджет внутри
   `extract-mentions`.
 
+Остаток по ревью T-79 (code-reviewer, 2026-10-02), решения продакта / отдельные задачи:
+- **Покупатель видит вечный спиннер при `needs_attention`:** страница отчёта
+  (`report/[auditId]/page.tsx`) не считает его «готовым», а `AuditProgress` без
+  progress-токена не поллит. Нужен экран/сообщение для платного аудита в этом статусе.
+- **Кнопка Restart в админке ничего не перезапускает:** `restart-step` только пишет
+  событие `admin.step_restart` — не меняет статус и не шлёт `audit.queued`. Ребро
+  `admin_restart` (`needs_attention → running`) не используется; пункт «Проверка
+  вручную» спеки T-79 про Restart выполнить нечем. Логика воркера под повторный
+  `audit.queued` готова (`current === to`).
+- `current === to` при повторе с потерянным результатом шага не дописывает событие
+  `status.changed` (статус верен, в ленте перехода нет).
+- Шаг `completed → in_review` должен читать `manualReview` из профиля
+  (`audit-profiles.v2.json`), а `isPaid = auditType !== 'teaser'` — условие по типу
+  аудита, запрещённое CLAUDE.md; допустимо как контекст `transition()`, но не для
+  решения о ручном ревью.
+- Нет `cancelOn`: после `admin_cancel` прогон висит в `waitForEvent` до 7 дней.
+- Гонка email-гейта: событие `email.provided`, пришедшее между CAS в `waiting_email`
+  и регистрацией `waitForEvent`, теряется (аудит ждёт 7 дней). Окно узкое.
+- `packages/db/src/client.ts`: `postgres()` без `max`/`idle_timeout`/`connect_timeout`
+  (`prepare: false` не нужен — drizzle-postgres-js гонит запросы через `unsafe`).
+  Рассмотреть вместе с подключением боевой Supabase.
+- После деплоя **обязательна повторная синхронизация приложения в Inngest Cloud**:
+  `onFailure` — отдельная зарегистрированная функция `audit-run-failure`.
+

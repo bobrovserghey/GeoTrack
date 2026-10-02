@@ -203,14 +203,21 @@ describe('auditRunHandler — paid audit, email provided', () => {
   });
 });
 
-describe('auditRunHandler — paid audit, email timeout', () => {
-  it('does not reach in_review on email timeout (returns early)', async () => {
-    const deps = makeMockDeps({ getAuditIsPaid: vi.fn(async () => true) });
-    const step = makeMockStep({}); // email timeout
-    await auditRunHandler('audit-paid-timeout', step, deps);
+describe('auditRunHandler — a paid audit never waits for an email', () => {
+  // Nothing can send `email.provided` for a paid audit (the email route needs a progress
+  // token), and the email-timeout path ends in `completed`, never `in_review`.
+  it.each([null, 'buyer@example.com'])('goes straight to review with email=%s', async (email) => {
+    const deps = makeMockDeps({
+      getAuditIsPaid: vi.fn(async () => true),
+      getAuditEmailNormalized: vi.fn(async () => email),
+    });
+    const step = makeMockStep({});
+    await auditRunHandler('audit-paid', step, deps, 'saas.crm');
 
-    expect(deps.statusHistory).not.toContain('in_review');
-    expect(deps.statusHistory.at(-1)).toBe('completed');
+    const waits = (step.waitForEvent as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0]);
+    expect(waits).not.toContain('wait-email');
+    expect(deps.statusHistory).not.toContain('waiting_email');
+    expect(deps.statusHistory.slice(-2)).toEqual(['completed', 'in_review']);
   });
 });
 
@@ -459,27 +466,26 @@ describe('auditRunHandler — status is read from the DB, not assumed (compare-a
   });
 });
 
-describe('auditRunHandler — paid audit that already has the buyer\'s email', () => {
-  it('does not wait for an email event and goes straight to the brand prompts', async () => {
-    const deps = makeMockDeps({
-      getAuditIsPaid: vi.fn(async () => true),
-      getAuditEmailNormalized: vi.fn(async () => 'buyer@example.com'),
+describe('auditRunHandler — disposable verdicts and retries', () => {
+  const emailProvided = { 'wait-email': { data: { auditId: 'a' } } };
+  const blocked = (reason: string) =>
+    makeMockDeps({
+      getAuditEmailNormalized: vi.fn(async () => 'user@example.com'),
+      checkDisposableEmail: vi.fn(async () => ({ blocked: true, reason })),
     });
-    const step = makeMockStep({});
-    await auditRunHandler('audit-paid-known-email', step, deps, 'saas.crm');
 
-    const waits = (step.waitForEvent as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0]);
-    expect(waits).not.toContain('wait-email');
-    expect(deps.statusHistory).not.toContain('waiting_email');
-    expect(deps.statusHistory.slice(-2)).toEqual(['completed', 'in_review']);
-    expect(deps.checkDisposableEmail).toHaveBeenCalledWith('buyer@example.com');
+  it('a disposable domain is a definite verdict: no retries', async () => {
+    await expect(auditRunHandler('d1', makeMockStep(emailProvided), blocked('disposable'))).rejects.toBeInstanceOf(
+      NonRetriableError,
+    );
   });
 
-  it('a teaser with the same email still waits for the email event', async () => {
-    const deps = makeMockDeps({ getAuditEmailNormalized: vi.fn(async () => 'x@example.com') });
-    const step = makeMockStep({});
-    await auditRunHandler('audit-teaser-email', step, deps, 'saas.crm');
-    const waits = (step.waitForEvent as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0]);
-    expect(waits).toContain('wait-email');
+  // hasMxRecord swallows resolver errors, so `no_mx` can be a transient DNS failure.
+  it('no_mx can be a transient DNS failure: it stays retriable', async () => {
+    const promise = auditRunHandler('d2', makeMockStep(emailProvided), blocked('no_mx'));
+    await expect(promise).rejects.toThrow('DISPOSABLE_EMAIL:no_mx');
+    await expect(auditRunHandler('d3', makeMockStep(emailProvided), blocked('no_mx'))).rejects.not.toBeInstanceOf(
+      NonRetriableError,
+    );
   });
 });

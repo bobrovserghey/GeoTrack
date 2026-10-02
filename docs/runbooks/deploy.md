@@ -170,7 +170,8 @@
 - [ ] Variables: `INNGEST_SIGNING_KEY` и `DATABASE_URL` (тот же, что у web;
       остальное Railway задаёт сам)
 - [ ] Networking → Generate Domain; `curl https://<домен>/healthz` → `ok`
-- [ ] Inngest Cloud → Sync app → `https://<домен>/api/inngest`
+- [ ] Inngest Cloud → Sync app → `https://<домен>/api/inngest` (после каждого
+      деплоя, где менялись функции: `onFailure` — отдельная функция `audit-run-failure`)
 - [ ] **Помнить:** шаги пайплайна пока заглушки — аудит проходит статусы, но отчёт
       пустой. Реальные платежи не включать
 
