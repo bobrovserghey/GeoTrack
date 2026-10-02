@@ -511,3 +511,23 @@ Inngest), вне production — по-прежнему `noopDeps`. **Следст
 задача на реальную привязку (`updateAuditStatus`/`insertAuditEvent`/… к БД и
 замену `crawlStub`/`enginePollStub`/`brandPromptsStub` настоящими шагами) —
 это и есть непосаженная часть пайплайна (см. CLAUDE.md, примечание по T-29/T-78).
+Отмечено в `docs/runbooks/deploy.md` (раздел 3), чтобы красные раны после
+первого синка с Inngest не выглядели как поломка деплоя.
+
+Что остаётся открытым (вне рамок этой правки, для задачи на привязку):
+
+- У `auditRun` нет `onFailure`-хендлера, поэтому провалившийся ран не переводит
+  аудит в `failed` — он навсегда остаётся `queued`, и страница прогресса
+  (`apps/web/src/app/report/[auditId]/audit-progress.tsx`) крутится без конца.
+  Регрессии относительно прежнего поведения нет (ран, «успешный» на `noopDeps`,
+  тоже оставлял `queued`), но при привязке понадобится `onFailure` →
+  `transition(..., 'failed')`.
+- Защита ловит только отсутствие зависимостей, но не заглушечность шагов: как
+  только `setAuditRunDeps()` будет вызван, прод снова начнёт «успешно» отдавать
+  пустые аудиты (`pagesFound: 0`, `mentionsFound: 0`), пока
+  `crawlStub`/`enginePollStub`/`brandPromptsStub` не заменят настоящими шагами.
+- `apps/worker/package.json` → `start: tsx src/server.ts` не выставляет
+  `NODE_ENV`. В Docker/Railway он приходит из `Dockerfile`
+  (`ENV NODE_ENV=production`), но при запуске воркера мимо образа (nixpacks,
+  ручной `pnpm start` на VPS) и эта защита, и проверка env в `server.ts` молча
+  отключатся.
