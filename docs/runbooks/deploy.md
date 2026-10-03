@@ -124,7 +124,7 @@
 ## Чек-лист продакта (по порядку)
 
 Нужные аккаунты: Supabase, Vercel, Railway, Inngest Cloud, Cloudflare
-(Turnstile), Resend, Paddle (sandbox). Все 16 переменных `apps/web` должны быть
+(Turnstile), Resend, Paddle (sandbox). Все 17 переменных `apps/web` должны быть
 **непустыми на этапе сборки** — иначе Vercel-сборка упадёт, это намеренно.
 
 **A. Supabase (новый проект под staging/prod, не dev-база из `db:push`)**
@@ -150,7 +150,7 @@
 **D. Vercel (`apps/web`)**
 - [ ] Import репозитория; Root Directory `apps/web`; Build Command **пустой**
       (иначе выключится проверка env); Install `pnpm install --frozen-lockfile`
-- [ ] Environment Variables (Production и Preview) — все 16 из
+- [ ] Environment Variables (Production и Preview) — все 17 из
       `apps/web/.env.example`; секреты `ADMIN_SECRET`/`AUDIT_SERVICE_KEY` —
       новые случайные (`openssl rand -hex 24`), не из локального `.env.local`
 - [ ] `NEXT_PUBLIC_APP_URL` — итоговый адрес Vercel (после первого деплоя
