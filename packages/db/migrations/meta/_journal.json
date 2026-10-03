@@ -36,6 +36,13 @@
       "when": 1790726400000,
       "tag": "0004_claude_engine",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791043254588,
+      "tag": "0005_enable_rls",
+      "breakpoints": true
     }
   ]
 }

@@ -25,7 +25,7 @@ export const passports = pgTable('passports', {
   storageRef: text('storage_ref'),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const categories = pgTable('categories', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -37,7 +37,7 @@ export const categories = pgTable('categories', {
   selectedByUser: integer('selected_by_user').notNull().default(0),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const competitors = pgTable('competitors', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -47,7 +47,7 @@ export const competitors = pgTable('competitors', {
   source: varchar('source', { length: 64 }).notNull(),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const promptTypeEnum = pgEnum('prompt_type', [
   'discovery',
@@ -65,7 +65,7 @@ export const prompts = pgTable('prompts', {
   categorySlug: varchar('category_slug', { length: 128 }).notNull(),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const engineEnum = pgEnum('engine', ['perplexity', 'chatgpt', 'gemini', 'claude']);
 
@@ -84,7 +84,7 @@ export const engineRuns = pgTable('engine_runs', {
   latencyMs: integer('latency_ms'),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const sentimentEnum = pgEnum('sentiment', ['positive', 'neutral', 'negative']);
 
@@ -98,7 +98,7 @@ export const mentions = pgTable('mentions', {
   claims: jsonb('claims').notNull().default([]),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const passportsRelations = relations(passports, ({ one }) => ({
   audit: one(audits, { fields: [passports.auditId], references: [audits.id] }),

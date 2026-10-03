@@ -50,7 +50,7 @@ export const users = pgTable('users', {
   uniqueIndex('users_email_normalized_idx')
     .on(t.emailNormalized)
     .where(sql`${t.emailNormalized} IS NOT NULL`),
-]);
+]).enableRLS();
 
 export const audits = pgTable('audits', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -75,7 +75,7 @@ export const audits = pgTable('audits', {
 }, (t) => [
   index('audits_domain_normalized_status_idx').on(t.domainNormalized, t.status, t.createdAt),
   index('audits_email_normalized_status_idx').on(t.emailNormalized, t.status, t.createdAt),
-]);
+]).enableRLS();
 
 export const auditEvents = pgTable('audit_events', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -86,7 +86,7 @@ export const auditEvents = pgTable('audit_events', {
   createdAt: now(),
 }, (t) => [
   unique('audit_events_audit_seq').on(t.auditId, t.seq),
-]);
+]).enableRLS();
 
 export const orderStatusEnum = pgEnum('order_status', ['pending', 'completed', 'refunded']);
 
@@ -100,7 +100,7 @@ export const orders = pgTable('orders', {
   amountUsd: numeric('amount_usd', { precision: 10, scale: 2 }).notNull(),
   status: orderStatusEnum('status').notNull().default('pending'),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const payments = pgTable('payments', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -111,7 +111,7 @@ export const payments = pgTable('payments', {
   status: varchar('status', { length: 32 }).notNull(),
   payload: jsonb('payload').notNull().default({}),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const reportTokenTypeEnum = pgEnum('report_token_type', ['report', 'progress']);
 
@@ -122,7 +122,7 @@ export const reportTokens = pgTable('report_tokens', {
   tokenType: reportTokenTypeEnum('token_type').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const usersRelations = relations(users, ({ many }) => ({
   audits: many(audits),

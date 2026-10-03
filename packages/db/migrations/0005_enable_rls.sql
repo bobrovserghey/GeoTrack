@@ -1,0 +1,20 @@
+ALTER TABLE "audit_events" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "audits" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "orders" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "payments" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "report_tokens" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "category_cache" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "pages" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "sites" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "categories" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "competitors" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "engine_runs" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "mentions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "passports" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "prompts" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "agent_runs" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "findings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "offsite_signals" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "scores" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "tech_checks" ENABLE ROW LEVEL SECURITY;

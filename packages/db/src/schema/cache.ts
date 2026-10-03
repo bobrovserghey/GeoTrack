@@ -29,4 +29,4 @@ export const categoryCache = pgTable('category_cache', {
   unique('category_cache_key').on(
     t.categoryId, t.locale, t.promptSetVersion, t.promptId, t.engine, t.repeatIndex,
   ),
-]);
+]).enableRLS();
