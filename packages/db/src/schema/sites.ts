@@ -23,7 +23,7 @@ export const sites = pgTable('sites', {
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   crawledAt: timestamp('crawled_at', { withTimezone: true }).notNull().defaultNow(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const pages = pgTable('pages', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -40,7 +40,7 @@ export const pages = pgTable('pages', {
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   crawledAt: timestamp('crawled_at', { withTimezone: true }).notNull().defaultNow(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const sitesRelations = relations(sites, ({ one, many }) => ({
   audit: one(audits, { fields: [sites.auditId], references: [audits.id] }),

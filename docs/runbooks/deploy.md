@@ -15,7 +15,45 @@
 2. Settings → API → `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`;
    `anon public` ключ → `NEXT_PUBLIC_SUPABASE_ANON_KEY`;
    `service_role` ключ → `SUPABASE_SERVICE_ROLE_KEY` (секретный, не публиковать).
-3. Прогнать миграции на **пустую** базу (`pnpm db:migrate` читает
+3. **До миграций проверить роль подключения — тем же соединением, которым
+   ходит приложение.** Миграция `0005_enable_rls` включает row level security
+   на всех таблицах (ADR-028). Если роль из `DATABASE_URL` не владелец таблиц
+   и не имеет `BYPASSRLS`, после миграции запросы начнут возвращать **пустые
+   результаты без ошибки** — приложение продолжит работать и покажет пустые
+   отчёты. Проверка идёт через сам `DATABASE_URL`:
+   ```bash
+   psql "$DATABASE_URL" -c "select current_user, \
+     (select rolbypassrls from pg_roles where rolname = current_user) as bypassrls, \
+     coalesce(bool_and(pg_has_role(current_user, c.relowner, 'usage')), true) as owns_all \
+     from pg_class c join pg_namespace n on n.oid = c.relnamespace \
+     where n.nspname = 'public' and c.relkind in ('r', 'p');"
+   ```
+   Проверка проходит, если **`bypassrls = t` ИЛИ `owns_all = t`** — достаточно
+   любого: первое значит, что роль обходит RLS явной привилегией, второе — что
+   она владеет всеми таблицами `public`, а владельцу Postgres RLS не применяет
+   (почему именно так и почему в запросе `'usage'`, а не `'member'` —
+   ADR-028). Если оба `f` — миграцию не применять и сообщить агенту.
+
+   На пустой базе, а шаг идёт до миграций, таблиц ещё нет: агрегат считать не
+   по чему, `coalesce(…, true)` даёт `owns_all = t`, и ориентироваться надо на
+   `bypassrls`. Для дефолтного Supabase там `t`. `owns_all` становится
+   содержательным при повторной проверке после пункта 4.
+
+   **Не проверять это в SQL Editor через `current_user`**: там `current_user` —
+   роль самого редактора, а не роль из `DATABASE_URL`, и проверка выглядит
+   успешной именно в том случае, от которого защищает. Если `psql` под рукой
+   нет, взять username из `DATABASE_URL` (между `//` и `:`), отбросить суффикс
+   `.<projectref>` — то есть взять часть до первой точки — и подставить
+   литералом:
+   ```sql
+   select rolname, rolbypassrls from pg_roles
+   where rolname = 'имя-роли-из-DATABASE_URL-без-суффикса';
+   ```
+   Суффикс обязательно убрать: у пулера в режиме Transaction username —
+   `postgres.<projectref>`, это имя для аутентификации в Supavisor, а не роль в
+   `pg_roles`. С суффиксом вернётся 0 строк, что легко принять за провал
+   проверки при исправной роли.
+4. Прогнать миграции на **пустую** базу (`pnpm db:migrate` читает
    `DATABASE_URL` и без неё падает; журнал и снимки исправлены в PR #57):
    ```bash
    DATABASE_URL="..." corepack pnpm db:migrate
@@ -24,6 +62,33 @@
    либо только `db:push` (одноразовая dev-БД). База, созданная через `db:push`,
    не имеет таблицы `__drizzle_migrations` — `db:migrate` на ней упадёт.
    Подробности и сценарии — `docs/specs/debt.md` («миграции drizzle»).
+5. **После миграций проверить, что RLS включён.** Три проверки, все три
+   обязательны перед приёмом реальных денег:
+
+   а) Supabase → Advisors → **Security**: не должно быть предупреждений
+   «RLS disabled in public». Это самый быстрый способ увидеть таблицу,
+   которую миграция пропустила.
+
+   б) В SQL Editor — `relrowsecurity` должно быть `true` у всех таблиц
+   (сейчас их 20):
+   ```sql
+   select relname, relrowsecurity from pg_class c
+   join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind in ('r', 'p')
+   order by relname;
+   ```
+
+   в) Запрос с публичным ключом должен вернуть пустой массив или отказ, а не
+   данные:
+   ```bash
+   curl "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/audits?select=id" \
+     -H "apikey: $NEXT_PUBLIC_SUPABASE_ANON_KEY"
+   ```
+   Если здесь приходят строки — RLS не применился, дальше не идти.
+
+   После этого проверить, что приложение работает: создание тизера, вебхук
+   оплаты, страница отчёта, вход в админку. Пустые отчёты при работающем
+   интерфейсе — признак неверной роли из пункта 3.
 
 ---
 
@@ -134,6 +199,9 @@
       `service_role`/secret ключи
 - [ ] Положить значения в локальный `apps/web/.env.local` (не в чат) и сказать
       агенту: он выполнит `db:migrate` и проверит таблицы
+- [ ] **После миграций** — Advisors → Security: нет предупреждений
+      «RLS disabled in public» (раздел 1, пункт 5). Если есть — не включать
+      платежи и сообщить агенту
 
 **B. Inngest Cloud**
 - [ ] Создать приложение; **Event Key** → `INNGEST_EVENT_KEY` (web),

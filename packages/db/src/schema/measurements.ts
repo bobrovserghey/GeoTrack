@@ -23,7 +23,7 @@ export const techChecks = pgTable('tech_checks', {
   details: jsonb('details').notNull().default({}),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const offsiteSignals = pgTable('offsite_signals', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -34,7 +34,7 @@ export const offsiteSignals = pgTable('offsite_signals', {
   details: jsonb('details').notNull().default({}),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const agentRuns = pgTable('agent_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -45,7 +45,7 @@ export const agentRuns = pgTable('agent_runs', {
   details: jsonb('details').notNull().default({}),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const scores = pgTable('scores', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -58,7 +58,7 @@ export const scores = pgTable('scores', {
   measured: boolean('measured').notNull().default(true),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const findings = pgTable('findings', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -73,7 +73,7 @@ export const findings = pgTable('findings', {
   priority: integer('priority').notNull().default(0),
   stepVersion: varchar('step_version', { length: 32 }).notNull(),
   createdAt: now(),
-});
+}).enableRLS();
 
 export const techChecksRelations = relations(techChecks, ({ one }) => ({
   audit: one(audits, { fields: [techChecks.auditId], references: [audits.id] }),
